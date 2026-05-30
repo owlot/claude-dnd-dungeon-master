@@ -1,0 +1,18 @@
+**/.env
+settings.local.json
+**/*.mp3
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Python cache files
+tools/**/__pycache__/
+*.pyc
+*.pyo
+*.pyd

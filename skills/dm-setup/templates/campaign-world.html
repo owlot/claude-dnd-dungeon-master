@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{CAMPAIGN_DISPLAY}} — World Guide</title>
+        <link rel="stylesheet" href="../style/story.css" />
+        <script src="../js/lightbox.js" defer></script>
+        <script src="../js/nav.js" defer></script>
+        <script src="../js/audio.js" defer></script>
+        <script src="../js/world.js" defer></script>
+    </head>
+    <body class="world">
+        <div id="lightbox" onclick="this.classList.remove('open')">
+            <img id="lightbox-img" src="" alt="" />
+        </div>
+        <div class="container-wide">
+            <h1>{{CAMPAIGN_DISPLAY}}</h1>
+            <div class="subtitle">World Guide — People &amp; Places</div>
+
+            <div class="world-search-wrap">
+                <input
+                    type="search"
+                    id="world-search"
+                    placeholder="Search people &amp; places…"
+                    autocomplete="off"
+                />
+            </div>
+
+            <div class="world-jumps">
+                <a href="#section-party">The Party</a>
+                <a href="#section-people">People Met</a>
+                <a href="#section-places">Places</a>
+                <a href="#section-objects">Objects</a>
+            </div>
+
+            <div id="world-root"></div>
+        </div>
+    </body>
+</html>

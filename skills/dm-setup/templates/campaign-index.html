@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{CAMPAIGN_DISPLAY}} — Session Archive</title>
+  <link rel="stylesheet" href="../style/story.css">
+  <script src="../js/nav.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <h1>{{CAMPAIGN_DISPLAY}}</h1>
+    <div class="subtitle">Session Archive</div>
+
+    <ul class="session-list" style="margin-bottom: 2rem;">
+      <li>
+        <a href="world.html">
+          <span class="session-number" style="color: #a08858;">World Guide</span>
+          <span class="session-title">People &amp; Places</span>
+          <span class="session-subtitle">Characters met, locations visited</span>
+        </a>
+      </li>
+    </ul>
+
+    <ul class="session-list" id="session-list">
+      <!-- Sessions will be populated here by the website-generator -->
+    </ul>
+  </div>
+</body>
+</html>

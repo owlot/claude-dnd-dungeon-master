@@ -1,0 +1,171 @@
+/* Private memoir pages — login screen + per-character memoir display */
+
+.private-note {
+    background: #1a1a2a;
+    border-left: 3px solid #5a5a9a;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+    color: #b0b0d0;
+    font-style: italic;
+    border-radius: 0 3px 3px 0;
+}
+
+#login-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.login-title {
+    font-size: 1.4rem;
+    color: #c9a84c;
+    text-align: center;
+}
+
+.login-sub {
+    font-size: 0.9rem;
+    color: #666;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+.character-grid {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.char-btn {
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    text-align: center;
+    width: 160px;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
+}
+
+.char-btn:hover {
+    border-color: #a08858;
+    background: #252520;
+}
+
+.char-btn.selected {
+    border-color: #c9a84c;
+    background: #252520;
+}
+
+.char-btn img {
+    width: 80px;
+    height: 100px;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 3px;
+    border: 1px solid #333;
+    display: block;
+    margin: 0 auto 0.6rem;
+}
+
+.char-btn .char-name {
+    font-size: 0.9rem;
+    color: #e8e0d0;
+    font-weight: bold;
+}
+
+.char-btn .char-class {
+    font-size: 0.75rem;
+    color: #666;
+    font-family: sans-serif;
+    margin-top: 0.2rem;
+}
+
+.password-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-row input {
+    background: #111;
+    border: 1px solid #333;
+    color: #e8e0d0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-family: Georgia, serif;
+    width: 200px;
+    outline: none;
+}
+
+.password-row input:focus {
+    border-color: #a08858;
+}
+
+.password-row button {
+    background: #252520;
+    border: 1px solid #a08858;
+    color: #c9a84c;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: sans-serif;
+    transition: background 0.15s;
+}
+
+.password-row button:hover {
+    background: #2a2a20;
+}
+
+.login-error {
+    color: #bf6a6a;
+    font-size: 0.85rem;
+    font-family: sans-serif;
+    min-height: 1.2rem;
+    text-align: center;
+}
+
+#memoir-screen {
+    display: none;
+}
+
+.memoir-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.memoir-portrait {
+    width: 60px;
+    height: 75px;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 3px;
+    border: 1px solid #444;
+    flex-shrink: 0;
+}
+
+.memoir-title {
+    font-size: 1.8rem;
+    color: #c9a84c;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.5rem;
+    flex: 1;
+}
+
+.memoir-subtitle {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 2rem;
+    font-family: sans-serif;
+}

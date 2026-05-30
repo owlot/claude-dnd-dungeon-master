@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campaigns</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Georgia, serif;
+            background: #1a1a1a;
+            color: #e8e0d0;
+            margin: 0;
+            padding: 3rem 2rem;
+        }
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.4rem;
+            color: #555577;
+            font-family: sans-serif;
+            font-weight: normal;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin: 0 0 2.5rem;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 1rem;
+        }
+        .campaign-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .campaign-list li {
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .campaign-list a {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            padding: 1.25rem 0.25rem;
+            text-decoration: none;
+            color: #e8e0d0;
+            transition: color 0.15s;
+        }
+        .campaign-list a:hover {
+            color: #c9a84c;
+        }
+        .campaign-name {
+            font-size: 1.1rem;
+        }
+        .campaign-meta {
+            font-size: 0.82rem;
+            color: #666;
+            font-family: sans-serif;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Campaigns</h1>
+        <ul class="campaign-list">
+        </ul>
+    </div>
+</body>
+</html>
