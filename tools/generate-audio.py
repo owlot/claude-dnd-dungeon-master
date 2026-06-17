@@ -209,7 +209,7 @@ def main():
     parser.add_argument("story", help="Path to session-N-story.md")
     parser.add_argument("--device", default="cuda", help="Device: cuda or cpu (default: cuda)")
     parser.add_argument("--dry-run", action="store_true", help="Parse only, don't generate audio")
-    parser.add_argument("--scene", type=int, help="Regenerate only this scene number (1-based)")
+    parser.add_argument("--scene", type=int, action="append", help="Regenerate only this scene number (1-based)")
     parser.add_argument("--memoirs-only", action="store_true", help="Generate only memoir audio")
     parser.add_argument("--scenes-only", action="store_true", help="Generate only scene audio")
     parser.add_argument("--anchor", help="Memoir anchor filter: [char/]anchor-slug")
@@ -288,7 +288,7 @@ def main():
     # Generate scenes
     if not args.memoirs_only:
         for i, (title, parts) in enumerate(scenes, 1):
-            if args.scene and i != args.scene:
+            if args.scene and i not in args.scene:
                 continue
             slug = slugify(title)
             for j, segments in enumerate(parts):
