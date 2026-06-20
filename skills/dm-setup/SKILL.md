@@ -100,7 +100,7 @@ website/
 
 Copy `templates/CLAUDE.md` → `CLAUDE.md` at the project root. Always overwrite — this file is framework infrastructure, not user content.
 
-Copy `templates/.gitignore` → `.gitignore` at the project root. Always overwrite — this file is framework infrastructure.
+Copy `templates/gitignore.template` → `.gitignore` at the project root. Always overwrite — this file is framework infrastructure.
 
 Then copy each file from `.claude/skills/dm-setup/templates/` to `website/` using `Bash(cp ...)`. Always copy — overwrite any existing version so the installed files match the templates:
 - `templates/js/audio.js` → `website/js/audio.js`

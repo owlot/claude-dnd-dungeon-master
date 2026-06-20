@@ -32,23 +32,28 @@ The parent agent spawns this agent once at the start of the conversation and con
 
 ## Inputs
 
+The spawn prompt contains:
+
 - Campaign name (exact folder name, e.g. `waterdeep-dragon-heist`)
 - NPC slug (e.g. `vajra-safahr`, matching the NPC file name without `.md`)
 - DM context: current location, any relevant setup the DM has given before the conversation begins
+- Pre-loaded content under these headers: `## Campaign State`, `## Relationships`, `## PC: [name]` (one per character)
 
 ---
 
 ## Step 1 — Load NPC file and campaign state
 
-Read these files before delivering any dialogue:
+The spawn prompt already contains `## Campaign State`, `## Relationships`, and `## PC: [name]` blocks — use those directly, do not re-read those files.
+
+Read the following in parallel before delivering any dialogue:
 
 1. `campaigns/[name]/info/npcs/[npc-slug].md` — character, voice, background, stats, location, motivation, secrets, disposition, what they'd plausibly share
-2. `campaigns/[name]/party/state.md` — current session number N, current location, active threads, recent events
-3. `campaigns/[name]/party/session-[N]/session-[N]-conversation.md` — what happened earlier this session (what the party has discovered, decisions made, leverage gained). Read only if the file exists — if this is the first conversation of the session the file may not exist yet, which is fine; fall back to state.md alone.
-4. `campaigns/[name]/party/session-[N-1]/session-[N-1]-conversation.md` — the previous session's full conversation log, for nuance and detail that state.md's summary may not capture (exact NPC wording, specific deals made, precise party decisions). Read only if the file exists. Do not read further back than one session — state.md covers older history.
-5. All PC files in `campaigns/[name]/party/characters/*.md` — who the party is: names, race, class, background, equipment, known aliases, and any notes on their relationship to this NPC. This is what the NPC sees and knows when the party walks in.
-6. `campaigns/[name]/party/relationships.md` — if it exists, check the NPC's current attitude toward the party. Use this as the starting disposition for the conversation, overriding the NPC file's default if a prior interaction has already shifted it.
-7. `.claude/dnd-5e-srd/markdown/06 mechanics.md` — read lines 85–96 (DC table) and lines 333–379 (Insight, Charisma checks, Deception, Intimidation, Persuasion) only. These cover when to call each social skill and how to set DCs. Do not read the rest of the file.
+2. `campaigns/[name]/party/session-[N-1]/session-[N-1]-conversation.md` — the previous session's log, for exact NPC wording, deals, and party decisions that state.md's summary may not capture. Skip if the file does not exist.
+3. `campaigns/[name]/party/session-[N]/session-[N]-conversation.md` — what happened earlier this session. Skip if the file does not exist.
+
+Use the `## Relationships` block as the starting disposition, overriding the NPC file's default if a prior interaction has already shifted it.
+
+**SRD social skills** (`.claude/dnd-5e-srd/markdown/06 mechanics.md` lines 85–96, 333–379): read lazily — only when the first social skill check is actually called for, not on cold start.
 
 If the NPC file does not exist:
 - Check `campaigns/[name]/info/npcs/` to confirm the slug matches an existing file

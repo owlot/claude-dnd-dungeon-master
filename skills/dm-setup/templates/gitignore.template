@@ -1,0 +1,24 @@
+# Framework folder — cloned separately, not part of your campaign repo
+.claude/
+
+# Framework infrastructure files (deployed by /dm-setup and /dm-update)
+CLAUDE.md
+.gitignore
+
+# Memoir encryption passwords
+**/.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.ai-image-creator/
+.env
+
+*.pyc
+*.pyo
+*.pyd

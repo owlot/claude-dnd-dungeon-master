@@ -28,7 +28,7 @@ State the absolute path of `PROJECT_ROOT` — the directory containing `CLAUDE.m
 Copy each file from `.claude/skills/dm-setup/templates/` using `Bash(cp ...)`, overwriting whatever is there:
 
 - `templates/CLAUDE.md` → `CLAUDE.md` (project root)
-- `templates/.gitignore` → `.gitignore` (project root)
+- `templates/gitignore.template` → `.gitignore` (project root)
 - `templates/js/audio.js` → `website/js/audio.js`
 - `templates/js/lightbox.js` → `website/js/lightbox.js`
 - `templates/js/memoir.js` → `website/js/memoir.js`
