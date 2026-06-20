@@ -374,7 +374,7 @@ NPC portrait images use `card_set_portrait`. Both are lightbox-enabled automatic
 ### New object acquired or changed
 
 ```bash
-python .claude/scripts/update_world.py [name] object_add [card-id] "[Name]" "[What it is · Holder]" tag-location "[Description]"
+python .claude/scripts/update_world.py [name] object_add [card-id] "[Name]" "[What it is · Holder]" tag-with-party "[Description]"
 ```
 
 ### Party member change (description update)
@@ -389,7 +389,9 @@ python .claude/scripts/update_world.py [name] card_set_desc [card-id] [paragraph
 python .claude/scripts/update_world.py [name] replace [card-id] "[old text]" "[new text]"
 ```
 
-Available tag classes: `tag-ally`, `tag-neutral`, `tag-unknown`, `tag-enemy`, `tag-visited`, `tag-location`, `tag-dead`.
+Available tag classes: `tag-ally`, `tag-neutral`, `tag-unknown`, `tag-enemy`, `tag-visited`, `tag-location`, `tag-dead`, `tag-with-party`, `tag-handed-off`.
+
+For object cards specifically: use `tag-with-party` (held by the party), `tag-handed-off` (given to an NPC or faction), or `tag-unknown` (whereabouts unknown).
 
 **Never use game mechanics language** in world.json character cards or NPC descriptions — no "HP", "AC", "level", "spell slots", etc.
 
