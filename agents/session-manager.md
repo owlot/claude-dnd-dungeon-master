@@ -89,6 +89,19 @@ If any unverified encounters are likely, prompt: *"Run `/dm-load-encounter [name
 
 Ask: *"Ready to begin?"* and wait for the DM to confirm before doing anything else.
 
+### 8. Spawn session-context agent
+
+After the DM confirms, spawn the `session-context` agent:
+
+```
+Project root: [absolute path]
+Campaign: [name]
+```
+
+Keep its agent ID and pass it to the main thread so DM input can be relayed to it when NPC conversations begin. Signal to the main thread:
+
+> "Session context agent is live — send NPC conversation requests to it via SendMessage."
+
 ---
 
 ## ON END SESSION

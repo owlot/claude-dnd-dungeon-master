@@ -95,7 +95,7 @@ Append scene sections using this format:
 *(See full combat log: session-[N]-combat-[slug].md)*
 ```
 
-**NPC conversation cross-references**: Write one line and stop — the conversation-tracker already appended those:
+**NPC conversation cross-references**: Write one line and stop — the conversation-npc agent already appended those:
 ```markdown
 *(See NPC log: session-[N]-npc-[sequence]-[slug].md)*
 ```

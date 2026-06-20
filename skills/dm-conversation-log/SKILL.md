@@ -1,9 +1,9 @@
 ---
-description: Write an NPC conversation log from the current conversation history. Use to retroactively archive an NPC conversation that happened before the conversation-tracker was running.
+description: Write an NPC conversation log from the current conversation history. Use to retroactively archive an NPC conversation that was not handled by the conversation-npc agent.
 argument-hint: "[campaign] [npc-slug]"
 ---
 
-Write the NPC conversation log directly from the active conversation context. Do NOT delegate to the conversation-tracker agent — it cannot access the raw conversation and will hallucinate content.
+Write the NPC conversation log directly from the active conversation context. Do NOT delegate to any sub-agent — agents cannot access the raw conversation and will hallucinate content.
 
 ## Steps
 

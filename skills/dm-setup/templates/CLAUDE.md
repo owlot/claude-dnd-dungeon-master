@@ -27,15 +27,13 @@ Claude is a **DM assistant** — a co-pilot that handles the mechanical, informa
 
 Voice NPCs based on their encounter file or character card — their established voice, motivation, and current disposition. Claude does not decide whether persuasion succeeds; Claude plays out the NPC's reaction after the DM reports the roll result.
 
-**Never handle NPC dialogue in the main context.** When dialogue begins with a named NPC, invoke `/dm-checkpoint-log [campaign]`, then spawn the `conversation-tracker` agent immediately — do not wait for the DM to ask. Do not trigger for truly unnamed background characters or single wordless reactions. See `.claude/agents/conversation-tracker.md`.
+**Never handle NPC dialogue in the main context.** When dialogue begins with a named NPC, invoke `/dm-checkpoint-log [campaign]`, then notify the `session-context` agent via `SendMessage` — do not wait for the DM to ask. Do not trigger for truly unnamed background characters or single wordless reactions.
 
-**When spawning, pass the files already in main context** to avoid redundant reads in the agent. Include in the spawn prompt:
+The `session-context` agent is spawned once at session start by `/dm-start-session` and stays alive for the full session. It holds all shared campaign context and, when a conversation begins, spawns a `conversation-npc` sub-agent with that context embedded, waits for its opening line, and relays that line plus the sub-agent's ID back in a single message — don't expect the NPC's first line any faster by skipping that wait, there is nothing to relay before it exists. **From the second exchange onward, message the `conversation-npc` sub-agent directly — do not keep routing every line through `session-context`.** Staying in the loop turn-by-turn doubles the agent hops (and the wait) for no benefit.
 
-- `campaigns/[name]/party/state.md` — paste under `## Campaign State`
-- `campaigns/[name]/party/relationships.md` — paste under `## Relationships` (or `## Relationships\nFile not present.` if missing)
-- All `campaigns/[name]/party/characters/*.md` — paste each under `## PC: [name]`
+**If a response is taking too long, or the DM says to just handle it directly:** take over the conversation in the main thread immediately — don't keep waiting on a notification. Send the sub-agent a short stand-down message so a late reply doesn't surface afterward, and pick up logging responsibility yourself per `.claude/rules/npc-log-format.md` (or run `/dm-conversation-log` retroactively once the conversation ends) so the exchange isn't lost.
 
-The agent reads the NPC file and previous session log itself — those are not expected to be in the main context.
+See `.claude/agents/session-context.md` and `.claude/agents/conversation-npc.md`.
 
 ---
 
@@ -144,7 +142,7 @@ Flush the current session conversation to `party/session-[N]/session-[N]-convers
 Write a combat log retroactively from the current conversation history. Use in a resumed old session to archive a fight that wasn't logged at the time. Writes directly from active context using the format in `.claude/rules/combat-log-format.md`.
 
 **`/dm-conversation-log [campaign] [npc-slug]`**
-Write an NPC conversation log retroactively from the current conversation history. Use when the conversation-tracker wasn't running and you need to archive an NPC exchange. Writes directly from active context using the format in `.claude/rules/npc-log-format.md`.
+Write an NPC conversation log retroactively from the current conversation history. Use when the conversation-npc agent wasn't running and you need to archive an NPC exchange. Writes directly from active context using the format in `.claude/rules/npc-log-format.md`.
 
 **`/dm-undo [campaign]`**
 Restore all character files and `combat_state.json` from the most recent checkpoint.

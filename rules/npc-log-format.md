@@ -1,6 +1,6 @@
 # NPC Conversation Log Format
 
-Reference for both the `conversation-tracker` agent (live conversations) and the `/dm-conversation-log` skill (retroactive from context).
+Reference for both the `conversation-npc` agent (live conversations) and the `/dm-conversation-log` skill (retroactive from context).
 
 ---
 
