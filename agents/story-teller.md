@@ -295,7 +295,7 @@ Translate the combat log into action prose. The goal is the *feeling* of the fig
 
 ## Memoir rules
 
-- **Memoir section headers use the character's display name only** — `### Caelith`, `### Lylnyler`, `### Corrin`. Never use the file slug (`### caelith-morn`) or any other form.
+- **Memoir section headers use the character's slug exactly** — `### caelith-morn`, `### corrin-greenbottle`, `### lylnyler-fienderck`. The slug must match the key in `memoir-config.json`. `extract_memoir.py` reads the heading verbatim and names output files from it — a mismatch breaks the encryption step.
 - Write in **first person, past tense**, in the character's own voice ("I told him", "I noticed", "I kept that thought")
 - Base inner voice on the character file — background, personality traits, age, class
 - **If a private log exists**, its contents are authoritative. Render patron communications, visions, whispered instructions in full.

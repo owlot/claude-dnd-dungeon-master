@@ -31,7 +31,11 @@ import os
 import json
 import argparse
 
+_speaker_map = {}  # populated in main() from world.json { card.id → card.speaker }
+
 def speaker_display_name(slug):
+    if slug in _speaker_map:
+        return _speaker_map[slug]
     return " ".join(w.capitalize() for w in slug.split("-"))
 
 
@@ -491,6 +495,16 @@ def main():
         sys.exit(1)
 
     campaign_title = args.title
+
+    # Load speaker display names from world.json before rendering
+    world_json_path = os.path.join("website", campaign, "world.json")
+    if os.path.exists(world_json_path):
+        with open(world_json_path, encoding="utf-8") as f:
+            _world = json.load(f)
+        for _section in _world.get("sections", []):
+            for _card in _section.get("cards", []):
+                if "speaker" in _card:
+                    _speaker_map[_card["id"]] = _card["speaker"]
 
     tokens = parse_story(story_path)
     memoir_chars = collect_memoir_characters(story_path)

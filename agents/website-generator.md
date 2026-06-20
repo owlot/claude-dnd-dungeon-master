@@ -357,6 +357,16 @@ python .claude/scripts/update_world.py [name] card_set_tag [card-id] tag-ally
 python .claude/scripts/update_world.py [name] card_set_desc [card-id] 0 "[New description text]"
 ```
 
+### NPC speaker display name (dialogue attribution)
+
+`story_to_html.py` reads `speaker` from each world.json card to label dialogue in the HTML. The fallback is slug → title-case (e.g. `adrastus-thorn` → `Adrastus Thorn`). Set a `speaker` field when the fallback produces a wrong or awkward name:
+
+```bash
+python .claude/scripts/update_world.py [name] card_set_field [card-id] speaker "Cardinal Thorn"
+```
+
+Only add this field when the auto-derived name is incorrect — most slugs need no override.
+
 ### New location visited
 
 ```bash

@@ -206,6 +206,15 @@ def main():
             print(f"Tag {tag} not found on {card_id}")
         return
 
+    if op == "card_set_field":
+        card_id, field, value = args[0], args[1], args[2]
+        card = find_card(world, card_id)
+        if not card: print(f"Card not found: {card_id}"); sys.exit(1)
+        card[field] = value
+        save(world, path)
+        print(f"Set {field} for {card_id}: {value}")
+        return
+
     if op == "card_set_portrait":
         card_id, img = args[0], args[1]
         card = find_card(world, card_id)
