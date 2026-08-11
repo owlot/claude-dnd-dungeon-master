@@ -123,3 +123,70 @@ def run(campaign, character, count, voices_dir):
         out_path = os.path.join(voices_dir, f"{character}_audition_{i+1}.wav")
         sf.write(out_path, audio, sr)
         print(f"  [{i+1}/{count}] {out_path} ({len(audio)/sr:.1f}s)")
+
+
+def run_reaudition(campaign, character, count, voices_dir, pt_path):
+    """Re-audition using an already-locked .pt voice clone prompt."""
+    for intro_path in [
+        os.path.join("campaigns", campaign, "info", "npcs", f"{character}.md"),
+        os.path.join("campaigns", campaign, "party", "characters", f"{character}.md"),
+        os.path.join("campaigns", campaign, "info", "introductions", f"{character}.md"),
+    ]:
+        if os.path.exists(intro_path):
+            break
+    else:
+        print(f"Error: character file not found for {character}")
+        raise SystemExit(1)
+
+    name, instruct, text = parse_introduction(intro_path)
+
+    import json as _json
+    subs_path = os.path.join("campaigns", campaign, "party", "phonetic-substitutions.json")
+    if os.path.exists(subs_path):
+        subs = {rf"\b{re.escape(k)}\b": v for k, v in _json.load(open(subs_path, encoding="utf-8")).items()}
+        for pattern, replacement in subs.items():
+            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+
+    print(f"Character:   {name}")
+    print(f"Text:        {text[:80]}...")
+    print()
+
+    CLONE_GEN_KWARGS = dict(
+        max_new_tokens=2000,
+        do_sample=True,
+        top_k=50,
+        top_p=0.95,
+        temperature=0.9,
+        repetition_penalty=1.3,
+        subtalker_dosample=True,
+        subtalker_top_k=50,
+        subtalker_top_p=0.95,
+        subtalker_temperature=0.9,
+    )
+
+    print(f"Loading locked voice prompt: {pt_path}")
+    prompt = torch.load(pt_path, weights_only=False)
+
+    from qwen_tts import Qwen3TTSModel
+    print("Loading Qwen3 Base (clone) model...")
+    model = Qwen3TTSModel.from_pretrained(
+        "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+        device_map="cuda",
+        dtype=torch.float16,
+    )
+
+    import numpy as np
+    silence = np.zeros(int(24000 * 1.0))
+
+    print(f"Generating {count} re-audition samples...\n")
+    for i in range(count):
+        wavs, sr = model.generate_voice_clone(
+            text=text,
+            language="English",
+            voice_clone_prompt=prompt,
+            **CLONE_GEN_KWARGS,
+        )
+        audio = np.concatenate([silence, wavs[0]])
+        out_path = os.path.join(voices_dir, f"{character}_audition_{i+1}.wav")
+        sf.write(out_path, audio, sr)
+        print(f"  [{i+1}/{count}] {out_path} ({len(audio)/sr:.1f}s)")

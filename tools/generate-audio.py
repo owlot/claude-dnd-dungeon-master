@@ -215,6 +215,7 @@ def main():
     parser.add_argument("--anchor", help="Memoir anchor filter: [char/]anchor-slug")
     parser.add_argument("--backend", help="Override backend: qwen3 or moss")
     parser.add_argument("--offline", action="store_true", help="Skip HuggingFace network checks, use local cache only")
+    parser.add_argument("--narrator", help="Override narrator voice slug (e.g. lotte-narrator)")
     args = parser.parse_args()
 
     campaign = args.campaign
@@ -226,10 +227,13 @@ def main():
 
     filename = os.path.basename(story_path)
     session_m = re.match(r"(session-\d+)", filename)
-    if not session_m:
-        print(f"Error: could not derive session from filename: {filename}")
-        sys.exit(1)
-    session = session_m.group(1)
+    if session_m:
+        session = session_m.group(1)
+    else:
+        # Accept arbitrary story files — derive a slug from the filename stem
+        session = re.sub(r"[-_]story\.md$", "", filename)
+        session = re.sub(r"\.md$", "", session)
+        print(f"Non-session file — using slug '{session}' for output directory")
 
     backend = args.backend or get_backend(campaign)
     print(f"Backend: {backend}")
@@ -257,6 +261,9 @@ def main():
         return
 
     voice_overrides = load_voice_overrides(campaign)
+    if args.narrator:
+        voice_overrides["narrator"] = args.narrator
+        print(f"Narrator override: {args.narrator}")
 
     # Load backend
     backend_dir = os.path.join(os.path.dirname(__file__), "backends", backend)

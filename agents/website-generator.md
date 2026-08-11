@@ -301,15 +301,15 @@ Each run produces `website/[name]/assets/memoirs/session-[N]-[char]-private.json
 
 ---
 
-## Step 5 — Update index.html and sessions.json
+## Step 5 — Update sessions.json
 
-Read the existing `index.html` to understand the entry format used by previous sessions, then add a matching `<li>` entry for this session.
-
-The `session-subtitle` span must be **a brief summary of what happened in the session** — 8–12 words capturing the key events or turning points. Look at how other sessions are subtitled in the existing `index.html` for the right tone. **Never use the in-game date or real-world date as the subtitle.**
-
-Example of a good subtitle: `"The brawl at the Yawning Portal, Floon rescued, and the deed to Trollskull Manor"`
+`index.html` renders its session list dynamically from `website/[name]/sessions.json` via `js/index.js` — it has no hardcoded `<li>` entries for sessions and must not be given any. Only `sessions.json` needs updating.
 
 Add a new entry to `website/[name]/sessions.json`. Read the existing file, append the new session object, and write it back.
+
+The `subtitle` field must be **a brief summary of what happened in the session** — 8–12 words capturing the key events or turning points. Look at how other sessions are subtitled in the existing file for the right tone. **Never use the in-game date or real-world date as the subtitle.**
+
+Example of a good subtitle: `"The brawl at the Yawning Portal, Floon rescued, and the deed to Trollskull Manor"`
 
 The file uses this structure:
 ```json
@@ -323,7 +323,7 @@ The file uses this structure:
 
 Set `audioEnabled` to `true` only if voice files have been generated for the campaign (i.e. `website/[name]/audio/introductions/narrator.pt` exists). Otherwise leave it `false` — this prevents loudspeaker buttons from appearing on pages where no audio has been generated.
 
-The shared `nav.js` reads this file at runtime — no changes to `nav.js` itself are needed.
+Both `nav.js` (dropdown/footer nav on every page) and `js/index.js` (the homepage session list) read this file at runtime — no changes to either script are needed.
 
 ---
 

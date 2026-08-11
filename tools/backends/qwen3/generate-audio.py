@@ -100,6 +100,11 @@ def resolve_voice(voices, speaker_slug, overrides=None):
         for key in voices:
             if key.startswith(speaker_slug + "-"):
                 return key
+    # Narrator fallback — check overrides before defaulting
+    if overrides and "narrator" in overrides:
+        mapped = overrides["narrator"]
+        if mapped in voices:
+            return mapped
     return "narrator"
 
 

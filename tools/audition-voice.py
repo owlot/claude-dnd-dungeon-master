@@ -10,6 +10,10 @@ Usage:
     python tools/audition-voice.py waterdeep-dragon-heist yagra-stonefist
     python tools/audition-voice.py waterdeep-dragon-heist yagra-stonefist --count 6
 
+    # Re-audition using the already-locked voice (.pt) — use when the intro text changed
+    # after a voice was already chosen. Produces samples in the locked voice with new text.
+    python tools/audition-voice.py waterdeep-dragon-heist yagra-stonefist --reaudition
+
 After listening, lock in your choice:
     python tools/lock-voice.py <campaign> <character> --wav <chosen_audition.wav>
 """
@@ -33,6 +37,8 @@ def main():
     parser.add_argument("character", help="Character slug")
     parser.add_argument("--count", type=int, default=4, help="Number of samples (default: 4)")
     parser.add_argument("--backend", help="Override backend: qwen3 or moss")
+    parser.add_argument("--reaudition", action="store_true",
+                        help="Re-audition using the already-locked .pt voice — use when intro text changed after voice was chosen")
     args = parser.parse_args()
 
     backend = args.backend or get_backend(args.campaign)
@@ -45,7 +51,16 @@ def main():
     spec = importlib.util.spec_from_file_location("backend_audition", os.path.join(backend_dir, "audition-voice.py"))
     be = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(be)
-    be.run(args.campaign, args.character, args.count, voices_dir)
+
+    if args.reaudition:
+        pt_path = os.path.join(voices_dir, f"{args.character}.pt")
+        if not os.path.exists(pt_path):
+            print(f"Error: no locked voice found at {pt_path} — run without --reaudition first")
+            sys.exit(1)
+        print(f"Re-auditioning with locked voice: {pt_path}")
+        be.run_reaudition(args.campaign, args.character, args.count, voices_dir, pt_path)
+    else:
+        be.run(args.campaign, args.character, args.count, voices_dir)
 
     print(f"\n── Playback (5s each) ──────────────────────────")
     import glob, subprocess, time

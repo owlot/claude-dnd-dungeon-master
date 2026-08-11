@@ -75,6 +75,12 @@ python3 .claude/tools/audition-voice.py [CAMPAIGN] [CHARACTER]
 
 This generates 4 WAV files at `website/[CAMPAIGN]/audio/introductions/[CHARACTER]_audition_1.wav` through `_4.wav`.
 
+**If the intro text changed after a voice was already locked** (e.g. the DM updated the character's speech pattern), use `--reaudition` instead. This synthesises the new text in the already-chosen voice rather than generating random new voices:
+
+```bash
+python3 .claude/tools/audition-voice.py [CAMPAIGN] [CHARACTER] --reaudition
+```
+
 ---
 
 ## Step 5 — Lock in the chosen voice
@@ -87,7 +93,7 @@ Ask: *"Which number do you want to lock in? Or type 'again' to generate 4 more s
 python3 .claude/tools/lock-voice.py [CAMPAIGN] [CHARACTER] --wav website/[CAMPAIGN]/audio/introductions/[CHARACTER]_audition_[N].wav
 ```
 
-- If the DM says 'again': go back to Step 4 and regenerate.
+- If the DM says 'again': go back to Step 4 and regenerate (with the same flag if `--reaudition` was used).
 
 ---
 
