@@ -17,9 +17,10 @@ Usage:
 import sys
 import json
 import re
+import difflib
 from pathlib import Path
 
-BASE = Path(__file__).parent.parent.parent / "dnd-5e-srd"
+BASE = Path(__file__).parent.parent / "dnd-5e-srd"
 JSON_DIR = BASE / "json"
 
 
@@ -54,40 +55,67 @@ def format_content(content, name):
 
 def closest_matches(name, candidates, n=5):
     name_l = name.lower()
+    lower_to_original = {}
+    for c in candidates:
+        lower_to_original.setdefault(c.lower(), c)
+
+    # Substring hits (query appears inside the candidate name) rank first.
     scored = [(c, c.lower().find(name_l)) for c in candidates]
     hits = [(c, s) for c, s in scored if s >= 0]
     hits.sort(key=lambda x: (x[1], len(x[0])))
-    if hits:
-        return [c for c, _ in hits[:n]]
-    # fallback: prefix match
+    ordered = [c for c, _ in hits]
+
+    # Fuzzy matches catch typos/mishearings (e.g. "Ogre Jelly" -> "Ochre Jelly")
+    # that don't share a substring or prefix with the correct name.
+    fuzzy = difflib.get_close_matches(name_l, list(lower_to_original.keys()), n=n, cutoff=0.6)
+    for f in fuzzy:
+        original = lower_to_original[f]
+        if original not in ordered:
+            ordered.append(original)
+
+    if ordered:
+        return ordered[:n]
+    # last resort: prefix match
     return [c for c in candidates if c.lower().startswith(name_l[:3])][:n]
+
+
+def flatten_named_entries(group):
+    """Yield (name, entry) pairs from a section, descending into category
+    subgroups that nest real entries one level deeper than the top-level
+    grouping (e.g. monsters -> "Oozes" -> "Ochre Jelly", magic items ->
+    "Artifacts" -> "Orb of Dragonkind"). Entries that are dicts without a
+    "content" key and without further nested dicts are auxiliary tables
+    (e.g. a weather/level-progression table), not real lookup targets —
+    skipped rather than yielded so callers never index a missing key."""
+    for entry_name, entry in group.items():
+        if entry_name == "content":
+            continue
+        if isinstance(entry, dict) and "content" not in entry:
+            if any(isinstance(v, dict) for v in entry.values()):
+                yield from flatten_named_entries(entry)
+            # else: auxiliary table (e.g. {"table": {...}}) — not a real entry
+        else:
+            yield entry_name, entry
 
 
 def lookup_monster(name):
     data = load_json("11 monsters.json")
     monsters = data["Monsters"]
     name_l = name.lower()
-    all_names = []
+    all_entries = []
     for group_key, group in monsters.items():
         if not isinstance(group, dict):
             continue
-        for entry_name, entry in group.items():
-            if entry_name == "content":
-                continue
-            all_names.append(entry_name)
-            if entry_name.lower() == name_l:
-                return format_content(entry["content"], entry_name)
+        all_entries.extend(flatten_named_entries(group))
+
+    for entry_name, entry in all_entries:
+        if entry_name.lower() == name_l:
+            return format_content(entry["content"], entry_name)
     # Partial match
-    for n in all_names:
-        if name_l in n.lower():
-            group_key_found = None
-            for gk, gv in monsters.items():
-                if isinstance(gv, dict) and n in gv:
-                    group_key_found = gk
-                    break
-            if group_key_found:
-                entry = monsters[group_key_found][n]
-                return format_content(entry["content"], n)
+    for entry_name, entry in all_entries:
+        if name_l in entry_name.lower():
+            return format_content(entry["content"], entry_name)
+    all_names = [n for n, _ in all_entries]
     suggestions = closest_matches(name, all_names)
     return f"Not found: {name}\nDid you mean: {', '.join(suggestions) if suggestions else 'no suggestions'}"
 
@@ -96,14 +124,18 @@ def lookup_spell(name):
     data = load_json("08 spellcasting.json")
     spells = data["Spellcasting"]["Spell Descriptions"]
     name_l = name.lower()
-    for spell_name, entry in spells.items():
+    # A few non-spell reference tables (Precipitation, Temperature, Wind)
+    # live in this section without a "content" key — skip them so an
+    # accidental match doesn't crash on a missing key.
+    real_spells = {k: v for k, v in spells.items() if isinstance(v, dict) and "content" in v}
+    for spell_name, entry in real_spells.items():
         if spell_name.lower() == name_l:
             return format_content(entry["content"], spell_name)
     # Partial
-    for spell_name, entry in spells.items():
+    for spell_name, entry in real_spells.items():
         if name_l in spell_name.lower():
             return format_content(entry["content"], spell_name)
-    suggestions = closest_matches(name, list(spells.keys()))
+    suggestions = closest_matches(name, list(real_spells.keys()))
     return f"Not found: {name}\nDid you mean: {', '.join(suggestions) if suggestions else 'no suggestions'}"
 
 
@@ -158,23 +190,19 @@ def lookup_item(name):
     data = load_json("10 magic items.json")
     items = data["Magic Items"]
     name_l = name.lower()
+    all_entries = list(flatten_named_entries(items))
+
     # Exact match (case-insensitive)
-    for item_name, entry in items.items():
-        if item_name == "content":
-            continue
+    for item_name, entry in all_entries:
         if item_name.lower() == name_l:
-            if isinstance(entry, dict) and "content" in entry:
-                return format_content(entry["content"], item_name)
+            return format_content(entry["content"], item_name)
     # Partial match: all query words appear in item name
     query_words = set(name_l.split())
-    for item_name, entry in items.items():
-        if item_name == "content":
-            continue
+    for item_name, entry in all_entries:
         item_l = item_name.lower()
         if name_l in item_l or all(w in item_l for w in query_words):
-            if isinstance(entry, dict) and "content" in entry:
-                return format_content(entry["content"], item_name)
-    all_names = [k for k in items if k != "content"]
+            return format_content(entry["content"], item_name)
+    all_names = [n for n, _ in all_entries]
     suggestions = closest_matches(name, all_names)
     return f"Not found: {name}\nDid you mean: {', '.join(suggestions) if suggestions else 'no suggestions'}"
 
