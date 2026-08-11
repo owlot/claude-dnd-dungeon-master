@@ -214,11 +214,13 @@ The `website-generator` agent is the only valid writer of `website/*/assets/memo
 
 ## Rules Reference
 
-For any rules lookup — monster stat blocks, spells, conditions, magic items, NPC stat blocks, creatures, or class features — delegate to the `srd-lookup` agent. It searches the relevant SRD file and returns only the matching entry, keeping the main context clean.
+**Check prepared campaign files first.** If a monster or NPC is part of an already-indexed encounter (`campaigns/[name]/info/encounters/[slug].md`), that file's stat block was pulled from the SRD at index time and cross-checked by `encounter-verifier` before combat — read it directly, no lookup needed. This is the entire point of pre-indexing: prepared content shouldn't cost a round-trip at the table.
 
-**Always look up before stating mechanics.** Whenever a spell is cast, an item is used, or an ability is triggered — in combat or out — verify the entry before giving any dice, effects, or rules text. Never rely on training memory for healing dice, charges, damage, or save DCs.
+For anything not already covered by a prepared campaign file — spells, magic items, conditions, NPC stat blocks not tied to an indexed encounter, creatures, class features, or a monster ability referenced by name but not spelled out in the encounter file (or flagged `[DM: verify]`) — delegate to the `srd-lookup` agent. It searches the relevant SRD file and returns only the matching entry, keeping the main context clean.
 
-**Only look up once per session.** If the entry has already been retrieved by `srd-lookup` earlier in this conversation, use that result — do not call the agent again. Only delegate if the entry is not already in context.
+**Always look up before stating mechanics not already in a prepared file.** Whenever a spell is cast, an item is used, or an ability is triggered — in combat or out — verify the entry (from the encounter file or `srd-lookup`) before giving any dice, effects, or rules text. Never rely on training memory for healing dice, charges, damage, or save DCs.
+
+**Only look up once per session.** If the entry has already been retrieved by `srd-lookup` earlier in this conversation, use that result — do not call the agent again. Only delegate if the entry is not already in context or in a prepared campaign file.
 
 See `.claude/agents/srd-lookup.md` for lookup types and SRD file locations.
 

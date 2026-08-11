@@ -91,13 +91,13 @@ For each turn in initiative order:
 1. Display the Combat Status Block
 2. Prompt the DM: *"It's [Name]'s turn — ask them what they do."*
 3. Wait for the DM to report what happened
-4. **If the action involves a spell, named special ability, or item**, delegate to the `srd-lookup` agent before resolving:
-   - Spell → `spell: [name]`
-   - Monster ability → `monster: [name]` (to confirm the ability's exact wording and any saving throw DC)
-   - Condition being applied → `condition: [name]`
-   - Magic item or consumable (potion, scroll, etc.) → `item: [name]`
-   When delegating to `srd-lookup`, always include `Project root: [the project root passed to this agent]` as the first line of the prompt
-   Always look up before stating dice or effects — do not rely on memory for healing dice, charges, damage, or save DCs. If the entry was already retrieved earlier in this conversation, use that result instead of calling the agent again.
+4. **If the action involves a spell, named special ability, or item**, resolve it from already-prepared text first — only delegate to `srd-lookup` when that text isn't already on hand:
+   - **Monster/enemy ability, trait, reaction, or legendary action** → this encounter's file (loaded in Step 2) already has the full, SRD-verified text — read it from there directly, no agent call needed. Only delegate to `srd-lookup` (`monster: [name]`) if the ability is referenced by name but not spelled out in the encounter file, or is flagged `[DM: verify]`.
+   - **PC spell** → not enemy prep, never in the encounter file — delegate to `srd-lookup` (`spell: [name]`)
+   - **Condition being applied** → delegate to `srd-lookup` (`condition: [name]`) unless it was already looked up this session
+   - **PC magic item or consumable** (potion, scroll, etc.) → not enemy prep — delegate to `srd-lookup` (`item: [name]`)
+   When delegating to `srd-lookup`, always include `Project root: [the project root passed to this agent]` as the first line of the prompt.
+   Always resolve from verified text — either the encounter file or an `srd-lookup` result — never from memory for healing dice, charges, damage, or save DCs. If an entry was already retrieved earlier in this conversation, use that result instead of calling the agent again.
 5. Resolve the action using the looked-up entry
 6. Update HP and conditions
 7. Re-render the Combat Status Block
