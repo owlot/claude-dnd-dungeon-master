@@ -178,6 +178,15 @@ Before generating, read the ai-image-creator skill for the authoritative generat
 [PROJECT_ROOT]/.claude/skills/ai-image-creator/SKILL.md
 ```
 
+**Cloud vs. local (forge) — ask once, up front, before writing any prompts:**
+
+Unless the invocation already specifies a provider, ask the DM: *"Generate these scenes via the cloud (default, supports reference images for face matching) or locally via Forge (no cost, but no reference-image support — character faces won't be matched from portraits)?"*
+
+- **Cloud (default)** — proceed as below with `-r` reference images for face matching.
+- **Local (`--provider forge`)** — drop all `-r` flags from the command (forge is txt2img-only, no reference images). Warn the DM once, before generating: character/NPC faces will not match their reference portraits in forge mode — descriptions alone drive appearance. If a scene leans heavily on a specific NPC's face being recognizable, recommend cloud for that scene instead. Forge also ignores `-m`/`-s` — only `-a` (aspect ratio) applies.
+
+If the Forge webui isn't already running, tell the DM to start it (`cd ~/Git/sd-webui-forge-neo && ./webui-user.sh`, ~15-20s to load) — don't start it yourself unless asked.
+
 **IMPORTANT — always use project-relative paths for Write and Bash:**
 
 The Write tool and permission rules are evaluated against project-relative paths. Never pass absolute paths (starting with `/home/...`) to the Write tool — always use paths relative to the project root (e.g. `website/[CAMPAIGN]/images/...`). For Bash commands that need an absolute path (e.g. `mkdir -p`, `uv run python`), use `[PROJECT_ROOT]/...` as usual, but the Write tool must always receive a relative path.
@@ -212,11 +221,21 @@ Generate all approved scenes in one uninterrupted pass — do not pause for appr
 ```bash
 set -a && source [PROJECT_ROOT]/.env && set +a
 
-uv run python [PROJECT_ROOT]/.claude/ai-image-creator/scripts/generate-image.py \
+uv run python [PROJECT_ROOT]/.claude/skills/ai-image-creator/scripts/generate-image.py \
   --prompt-file "[prompt-file-path]" \
   -a 16:9 \
   -r "[ref-image-1]" \
   -r "[ref-image-2]" \
+  -o "[output path]"
+```
+
+Or, if the DM chose local (forge) generation — no `.env`/API key needed, and no `-r` flags:
+
+```bash
+uv run python [PROJECT_ROOT]/.claude/skills/ai-image-creator/scripts/generate-image.py \
+  --prompt-file "[prompt-file-path]" \
+  --provider forge \
+  -a 16:9 \
   -o "[output path]"
 ```
 

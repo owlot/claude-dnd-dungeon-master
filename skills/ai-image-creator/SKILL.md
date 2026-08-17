@@ -1,17 +1,30 @@
 ---
 name: ai-image-creator
-description: Generate PNG images using AI (multiple models via OpenRouter including Gemini, FLUX.2, Riverflow, SeedDream, GPT-5 Image, GPT-5.4 Image 2, proxied through Cloudflare AI Gateway BYOK). Also analyze/describe existing images using multimodal AI vision. Use when user asks to "generate an image", "create a PNG", "make an icon", "make it transparent", "describe this image", "analyze this image", "what's in this image", "explain this image", or needs AI-generated visual assets for the project. Supports model selection via keywords (gemini, riverflow, flux2, seedream, gpt5, gpt5.4), configurable aspect ratios/resolutions, transparent backgrounds (-t), reference image editing (-r), image analysis (--analyze), and per-project cost tracking (--costs).
+description: Generate PNG images using AI (multiple models via OpenRouter including Gemini, FLUX.2, Riverflow, SeedDream, GPT-5 Image, GPT-5.4 Image 2, proxied through Cloudflare AI Gateway BYOK — or fully locally via a running sd-webui-forge-neo instance, no API key, no per-image cost). Also analyze/describe existing images using multimodal AI vision (cloud providers only). Use when user asks to "generate an image", "create a PNG", "make an icon", "make it transparent", "generate locally", "use forge", "describe this image", "analyze this image", "what's in this image", "explain this image", or needs AI-generated visual assets for the project. Supports model selection via keywords (gemini, riverflow, flux2, seedream, gpt5, gpt5.4) or --provider forge for local generation, configurable aspect ratios/resolutions, transparent backgrounds (-t), reference image editing (-r), image analysis (--analyze), and per-project cost tracking (--costs).
 allowed-tools: Bash, Read, Write
-compatibility: Requires uv (Python runner) and network access. Environment variables for CF AI Gateway or direct API keys must be configured in shell profile (~/.zshrc on macOS, ~/.bashrc on Linux, or System Environment Variables on Windows).
+compatibility: Requires uv (Python runner). Cloud providers (openrouter/google) need network access and API keys configured in shell profile (~/.zshrc on macOS, ~/.bashrc on Linux, or System Environment Variables on Windows). The forge provider needs a running local sd-webui-forge-neo instance instead — no network or API key required.
 metadata:
-  tags: image-generation, ai, openrouter, cloudflare, gemini, flux2, riverflow, seedream, gpt5, gpt54
+  tags: image-generation, ai, openrouter, cloudflare, gemini, flux2, riverflow, seedream, gpt5, gpt54, forge, local, stable-diffusion
 ---
 
 # AI Image Creator
 
-Generate PNG images via multiple AI models, routed through Cloudflare AI Gateway BYOK or directly via OpenRouter/Google AI Studio.
+Generate PNG images via multiple AI models — routed through Cloudflare AI Gateway BYOK or directly via OpenRouter/Google AI Studio, **or** generated fully locally via a running `sd-webui-forge-neo` instance with `--provider forge`.
 
-## Model Selection
+## Cloud vs. Local (Forge) — Decision Rule
+
+Two independent choices: which **provider** (where generation happens) and, for cloud, which **model** (which cloud model to use).
+
+| Choice | When to use |
+|--------|-------------|
+| **Cloud** (`--provider openrouter` / `google`, default) | User wants a specific named model (Gemini, FLUX.2, SeedDream, GPT-5 Image, etc.), needs reference-image editing (`-r`) or image analysis (`--analyze`), or no local Forge instance is running |
+| **Local** (`--provider forge`) | User says "generate locally", "use forge", "no cost", "don't use the API", or a local Forge webui is already running and the user hasn't specified a cloud model — ask if unsure |
+
+**Forge limitations to flag before using it:** no `--analyze` (no vision model), no `-r` reference images (txt2img only), no `--image-size` (use `-a` aspect ratio instead — mapped to fixed pixel sizes). If the user needs any of those, use a cloud provider instead.
+
+**If the Forge webui isn't running**, tell the user to start it: `cd ~/Git/sd-webui-forge-neo && ./webui-user.sh` (takes ~15-20s to load) — don't attempt to start it yourself unless asked.
+
+## Model Selection (cloud providers only)
 
 When the user mentions a model keyword in their image request, use the corresponding `--model` flag:
 
@@ -23,6 +36,8 @@ When the user mentions a model keyword in their image request, use the correspon
 | `seedream` | [ByteDance SeedDream 4.5](https://openrouter.ai/bytedance-seed/seedream-4.5) | "seedream", "use seedream" |
 | `gpt5` | [OpenAI GPT-5 Image](https://openrouter.ai/openai/gpt-5-image) | "gpt5", "gpt5 image", "use gpt5" |
 | `gpt5.4` | [OpenAI GPT-5.4 Image 2](https://openrouter.ai/openai/gpt-5.4-image-2) | "gpt5.4", "gpt-5.4 image", "use gpt5.4" |
+
+For local generation, pass `--provider forge`. Use `-m krea2` (default) or `-m flux` to pick which local checkpoint to generate with — see the Local Generation section below for details.
 
 ## Instructions
 
@@ -91,7 +106,7 @@ Professional prompt patterns are available in 3 reference files. These are **not
 ```bash
 uv run python ${CLAUDE_SKILL_DIR}/scripts/generate-image.py \
   -o "OUTPUT_PATH" \
-  [--provider openrouter|google] \
+  [--provider openrouter|google|forge] \
   [-a "16:9"] \
   [-s "2K"] \
   [-m "model-id"] \
@@ -104,6 +119,15 @@ With a specific model:
 uv run python ${CLAUDE_SKILL_DIR}/scripts/generate-image.py \
   -o "OUTPUT_PATH" \
   -m riverflow \
+  -p "A serene mountain lake at sunset"
+```
+
+Locally, no API key or cost (requires the Forge webui already running with `--api`):
+```bash
+uv run python ${CLAUDE_SKILL_DIR}/scripts/generate-image.py \
+  -o "OUTPUT_PATH" \
+  --provider forge \
+  -a "16:9" \
   -p "A serene mountain lake at sunset"
 ```
 
@@ -155,12 +179,12 @@ If the user needs resizing, format conversion, or other manipulation, first dete
 | `--output` | `-o` | Yes | -- | Output file path (parent dirs auto-created) |
 | `--prompt` | `-p` | No | -- | Inline prompt text |
 | `--prompt-file` | -- | No | `../tmp/prompt.txt` | Path to prompt file |
-| `--provider` | -- | No | `openrouter` | `openrouter` or `google` |
-| `--aspect-ratio` | `-a` | No | model default | OpenRouter only: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`, `4:3`, `3:4`, `4:5`, `5:4`, `21:9` |
-| `--image-size` | `-s` | No | model default | OpenRouter only: `0.5K`, `1K`, `2K`, `4K` |
-| `--model` | `-m` | No | `gemini` | Model keyword (`gemini`, `riverflow`, `flux2`, `seedream`, `gpt5`) or full model ID |
-| `--ref` | `-r` | No | -- | Reference image file (repeatable). For editing/style transfer. Multimodal models only (gemini, gpt5) |
-| `--analyze` | -- | No | -- | Analyze/describe a reference image (text-only output, no image generated). Requires `-r`. Multimodal models only |
+| `--provider` | -- | No | `openrouter` | `openrouter`, `google`, or `forge` (local, no API key/cost) |
+| `--aspect-ratio` | `-a` | No | model default | OpenRouter: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`, `4:3`, `3:4`, `4:5`, `5:4`, `21:9`. Forge: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`, `4:3`, `3:4` (mapped to fixed pixel sizes) |
+| `--image-size` | `-s` | No | model default | OpenRouter only: `0.5K`, `1K`, `2K`, `4K`. Not supported with `--provider forge` |
+| `--model` | `-m` | No | `gemini` (cloud) / `krea2` (forge) | Cloud: keyword (`gemini`, `riverflow`, `flux2`, `seedream`, `gpt5`) or full model ID. Forge: `krea2` or `flux` preset name |
+| `--ref` | `-r` | No | -- | Reference image file (repeatable). For editing/style transfer. Multimodal models only (gemini, gpt5). Not supported with `--provider forge` |
+| `--analyze` | -- | No | -- | Analyze/describe a reference image (text-only output, no image generated). Requires `-r`. Multimodal models only. Not supported with `--provider forge` |
 | `--transparent` | `-t` | No | -- | Generate with transparent background. Requires ffmpeg + imagemagick |
 | `--costs` | -- | No | -- | Display generation/cost history for this project and exit |
 | `--list-models` | -- | No | -- | List available model keywords and exit |
@@ -178,6 +202,52 @@ If the user needs resizing, format conversion, or other manipulation, first dete
 Gateway mode activates when all 3 `CF_*` vars are set. Falls back to direct mode if gateway fails.
 
 For first-time setup, see `references/setup-guide.md`.
+
+## Local Generation (`--provider forge`)
+
+Generates images on a running local `sd-webui-forge-neo` instance instead of any cloud API — no API key, no network dependency, no per-image cost. Uses the Forge/A1111-compatible `/sdapi/v1/txt2img` REST endpoint directly.
+
+**Prerequisite:** the webui must already be running with `--api` (set in `webui-user.sh`'s `COMMANDLINE_ARGS`). If it's not running:
+
+```bash
+cd ~/Git/sd-webui-forge-neo && ./webui-user.sh
+```
+
+It takes ~15-20s to load. Check readiness with `grep -q "Running on local URL" <logfile>` before generating, or just try a generation and read the error if it fails.
+
+```bash
+uv run python ${CLAUDE_SKILL_DIR}/scripts/generate-image.py \
+  -o "OUTPUT_PATH" \
+  --provider forge \
+  -a "16:9" \
+  -p "A cinematic fantasy tavern interior, warm candlelight"
+```
+
+**Two checkpoint presets, selected with `-m`/`--model` (default: `krea2`):**
+
+| Preset | Checkpoint | Notes |
+|--------|-----------|-------|
+| `krea2` (default) | Krea-2-Raw | Faster, more painterly-leaning results |
+| `flux` | FLUX.2-klein-9B | Sharper, more photorealistic — slightly slower |
+
+```bash
+uv run python ${CLAUDE_SKILL_DIR}/scripts/generate-image.py \
+  -o "OUTPUT_PATH" --provider forge -m flux -a "3:4" -p "..."
+```
+
+**Config (env vars, all optional — sensible defaults already point at this project's Forge setup):**
+
+| Variable | Default | Description |
+|----------|---------|--------------|
+| `AI_IMG_CREATOR_FORGE_URL` | `http://127.0.0.1:7860` | Base URL of the running webui |
+| `AI_IMG_CREATOR_FORGE_CHECKPOINT` | (preset's checkpoint) | Overrides the checkpoint filename for either preset |
+| `AI_IMG_CREATOR_FORGE_MODULES` | (preset's VAE + text encoder paths) | Comma-separated absolute paths to additional modules (VAE, text encoder) the checkpoint needs — overrides the whole list |
+
+**Known gotcha #1 — empty negative prompt crashes Krea-2:** never send an explicit empty `negative_prompt` to the Krea-2 checkpoint — it crashes the Qwen3VL text encoder (0-element tensor reshape error). The script already omits this field; if you ever call the raw API directly (e.g. via `curl`), leave `negative_prompt` out entirely rather than passing `""`.
+
+**Known gotcha #2 — module files must live in `models/VAE/` or `models/text_encoder/`:** Forge's additional-module list (used by both presets above) is only populated by scanning `models/VAE/` and `models/text_encoder/` (or `--vae-dir`/`--text-encoder-dir`) at webui startup. A VAE or text-encoder file sitting inside a checkpoint's own subfolder (e.g. `models/Stable-diffusion/SomeModel/vae/...`) is silently dropped from the request even if you pass its exact path — the API call still returns 200, but that module never actually loads, and you'll get a confusing "You do not have VAE/Qwen3 state dict!" error instead. If you add a new preset, copy (or symlink) its VAE/text-encoder file into `models/VAE/` or `models/text_encoder/` first. Multi-shard HuggingFace text encoders (multiple `model-0000N-of-0000N.safetensors` files) also need pre-merging into a single safetensors file before use — Forge's module loader has no logic to reassemble shards on its own.
+
+**Not supported in forge mode:** `--analyze` (no vision model), `-r` reference images (txt2img only, no image-to-image or editing), `--image-size` (use `-a` instead). Attempting any of these exits with an error before a request is made.
 
 ## Transparent Mode (`-t`)
 
