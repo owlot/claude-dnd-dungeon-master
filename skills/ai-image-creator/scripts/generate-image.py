@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AI Image Generator — Generate PNG images via multiple OpenRouter models or Google AI Studio.
+"""AI Image Generator — Generate PNG images via multiple OpenRouter models, Google AI Studio, or a local Forge instance.
 
 Supports multiple image generation models via keyword shortcuts:
     gemini     — Google Gemini 3.1 Flash (default, multimodal)
@@ -11,10 +11,15 @@ Supports multiple image generation models via keyword shortcuts:
 Routes through Cloudflare AI Gateway BYOK when configured, with automatic
 fallback to direct API calls. Uses only Python stdlib (no pip dependencies).
 
+--provider forge generates locally via a running sd-webui-forge-neo instance
+instead of any cloud API — no API key, no per-image cost. Requires the webui
+to be running with --api (see AI_IMG_CREATOR_FORGE_URL / FORGE_MODULES below).
+
 Usage:
     uv run python generate-image.py --output path.png --prompt "description"
     uv run python generate-image.py --output path.png --model riverflow --prompt "description"
     uv run python generate-image.py --output path.png --prompt-file prompt.txt
+    uv run python generate-image.py --output path.png --provider forge --prompt "description"
     uv run python generate-image.py --list-models
 """
 
@@ -84,6 +89,52 @@ ENV_CF_GATEWAY_ID = "AI_IMG_CREATOR_CF_GATEWAY_ID"
 ENV_CF_TOKEN = "AI_IMG_CREATOR_CF_TOKEN"
 ENV_OPENROUTER_KEY = "AI_IMG_CREATOR_OPENROUTER_KEY"
 ENV_GEMINI_KEY = "AI_IMG_CREATOR_GEMINI_KEY"
+
+# Local Forge (sd-webui-forge-neo) settings — no API key needed, runs on localhost.
+ENV_FORGE_URL = "AI_IMG_CREATOR_FORGE_URL"
+ENV_FORGE_CHECKPOINT = "AI_IMG_CREATOR_FORGE_CHECKPOINT"
+ENV_FORGE_MODULES = "AI_IMG_CREATOR_FORGE_MODULES"  # comma-separated absolute paths
+DEFAULT_FORGE_URL = "http://127.0.0.1:7860"
+DEFAULT_FORGE_PRESET = "krea2"
+
+# Named presets — pick with `--model <name>` under --provider forge. Env vars
+# (ENV_FORGE_CHECKPOINT / ENV_FORGE_MODULES) override the resolved preset entirely.
+#
+# IMPORTANT: any VAE or text-encoder file used here MUST live under
+# models/VAE/ or models/text_encoder/ (or a --vae-dir/--text-encoder-dir CLI
+# path) — Forge's module dropdown (main_entry.modules_change) is only
+# populated by scanning those directories at webui startup. A file inside a
+# checkpoint's own subfolder (e.g. models/Stable-diffusion/X/vae/...) is
+# silently dropped from the additional_modules list even if you pass its
+# path — the request appears to succeed but that module never loads.
+FORGE_MODEL_PRESETS = {
+    "krea2": {
+        "checkpoint": "Krea-2-Raw.safetensors",
+        "modules": [
+            "/home/lotjuh/Git/sd-webui-forge-neo/models/VAE/qwen_image_vae.safetensors",
+            "/home/lotjuh/Git/sd-webui-forge-neo/models/text_encoder/krea2-qwen3vl-4b.safetensors",
+        ],
+    },
+    "flux": {
+        "checkpoint": "FLUX.2-klein-9B/flux-2-klein-9b.safetensors",
+        "modules": [
+            "/home/lotjuh/Git/sd-webui-forge-neo/models/VAE/flux2-vae.safetensors",
+            "/home/lotjuh/Git/sd-webui-forge-neo/models/text_encoder/flux2-klein-9b-qwen3-merged.safetensors",
+        ],
+    },
+}
+DEFAULT_FORGE_CHECKPOINT = FORGE_MODEL_PRESETS[DEFAULT_FORGE_PRESET]["checkpoint"]
+DEFAULT_FORGE_MODULES = FORGE_MODEL_PRESETS[DEFAULT_FORGE_PRESET]["modules"]
+# Aspect ratios mapped to a fixed pixel size close to the Forge checkpoint's native resolution.
+FORGE_ASPECT_SIZES = {
+    "1:1": (1024, 1024),
+    "16:9": (1344, 768),
+    "9:16": (768, 1344),
+    "3:2": (1216, 832),
+    "2:3": (832, 1216),
+    "4:3": (1152, 896),
+    "3:4": (896, 1152),
+}
 
 def _load_dotenv() -> None:
     """Load .env files into os.environ (stdlib only, no pip deps).
@@ -220,9 +271,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--provider",
-        choices=["openrouter", "google"],
+        choices=["openrouter", "google", "forge"],
         default="openrouter",
-        help="API provider (default: openrouter)",
+        help="API provider (default: openrouter). 'forge' generates locally via a "
+             "running sd-webui-forge-neo instance — no API key, no per-image cost.",
     )
     parser.add_argument(
         "-a", "--aspect-ratio",
@@ -733,6 +785,104 @@ def extract_image_google(response: dict) -> tuple[bytes, str]:
     return image_bytes, text_content
 
 
+def forge_resolve_size(aspect_ratio: str | None) -> tuple[int, int]:
+    """Resolve an aspect-ratio keyword to a (width, height) pixel size for Forge.
+
+    Args:
+        aspect_ratio: Aspect ratio keyword (e.g. '16:9'), or None for square default.
+
+    Returns:
+        (width, height) tuple in pixels.
+    """
+    if aspect_ratio is None:
+        return FORGE_ASPECT_SIZES["1:1"]
+    size = FORGE_ASPECT_SIZES.get(aspect_ratio.strip())
+    if size is None:
+        log.warning(f"Unknown aspect ratio '{aspect_ratio}' for forge provider, using 1:1")
+        return FORGE_ASPECT_SIZES["1:1"]
+    return size
+
+
+def forge_txt2img(
+    prompt: str,
+    aspect_ratio: str | None,
+    base_url: str,
+    checkpoint: str,
+    modules: list[str],
+) -> tuple[bytes, str]:
+    """Generate an image via a local sd-webui-forge-neo instance's REST API.
+
+    Requires the webui to already be running with --api (see webui-user.sh).
+    Uses the Forge/A1111-compatible /sdapi/v1/txt2img endpoint directly —
+    no API key, no gateway, no per-image cost.
+
+    Args:
+        prompt: The positive prompt text.
+        aspect_ratio: Aspect ratio keyword (e.g. '16:9'), or None for 1:1.
+        base_url: Base URL of the running webui (e.g. http://127.0.0.1:7860).
+        checkpoint: Checkpoint filename to select (e.g. Krea-2-Raw.safetensors).
+        modules: Additional module paths (VAE + text encoder) required by the
+            checkpoint — passed via override_settings.forge_additional_modules.
+
+    Returns:
+        Tuple of (image_bytes, text_content). text_content is always empty —
+        Forge does not return model commentary the way multimodal APIs do.
+
+    Raises:
+        RuntimeError: If the request fails, times out, or the response has no image.
+
+    Note:
+        Do NOT send an explicit empty "negative_prompt": "" — this crashes the
+        Qwen3VL text encoder used by the Krea-2 checkpoint (reshape of a
+        0-element tensor). Omit the field entirely instead.
+    """
+    width, height = forge_resolve_size(aspect_ratio)
+    body = {
+        "prompt": prompt,
+        "steps": 20,
+        "sampler_name": "Euler",
+        "scheduler": "Simple",
+        "cfg_scale": 1.0,
+        "width": width,
+        "height": height,
+        "override_settings": {
+            "sd_model_checkpoint": checkpoint,
+            "forge_additional_modules": modules,
+        },
+    }
+    url = base_url.rstrip("/") + "/sdapi/v1/txt2img"
+    log.debug(f"Forge request URL: {url}")
+    log.debug(f"Forge request body: {json.dumps({k: v for k, v in body.items() if k != 'prompt'})}")
+
+    data = json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=data, headers={"Content-Type": "application/json"}, method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            response = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", errors="replace")[:1000]
+        raise RuntimeError(
+            f"Forge API returned HTTP {e.code}: {detail}\n"
+            f"Is the webui running with --api? Start it with: "
+            f"cd /home/lotjuh/Git/sd-webui-forge-neo && ./webui-user.sh"
+        ) from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(
+            f"Could not reach Forge webui at {base_url}: {e.reason}\n"
+            f"Start it with: cd /home/lotjuh/Git/sd-webui-forge-neo && ./webui-user.sh"
+        ) from e
+
+    images = response.get("images", [])
+    if not images:
+        raise RuntimeError(f"No images in Forge response: {json.dumps(response)[:500]}")
+
+    image_bytes = base64.b64decode(images[0])
+    log.info(f"Decoded Forge image: {len(image_bytes)} bytes")
+    return image_bytes, ""
+
+
 def extract_text_openrouter(response: dict) -> str:
     """Extract text-only content from OpenRouter response (analyze mode).
 
@@ -1086,6 +1236,9 @@ def main() -> None:
 
     # Validate --analyze mode
     if args.analyze:
+        if args.provider == "forge":
+            print("ERROR: --analyze is not supported with --provider forge (image-only, no vision model)", file=sys.stderr)
+            sys.exit(1)
         if not args.ref:
             print("ERROR: --analyze requires at least one reference image (-r)", file=sys.stderr)
             sys.exit(1)
@@ -1094,6 +1247,15 @@ def main() -> None:
             sys.exit(1)
         if args.aspect_ratio or args.image_size:
             print("ERROR: --analyze is incompatible with --aspect-ratio / --image-size", file=sys.stderr)
+            sys.exit(1)
+
+    # Validate --provider forge constraints
+    if args.provider == "forge":
+        if args.ref:
+            print("ERROR: Reference images (-r) are not supported with --provider forge", file=sys.stderr)
+            sys.exit(1)
+        if args.image_size:
+            print("ERROR: --image-size is not supported with --provider forge (use -a / --aspect-ratio)", file=sys.stderr)
             sys.exit(1)
 
     # Validate --output is provided (required unless --list-models, --costs, or --analyze)
@@ -1109,6 +1271,75 @@ def main() -> None:
             "The generated file will be PNG format regardless of extension.",
             file=sys.stderr,
         )
+
+    # --- Forge (local) provider: separate, simpler path — no gateway/model registry ---
+    if args.provider == "forge":
+        prompt = resolve_prompt(args)
+
+        preset_name = (args.model or DEFAULT_FORGE_PRESET).lower().strip()
+        preset = FORGE_MODEL_PRESETS.get(preset_name)
+        if preset is None:
+            available = ", ".join(FORGE_MODEL_PRESETS)
+            print(f"ERROR: Unknown forge model preset '{preset_name}'. Available: {available}", file=sys.stderr)
+            sys.exit(1)
+
+        base_url = os.environ.get(ENV_FORGE_URL, DEFAULT_FORGE_URL)
+        checkpoint = os.environ.get(ENV_FORGE_CHECKPOINT, preset["checkpoint"])
+        modules_env = os.environ.get(ENV_FORGE_MODULES)
+        modules = [m.strip() for m in modules_env.split(",")] if modules_env else preset["modules"]
+
+        print("Provider: forge (local)", file=sys.stderr)
+        print(f"Preset: {preset_name}", file=sys.stderr)
+        print(f"Checkpoint: {checkpoint}", file=sys.stderr)
+        print(f"URL: {base_url}", file=sys.stderr)
+        print(f"Prompt: {prompt[:100]}{'...' if len(prompt) > 100 else ''}", file=sys.stderr)
+        if args.aspect_ratio:
+            print(f"Aspect ratio: {args.aspect_ratio}", file=sys.stderr)
+        print("Generating image locally (this may take up to a minute)...", file=sys.stderr)
+
+        total_start = time.time()
+        try:
+            image_bytes, _text = forge_txt2img(prompt, args.aspect_ratio, base_url, checkpoint, modules)
+        except RuntimeError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            sys.exit(1)
+        total_elapsed = time.time() - total_start
+
+        assert output_path is not None  # guaranteed by validation above
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(image_bytes)
+
+        prompt_path = output_path.with_suffix(".prompt.md")
+        try:
+            prompt_meta = "# Prompt\n\n"
+            prompt_meta += "- **Model:** forge (local)\n"
+            prompt_meta += f"- **Checkpoint:** {checkpoint}\n"
+            prompt_meta += "- **Provider:** forge (local, no cost)\n"
+            if args.aspect_ratio:
+                prompt_meta += f"- **Aspect ratio:** {args.aspect_ratio}\n"
+            prompt_meta += f"- **Elapsed:** {total_elapsed:.1f}s\n"
+            prompt_meta += f"\n## Prompt Text\n\n{prompt}\n"
+            prompt_path.write_text(prompt_meta, encoding="utf-8")
+        except OSError as e:
+            log.warning(f"Could not save prompt file: {e}")
+
+        size_kb = len(image_bytes) / 1024
+        print(f"\nImage saved: {output_path} ({size_kb:.1f} KB)", file=sys.stderr)
+        log.info(f"Total elapsed: {total_elapsed:.1f}s")
+
+        result = {
+            "ok": True,
+            "output": str(output_path),
+            "size_bytes": len(image_bytes),
+            "provider": "forge",
+            "model": checkpoint,
+            "mode": "local",
+            "elapsed_seconds": round(total_elapsed, 1),
+            "transparent": False,
+            "ref_images": 0,
+        }
+        print(json.dumps(result))
+        sys.exit(0)
 
     # Resolve model and modalities
     model, modalities = resolve_model(args.model, args.provider)
