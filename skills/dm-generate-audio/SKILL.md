@@ -123,7 +123,17 @@ Then, check `website/[CAMPAIGN]/sessions.json`. The `audioEnabled` flag is a **t
 The DM can pass additional flags after the session number:
 
 - `--scenes-only` — skip memoir generation
-- `--memoirs-only` — skip scene generation  
-- `--scene [N]` — regenerate only scene N (e.g. after updating dialogue in the story)
+- `--memoirs-only` — skip scene generation
+- `--scene [N]` — regenerate only scene N (e.g. after updating dialogue in the story). Repeatable.
+- `--anchor [char/]anchor-slug` — regenerate only this memoir anchor. Prefix with `character-slug/` to also scope to one character; omit the prefix to match that anchor across all characters. Repeatable — pass multiple times to target several distinct `character/anchor` pairs (or bare anchors) in one run.
+- `--character [slug]` — regenerate memoirs only for this character (all their anchors). Repeatable — pass multiple times for several characters in one run. Combine with `--anchor` to narrow to one anchor within that character.
 
 Pass these through to `generate-audio.py` unchanged.
+
+**Targeted memoir regeneration** — after a story edit that only changes one or two characters' memoir text (not the scene prose), use `--memoirs-only` with `--character` instead of a full memoir rebuild:
+
+```bash
+${TTS_PYTHON:-python3} .claude/tools/generate-audio.py [CAMPAIGN] campaigns/[CAMPAIGN]/party/session-[N]/session-[N]-story.md --memoirs-only --character thokk --character twiggy
+```
+
+This regenerates only the named characters' memoir audio, leaving everyone else's files untouched — much faster than a full `--memoirs-only` run when only a couple of characters' text actually changed.

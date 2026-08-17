@@ -12,6 +12,9 @@ Usage:
     python tools/generate-audio.py waterdeep-dragon-heist ... --memoirs-only
     python tools/generate-audio.py waterdeep-dragon-heist ... --scene 2
     python tools/generate-audio.py waterdeep-dragon-heist ... --anchor corrin-greenbottle/anchor-brawl
+    python tools/generate-audio.py waterdeep-dragon-heist ... --anchor corrin-greenbottle/anchor-brawl --anchor lylnyler-fienderck/anchor-home
+    python tools/generate-audio.py waterdeep-dragon-heist ... --memoirs-only --character corrin-greenbottle
+    python tools/generate-audio.py waterdeep-dragon-heist ... --memoirs-only --character corrin-greenbottle --character lylnyler-fienderck
 
 Backend scripts:
     tools/backends/qwen3/generate-audio.py
@@ -212,7 +215,8 @@ def main():
     parser.add_argument("--scene", type=int, action="append", help="Regenerate only this scene number (1-based)")
     parser.add_argument("--memoirs-only", action="store_true", help="Generate only memoir audio")
     parser.add_argument("--scenes-only", action="store_true", help="Generate only scene audio")
-    parser.add_argument("--anchor", help="Memoir anchor filter: [char/]anchor-slug")
+    parser.add_argument("--anchor", action="append", help="Memoir anchor filter: [char/]anchor-slug (repeatable)")
+    parser.add_argument("--character", action="append", help="Regenerate memoirs only for this character slug (repeatable). Combine with --anchor to also filter to one anchor.")
     parser.add_argument("--backend", help="Override backend: qwen3 or moss")
     parser.add_argument("--offline", action="store_true", help="Skip HuggingFace network checks, use local cache only")
     parser.add_argument("--narrator", help="Override narrator voice slug (e.g. lotte-narrator)")
@@ -284,13 +288,15 @@ def main():
 
     print(f"\nOutput directory: {out_dir}")
 
-    # Parse anchor filter
-    anchor_char_filter = anchor_slug_filter = None
+    # Parse anchor filters — each is (char_filter_or_None, anchor_slug)
+    anchor_filters = []
     if args.anchor:
-        if "/" in args.anchor:
-            anchor_char_filter, anchor_slug_filter = args.anchor.split("/", 1)
-        else:
-            anchor_slug_filter = args.anchor
+        for raw in args.anchor:
+            if "/" in raw:
+                char_filter, slug_filter = raw.split("/", 1)
+            else:
+                char_filter, slug_filter = None, raw
+            anchor_filters.append((char_filter, slug_filter))
 
     # Generate scenes
     if not args.memoirs_only:
@@ -313,15 +319,24 @@ def main():
                 print(f"  Written: {audio_to_mp3(audio, out_path, be.SAMPLE_RATE)}")
 
     # Generate memoirs
-    if not args.scenes_only and not args.scene:
+    if args.memoirs_only or (not args.scenes_only and not args.scene):
         if memoirs:
             print("\n--- Generating memoir audio ---")
+        character_filter = set(args.character) if args.character else None
+        if character_filter:
+            unknown = character_filter - set(memoirs)
+            if unknown:
+                print(f"Warning: --character not found in memoirs: {', '.join(sorted(unknown))}")
         for character, anchors in memoirs.items():
-            if anchor_char_filter and character != anchor_char_filter:
+            if anchor_filters and not any(cf is None or cf == character for cf, _ in anchor_filters):
+                continue
+            if character_filter and character not in character_filter:
                 continue
             print(f"\n[Memoir] {character} ({len(anchors)} anchors)")
             for anchor, segments in anchors:
-                if anchor_slug_filter and anchor != anchor_slug_filter:
+                if anchor_filters and not any(
+                    slug == anchor and (cf is None or cf == character) for cf, slug in anchor_filters
+                ):
                     continue
                 public_segs = [(t, c) for t, c in segments if t == "p"]
                 private_segs = [(t, c) for t, c in segments if t == "private"]
