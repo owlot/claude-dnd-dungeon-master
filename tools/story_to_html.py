@@ -126,14 +126,16 @@ def parse_story(path):
             in_memoir_character = False
             continue
 
-        # Horizontal rule → scene break (but skip if followed by a chapter heading)
+        # Horizontal rule → scene break (but skip if followed by a chapter heading,
+        # or if nothing follows at all — a trailing --- at true end-of-file is not
+        # a mid-scene audio split, it's just a dangling document-end separator).
         if stripped == "---":
             # Look ahead: if next non-blank line is a ## heading, this is a chapter
             # boundary separator, not a mid-scene audio split — don't emit a break token.
             j = i
             while j < len(lines) and not lines[j].strip():
                 j += 1
-            if j < len(lines) and lines[j].strip().startswith("## "):
+            if j >= len(lines) or lines[j].strip().startswith("## "):
                 in_memoir = False
                 in_memoir_character = False
                 continue
@@ -155,15 +157,15 @@ def parse_story(path):
                 in_memoir_character = False
             continue
 
-        # While in memoir mode: skip once we've entered a character block (### slug).
-        # Prose between {#anchor} and the first ### is still scene prose — render it.
+        # While in memoir mode: skip actual memoir lines (###, [anchor:...], p:, private:).
+        # Non-memoir prose (scene narrative) after a memoir block should be processed normally.
         if in_memoir:
-            if stripped.startswith("### "):
-                in_memoir_character = True
+            if is_memoir_line(stripped):
+                # This is a memoir-related line (###, [anchor:...], p:, private:) — skip it
                 continue
-            if in_memoir_character:
-                continue
-            # else: scene prose before first ### — fall through to render normally
+            # else: non-memoir prose — exit memoir mode and process normally
+            in_memoir = False
+            in_memoir_character = False
 
         # Tagged dialogue: [slug]: "text" or [slug]: *"text"*
         dialogue_match = re.match(r"^\[([^\]]+)\]:\s*(.*)", stripped)
