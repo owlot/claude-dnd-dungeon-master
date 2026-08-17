@@ -97,6 +97,29 @@ For NPCs that are combat-relevant (have stat blocks, AC, HP, or attack entries):
 - Create `campaigns/[name]/info/npcs/[name].md` using the unified NPC format (## character, ## voice, ## image, ## background, ## stats, ## location)
 - Mark non-combat NPCs (merchants, quest-givers, etc.) as a note in `party/state.md` rather than creating a file
 
+**`## character` and `## voice` are parsed by `.claude/tools/backends/*/audition-voice.py` to generate locked TTS voices — they must follow this exact key-value schema, not free prose, or voice auditioning will fail to parse the file:**
+
+```markdown
+## character
+name: [Full Name]
+slug: [matching filename slug]
+gender: [male/female]
+age: [number, or a description like "middle-aged" if unknown]
+type: npc
+
+## voice
+pitch: [e.g. "medium-low, gravelly"]
+pace: [e.g. "unhurried, clipped when suspicious"]
+tone: [e.g. "gruff, dry, warms slowly"]
+quality: [e.g. "weathered outdoorsman's voice, rough-edged"]
+notes: [longer note on speech patterns, personality-in-voice, anything that shapes delivery]
+instruction: "[optional override — a single sentence combining the above for the TTS model, explicitly stating gender if the model tends to default male]"
+
+[3-6 sentences of first-person introduction in the character's voice — this is the reference clip text read aloud during audition]
+```
+
+Every field above (`pitch`, `pace`, `tone`, `quality`, `notes`) must appear as its own `key: value` line — do not fold them into a paragraph under a heading. The first-person introduction block goes after the key-value lines, separated by a blank line, and is the only prose in the section. Additional sections (`## image`, `## background`, `## stats`, `## location`) may still use free prose as before.
+
 ### 6. Extract locations
 
 For each named location in the source:
