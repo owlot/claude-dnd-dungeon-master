@@ -25,6 +25,13 @@ CLONE_GEN_KWARGS = dict(
     subtalker_temperature=0.9,
 )
 
+# Short utterances give the model less context to signal "this sentence is
+# finished," which makes it more likely to sample past the stop token and
+# clip the final word. Lower temperature narrows sampling toward the most
+# likely (stop-inclusive) continuation for these.
+SHORT_TEXT_THRESHOLD = 50
+CLONE_GEN_KWARGS_SHORT = dict(CLONE_GEN_KWARGS, temperature=0.6, subtalker_temperature=0.6)
+
 _PHONETIC_SUBSTITUTIONS = {}
 
 
@@ -111,13 +118,14 @@ def resolve_voice(voices, speaker_slug, overrides=None):
 def generate_segment(model, voices, speaker_slug, text, overrides=None):
     text = apply_substitutions(text)
     resolved = resolve_voice(voices, speaker_slug, overrides)
+    gen_kwargs = CLONE_GEN_KWARGS_SHORT if len(text) < SHORT_TEXT_THRESHOLD else CLONE_GEN_KWARGS
     try:
         if resolved in voices:
             wavs, sr = model.generate_voice_clone(
                 text=text,
                 language="English",
                 voice_clone_prompt=voices[resolved],
-                **CLONE_GEN_KWARGS,
+                **gen_kwargs,
             )
         else:
             print(f"  Warning: no voice for [{resolved}], skipping")
