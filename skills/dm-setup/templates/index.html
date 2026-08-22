@@ -67,5 +67,19 @@
         <ul class="campaign-list">
         </ul>
     </div>
+    <script>
+        document.querySelectorAll(".campaign-meta[data-campaign]").forEach((el) => {
+            const campaign = el.dataset.campaign;
+            fetch(`${campaign}/sessions.json`)
+                .then((res) => (res.ok ? res.json() : Promise.reject()))
+                .then((data) => {
+                    const count = (data.sessions || []).length;
+                    el.textContent = `D&D 5e · ${count} session${count === 1 ? "" : "s"}`;
+                })
+                .catch(() => {
+                    // Leave the "D&D 5e" fallback text in place if sessions.json is missing or unreachable.
+                });
+        });
+    </script>
 </body>
 </html>

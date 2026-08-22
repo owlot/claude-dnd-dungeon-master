@@ -273,10 +273,12 @@ Then update `website/index.html`: read the file, find `<ul class="campaign-list"
 <li>
     <a href="[CAMPAIGN]/index.html">
         <span class="campaign-name">[CAMPAIGN_DISPLAY]</span>
-        <span class="campaign-meta">D&amp;D 5e · 0 sessions</span>
+        <span class="campaign-meta" data-campaign="[CAMPAIGN]">D&amp;D 5e</span>
     </a>
 </li>
 ```
+
+The `data-campaign` attribute is required — a `<script>` at the bottom of `website/index.html` fetches `[CAMPAIGN]/sessions.json` for every element with this attribute and fills in the live session count (`D&D 5e · N sessions`) on page load. Do not hardcode a session count here; it would go stale the moment a new session is added, and nothing else in the framework updates it after this step.
 
 ---
 
