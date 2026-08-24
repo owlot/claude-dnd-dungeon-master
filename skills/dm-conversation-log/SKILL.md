@@ -17,7 +17,7 @@ Write the NPC conversation log directly from the active conversation context. Do
 
 5. Where anything is unclear or missing from the conversation context, write `[unclear from log]` — never invent or infer values.
 
-6. Delegate to the `conversation-log-appender` agent with an explicit prompt:
+6. Delegate to the `conversation-log-appender` agent (`subagent_type: "conversation-log-appender"`) with an explicit prompt:
 
    > "Append the NPC conversation from `campaigns/[name]/party/session-[N]/session-[N]-npc-[seq]-[slug].md` to `campaigns/[name]/party/session-[N]/session-[N]-conversation.md`. NPC file is at `campaigns/[name]/info/npcs/[slug].md`."
 

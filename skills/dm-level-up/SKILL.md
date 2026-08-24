@@ -17,7 +17,7 @@ Note the character's current level, class, and subclass.
 
 State: *"[Name] is leveling up from [N] to [N+1]."*
 
-Delegate to the `srd-lookup` agent with `class feature: [feature name]` for each feature gained at the new level. Look up features one at a time as needed — do not load the full classes file.
+Delegate to the `srd-lookup` agent (`subagent_type: "srd-lookup"`) with `class feature: [feature name]` for each feature gained at the new level. Look up features one at a time as needed — do not load the full classes file.
 
 ## Step 3 — HP
 

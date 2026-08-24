@@ -20,6 +20,35 @@ If `campaigns/[name]/party/session-[N]/` does not exist, stop and report: *"Camp
 
 ---
 
+## How to append (mechanical — this is not optional)
+
+**Never use `Write` on a log file that already exists.** `Write` replaces the whole file, so it forces you to regenerate every earlier exchange as output before the new one lands. That cost grows with every exchange: by exchange 10 of a real conversation it is 30KB+ of regenerated markdown and over three minutes of latency — all of it spent *before* the DM gets the line they need to read at the table.
+
+`Write` is correct exactly once per conversation: creating the file with its header.
+
+For every exchange after that, append with a single Bash heredoc:
+
+```bash
+cat >> "campaigns/[name]/party/session-[N]/session-[N]-npc-[seq]-[slug].md" <<'ENTRY'
+
+## Exchange [n]
+
+**Party**: [verbatim DM input]
+
+**[NPC Name]**: [full response as delivered]
+
+---
+ENTRY
+```
+
+Use a quoted heredoc delimiter (`<<'ENTRY'`) so backticks, `$`, and apostrophes in dialogue are written literally and never interpreted by the shell. If the dialogue itself could contain a line equal to the delimiter, pick a longer one.
+
+This is O(1) per exchange regardless of log length.
+
+**Do not read the log file back before appending.** You wrote it; your own context is the source of truth for what it contains. Reading it costs a round-trip and grows as the file grows.
+
+---
+
 ## Format
 
 ```markdown

@@ -7,7 +7,7 @@ End session $ARGUMENTS
 
 1. **Invoke `/dm-checkpoint-log $ARGUMENTS` first** — flush the conversation log directly from active context before spawning any agent.
 
-2. Delegate to the `session-manager` sub-agent to:
+2. Delegate to the `session-manager` sub-agent (`subagent_type: "session-manager"`) to:
    1. Derive the session summary from the conversation log just written
    2. Update `party/state.md` with current situation, open threads, next steps
    3. Update every character file in `campaigns/[campaign]/party/characters/` with current HP, resources used, gold, notes

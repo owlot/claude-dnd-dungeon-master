@@ -5,7 +5,7 @@ argument-hint: "[campaign name]"
 
 Index campaign $ARGUMENTS
 
-Delegate to the `indexer` sub-agent to read all files in `campaigns/[name]/sources/` and produce:
+Delegate to the `indexer` sub-agent (`subagent_type: "indexer"`) to read all files in `campaigns/[name]/sources/` and produce:
 - One file per encounter → `campaigns/[name]/info/encounters/[slug].md`
 - One file per PC → `campaigns/[name]/party/characters/[name].md`
 - Key NPC files → `campaigns/[name]/info/npcs/[name].md`

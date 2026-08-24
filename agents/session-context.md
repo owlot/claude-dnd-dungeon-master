@@ -35,7 +35,17 @@ Store all of this in working memory. These files are not re-read during the sess
 
 Signal readiness to the main thread:
 
-> "Session context loaded for [Campaign Name] — Session [N]. Ready for conversations."
+> "Session context loaded for [Campaign Name] — Session [N]. Ready for conversations. Reuse this same agent for the whole session — do not spawn a second one."
+
+**Never state your own agent ID.** You cannot see it: the harness assigns it and reports it to whoever spawned you, alongside your reply. Writing an ID yourself produces an invented string that reaches nobody. The main thread already has your real ID from the spawn result — it does not need you to repeat it.
+
+### Never let a second instance get spawned
+
+If you receive a startup/load request and you have already loaded context for this campaign and session, do not reload. Reply:
+
+> "session-context already live for Session [N] — reusing loaded context, no reload needed."
+
+Each duplicate instance re-reads state.md, every PC file, relationships.md and the previous session log from cold before it can do anything, and the DM waits through all of it. If the main thread reports it couldn't reach you, the fix is for it to resend to the ID from your spawn result — not to spawn a replacement.
 
 ---
 
@@ -55,7 +65,20 @@ On receiving this, proceed to Step 3.
 
 ## Step 3 — Spawn conversation sub-agent
 
-Spawn a `conversation-npc` sub-agent with the following prompt, embedding all pre-loaded context:
+**You must pass `subagent_type: "conversation-npc"` on the Agent call.** This is not optional and not implied by the prompt text. Omitting it silently spawns a `general-purpose` agent instead, which does not load the `conversation-npc` instructions at all — so it will not append to the log with `cat >>`, will not follow the scene-last output rule, and may not write a log file at all. The conversation will appear to work while doing none of the things that keep it fast and archived.
+
+Required call shape:
+
+```
+Agent(
+  subagent_type: "conversation-npc",     // REQUIRED — never omit
+  run_in_background: false,              // REQUIRED — see below
+  description: "NPC conversation: [NPC Name]",
+  prompt: <the block below>
+)
+```
+
+Spawn it with the following prompt, embedding all pre-loaded context:
 
 ```
 Project root: [absolute path]
@@ -85,6 +108,8 @@ Once the sub-agent delivers its opening line (in the same turn, per the foregrou
 
 > "[NPC Name]'s opening line, verbatim] — (agent: [sub-agent ID], message this agent directly for the rest of the conversation)"
 
+The sub-agent's ID **is** visible to you — the harness returns it in the spawn result. Copy it from there verbatim; never retype it from memory or construct one. (This is the opposite of your *own* ID, which you cannot see and must never state.)
+
 **From the second exchange onward, do not stay in the loop as a relay.** Routing every DM line through session-context first doubles the number of agent hops per exchange for zero benefit — session-context's context-preload job is already done once the sub-agent is spawned with it embedded. The main thread should address the `conversation-npc` sub-agent directly via `SendMessage` using the ID it was given with the opening line.
 
 ---
@@ -92,6 +117,18 @@ Once the sub-agent delivers its opening line (in the same turn, per the foregrou
 ## Step 4 — Idle between conversations
 
 With no relay role left, session-context sits idle after handing off each sub-agent ID, ready to preload context and spawn the next NPC's sub-agent (Steps 2–3) whenever the main thread starts a new conversation. It does not need to see the conversation itself.
+
+### If the main thread sends you a mid-conversation line anyway
+
+This happens, and it is always a mistake — measured at roughly **twice** the latency of the main thread messaging the sub-agent directly (median 42s vs 19s), because the line makes two extra agent hops for no added context.
+
+Do not relay it and do not answer as the NPC. Reply with just the correction, so the main thread can retarget:
+
+> "Not a relay — message [NPC Name]'s agent directly: `[sub-agent ID]`. Re-send your line there."
+
+Keep the sub-agent ID for each live conversation so you can always answer this.
+
+**Never shell out a message via a temp file.** Writing `cat > /tmp/npc_msg.txt` and similar adds whole turns to a path that is already too long. Messages go through `SendMessage` directly.
 
 ---
 
