@@ -31,20 +31,22 @@ This skill is not just something to run when the DM asks or at the end of a sess
 
 3. Write directly from the active conversation context — everything the DM said and Claude responded since the last checkpoint (or since session start if this is the first flush).
 
-4. **Append** to `campaigns/$ARGUMENTS/party/session-[N]/session-[N]-conversation.md` — never rewrite it. Use a quoted heredoc so dialogue containing backticks, `$`, or quotes is written literally:
+4. **Append** to `campaigns/$ARGUMENTS/party/session-[N]/session-[N]-conversation.md` — never rewrite it. Use a quoted heredoc so dialogue containing backticks, `$`, or quotes is written literally.
 
-   ```bash
-   cat >> "campaigns/$ARGUMENTS/party/session-[N]/session-[N]-conversation.md" <<'FLUSH'
+Write the command with **no leading indentation**: `cat` at column 0 and the closing `FLUSH` at column 0 on a line of its own. An indented terminator is not recognised, so the heredoc runs to end-of-input and writes the delimiter into the log instead of closing.
 
-   ### [Time of Day] — [Location] — [Scene Name]
+```bash
+cat >> "campaigns/$ARGUMENTS/party/session-[N]/session-[N]-conversation.md" <<'FLUSH'
 
-   [scene content, verbatim]
-   FLUSH
-   ```
+### [Time of Day] — [Location] — [Scene Name]
 
-   Use scene headings, DM/Claude speaker labels, and NPC dialogue quoted faithfully, matching the format already in the file (or the heading shape above if starting fresh).
+[scene content, verbatim]
+FLUSH
+```
 
-   Do **not** reproduce the existing log in order to add to it. This skill fires before every NPC conversation and every combat, so a full rewrite costs the table a pause that grows longer with every scene already logged.
+Use scene headings, DM/Claude speaker labels, and NPC dialogue quoted faithfully, matching the format already in the file (or the heading shape above if starting fresh).
+
+Do **not** reproduce the existing log in order to add to it. This skill fires before every NPC conversation and every combat, so a full rewrite costs the table a pause that grows longer with every scene already logged.
 
 5. Quote DM inputs and NPC dialogue **exactly as they appeared in the conversation** — do not paraphrase, interpret, or reconstruct. If Caelith said "Hi, I'm Caelith Moorn" that is what goes in the log. **This rule does not relax as the unflushed backlog grows.** A large amount of unwritten material is a sign a trigger was missed earlier (see above), not a license to summarize now — writing "[the party then did X, Y, and Z]" as a bracketed summary in place of the actual exchanges is exactly the failure mode this skill exists to prevent, and it is *most* likely to happen precisely when there's the most content to transcribe. If the backlog feels large enough that summarizing is tempting, that is the moment to slow down and write it out in full, not the moment to compress.
 
