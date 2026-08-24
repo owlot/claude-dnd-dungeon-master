@@ -9,7 +9,7 @@ Parse the arguments first: rest type (short or long, first word), campaign name 
 
 Invoke `/dm-checkpoint-log <campaign>` to flush the conversation log. Wait for confirmation, then proceed.
 
-Delegate to the `character-tracker` sub-agent with the following instructions:
+Delegate to the `character-tracker` sub-agent (`subagent_type: "character-tracker"`) with the following instructions:
 
 ## Short rest
 

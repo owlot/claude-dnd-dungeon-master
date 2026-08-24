@@ -7,7 +7,7 @@ Show character $ARGUMENTS
 
 Parse the arguments: campaign name (first word) and character name (remaining words).
 
-Delegate to the `character-tracker` sub-agent to run:
+Delegate to the `character-tracker` sub-agent (`subagent_type: "character-tracker"`) to run:
 ```
 python .claude/scripts/show_character.py <campaign> <character name>
 ```

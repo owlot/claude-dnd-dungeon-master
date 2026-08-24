@@ -5,4 +5,4 @@ argument-hint: "[character name] for campaign [campaign name]"
 
 Add character $ARGUMENTS
 
-Delegate to the `character-creation` sub-agent to add a single character to an existing campaign.
+Delegate to the `character-creation` sub-agent (`subagent_type: "character-creation"`) to add a single character to an existing campaign.
