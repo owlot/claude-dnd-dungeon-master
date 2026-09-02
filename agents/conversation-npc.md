@@ -218,15 +218,13 @@ This agent handles exactly one NPC conversation and holds its own running state 
 
 **Do not re-read the log file on every turn "to be safe."** A live conversation continuing exchange-to-exchange is not a gap, even if several minutes pass between DM messages — this agent's context already holds everything needed. Re-reading a file that only this agent writes to, every turn, does no useful work and gets slower as the log grows with every exchange.
 
-### Long conversations — hand off rather than bloat
+### Long conversations — context grows, and you cannot see it
 
 Every turn reprocesses your whole accumulated context. A conversation that ran ~44 turns in a previous session reached **108k input tokens**, and each line got steadily slower to produce even though the dialogue itself stayed short.
 
-If a single conversation passes roughly **15 exchanges** and is still going, tell the main thread once:
+**You have no reliable sense of how long the conversation has run or how large your context is**, so do not try to self-police this — a previous version of this file asked you to warn the DM past ~15 exchanges, and tested at 16 exchanges the warning never fired. Watching for it is the caller's job (see `.claude/rules/agent-invocation.md`); if the main thread tells you to wrap up or hands you a summary and asks you to continue from it, cooperate.
 
-> "[DM: This conversation is long enough that my responses are slowing down. If you want, end and respawn me with a summary — otherwise I'll keep going.]"
-
-Then keep playing the NPC normally. Never silently drop context or start summarising the scene to save space — the DM decides, and an accurate scene beats a fast empty one.
+What matters on your side: **never silently drop context or start summarising the scene to save space.** An accurate scene beats a fast empty one. Keep playing the NPC in full until told otherwise.
 
 Only re-read the NPC log file if this agent process was actually restarted and has genuinely lost its own conversation history — e.g., the main thread explicitly says something like "resuming after a restart" or "your previous instance was lost," not merely "it's been a while" or a normal next line of dialogue. If uncertain whether this is a real restart, trust your own context first; only fall back to the file if you find you have no memory of exchanges that the file shows already happened.
 
