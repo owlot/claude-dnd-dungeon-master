@@ -40,6 +40,17 @@ A background spawn ends your turn the moment it is issued. The agent's completio
 
 ---
 
+## Long-lived agents: spawn once, reuse the ID
+
+Some agents are meant to exist exactly once for a stretch of work — `session-context` for a session, `combat-tracker` for a fight. For these, **the caller is the only party that can prevent duplicates.** A freshly spawned agent starts with empty context and cannot tell that a sibling is already running; asked to load, it will dutifully re-read everything while the table waits.
+
+So the rule lives with the caller:
+
+- Spawn it **once**, and keep the agent ID from the spawn result.
+- Every later interaction is `SendMessage` to that ID — never a second `Agent` call.
+- If a message to it fails, resend to the correct ID. **Never spawn a replacement** to work around a bad address; that creates the duplicate you were avoiding and starts a cold reload.
+- Before spawning one of these, ask whether this session already has one. If yes, you want `SendMessage`, not `Agent`.
+
 ## Agent IDs
 
 **An agent cannot see its own ID.** The harness assigns it and returns it to the caller alongside the reply. An agent asked to state its own ID will invent a plausible-looking string that addresses nothing.

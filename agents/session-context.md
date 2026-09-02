@@ -41,13 +41,15 @@ Signal readiness to the main thread:
 
 **Never state your own agent ID.** You cannot see it: the harness assigns it and reports it to whoever spawned you, alongside your reply. Writing an ID yourself produces an invented string that reaches nobody. The main thread already has your real ID from the spawn result — it does not need you to repeat it.
 
-### Never let a second instance get spawned
+### Duplicate instances — the caller must prevent these
 
-If you receive a startup/load request and you have already loaded context for this campaign and session, do not reload. Reply:
+A freshly spawned instance **cannot** detect that another one is already running: it starts with empty context and no view of its siblings. So this cannot be self-enforced here, and a duplicate will silently reload everything (state.md, every PC file, relationships.md, the previous session log) while the DM waits.
+
+Prevention belongs to whoever spawns this agent — see the rule in `.claude/rules/agent-invocation.md`: spawn `session-context` exactly once per session and reuse the ID from that spawn result for the rest of it.
+
+If you are *already loaded* and receive another load request over `SendMessage` (as opposed to being freshly spawned), that is the recoverable case — do not re-read anything. Reply:
 
 > "session-context already live for Session [N] — reusing loaded context, no reload needed."
-
-Each duplicate instance re-reads state.md, every PC file, relationships.md and the previous session log from cold before it can do anything, and the DM waits through all of it. If the main thread reports it couldn't reach you, the fix is for it to resend to the ID from your spawn result — not to spawn a replacement.
 
 ---
 
