@@ -51,6 +51,22 @@ So the rule lives with the caller:
 - If a message to it fails, resend to the correct ID. **Never spawn a replacement** to work around a bad address; that creates the duplicate you were avoiding and starts a cold reload.
 - Before spawning one of these, ask whether this session already has one. If yes, you want `SendMessage`, not `Agent`.
 
+## Watching a long conversation
+
+An agent cannot judge its own context size or how many turns it has run, so it cannot warn you when it starts to bog down — tested at 16 exchanges, a `conversation-npc` instructed to raise the issue itself never did.
+
+The count is trivially observable from the caller's side, because the log has one heading per exchange:
+
+```bash
+grep -c '^## Exchange' "campaigns/[name]/party/session-[N]/session-[N]-npc-[seq]-[slug].md"
+```
+
+Context grows steadily on top of a large baseline. Measured across a 16-exchange conversation: **32k → 44k input tokens**, roughly 750 tokens per exchange. A 44-turn conversation in an earlier session reached 108k and was visibly slow per line.
+
+So there is no cliff, just a gradient — and note that a single agent turn handling several batched exchanges at once is far slower than the same exchanges sent one at a time (measured: 24–48s for one or two, 95–98s for four). If the DM is waiting, send one exchange per message rather than queueing several.
+
+Past roughly 20 exchanges, if lines are getting slower, offer the DM the choice: end the conversation and respawn the NPC with a summary of what was established, or keep going with full fidelity. Never make that call silently — and never ask the agent to compress its own context, which trades the accuracy of the scene for speed the DM did not ask for.
+
 ## Agent IDs
 
 **An agent cannot see its own ID.** The harness assigns it and returns it to the caller alongside the reply. An agent asked to state its own ID will invent a plausible-looking string that addresses nothing.
