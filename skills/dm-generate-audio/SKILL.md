@@ -108,6 +108,16 @@ Report progress as each memoir anchor completes.
 
 ---
 
+## Step 4b — Refresh read times
+
+Chapter read times on the session pages come from the audio lengths. Rebuild the manifest:
+
+```bash
+python3 .claude/tools/audio-durations.py [CAMPAIGN]
+```
+
+---
+
 ## Step 5 — Confirm
 
 Print a single line:
