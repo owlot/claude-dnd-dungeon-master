@@ -257,7 +257,7 @@ def main() -> None:
         sys.exit(1)
 
     campaign = args[0]
-    char_dir = os.path.join(BASE, campaign, "characters")
+    char_dir = os.path.join(BASE, campaign, "party", "characters")
 
     if not os.path.isdir(os.path.join(BASE, campaign)):
         sys.exit(f"Error: campaign directory not found: {os.path.join(BASE, campaign)}")
