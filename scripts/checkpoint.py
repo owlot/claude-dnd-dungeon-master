@@ -38,7 +38,7 @@ def files_to_snapshot(campaign: str) -> list[str]:
     files = []
 
     # All character files (not subdirectories like npcs/)
-    char_dir = os.path.join(camp_dir, "characters")
+    char_dir = os.path.join(camp_dir, "party", "characters")
     if os.path.isdir(char_dir):
         for fname in os.listdir(char_dir):
             if fname.endswith(".md") and not fname.startswith("_"):

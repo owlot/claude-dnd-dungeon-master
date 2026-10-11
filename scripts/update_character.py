@@ -62,7 +62,7 @@ def find_character_file(campaign: str, character_name: str) -> str:
     Locate a character .md file. Tries exact filename match first
     (lowercased, spaces→underscores), then partial match.
     """
-    char_dir = os.path.join(BASE, campaign, "characters")
+    char_dir = os.path.join(BASE, campaign, "party", "characters")
     if not os.path.isdir(char_dir):
         sys.exit(f"Error: characters directory not found: {char_dir}")
 

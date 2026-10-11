@@ -266,7 +266,7 @@ def cmd_init(campaign: str, encounter: str) -> None:
             })
 
     # Read party from character files
-    char_dir = os.path.join(campaign_dir(campaign), "characters")
+    char_dir = os.path.join(campaign_dir(campaign), "party", "characters")
     pc_names: list[dict] = []
     if os.path.isdir(char_dir):
         for fname in sorted(os.listdir(char_dir)):

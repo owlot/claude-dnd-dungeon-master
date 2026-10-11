@@ -90,7 +90,7 @@ def wrap_row(text: str, width: int = WIDTH, indent: int = 0) -> list[str]:
 # ── file finding (same logic as update_character.py) ─────────────────────────
 
 def find_character_file(campaign: str, character_name: str) -> str:
-    char_dir = os.path.join(BASE, campaign, "characters")
+    char_dir = os.path.join(BASE, campaign, "party", "characters")
     if not os.path.isdir(char_dir):
         sys.exit(f"Error: characters directory not found: {char_dir}")
 
