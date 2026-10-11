@@ -14,6 +14,16 @@
     font-family: Georgia, serif;
 }
 
+.read-time {
+    margin-left: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: normal;
+    letter-spacing: 0.04rem;
+    text-transform: none;
+    color: #7a6c4e;
+    white-space: nowrap;
+}
+
 .audio-play-btn {
     display: inline-flex;
     align-items: center;
@@ -445,6 +455,18 @@ a.ref:hover {
     background: #1a2a1a;
     color: #6abf7a;
     border: 1px solid #2a4a2a;
+}
+
+.tag-with-party {
+    background: #1a2a3a;
+    color: #7ab0d0;
+    border: 1px solid #2a4a6a;
+}
+
+.tag-handed-off {
+    background: #2a2a1a;
+    color: #a09050;
+    border: 1px solid #4a4a20;
 }
 
 .card mark {
@@ -1126,6 +1148,12 @@ a.ref:hover {
     line-height: 1.3;
 }
 
+#chapter-toc a .read-time {
+    display: block;
+    margin-left: 0;
+    font-size: 0.65rem;
+}
+
 #chapter-toc a:hover {
     color: #c9a84c;
 }
@@ -1230,4 +1258,13 @@ a.ref:hover {
         flex-direction: column;
         gap: 0.5rem;
     }
+}
+
+.chapter-subtitle .read-time-total {
+    font-style: normal;
+    margin-left: 0;
+}
+
+.chapter-subtitle .read-time-total::before {
+    content: " · ";
 }

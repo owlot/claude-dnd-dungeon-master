@@ -33,9 +33,22 @@ import argparse
 
 _speaker_map = {}  # populated in main() from world.json { card.id → card.speaker }
 
+# Generic speaker display name map
+_generic_speaker_map = {
+    "male-mid-minor": "Man",
+    "male-young-minor": "Young Man",
+    "male-weathered-minor": "Weathered Man",
+    "female-mid-minor": "Woman",
+    "female-young-minor": "Young Woman",
+    "guard-young": "Guard",
+    "guard-old": "Guard",
+}
+
 def speaker_display_name(slug):
     if slug in _speaker_map:
         return _speaker_map[slug]
+    if slug in _generic_speaker_map:
+        return _generic_speaker_map[slug]
     return " ".join(w.capitalize() for w in slug.split("-"))
 
 

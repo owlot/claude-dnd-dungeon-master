@@ -215,6 +215,53 @@
       .replace(/^-|-$/g, "");
   }
 
+  // Read time: sum of the chapter's audio tracks (main + mid-scene continuations)
+  // from audio/durations.json; falls back to a word-count estimate.
+  function chapterSeconds(h2, session, durations) {
+    const files = h2.dataset.audio ? [h2.dataset.audio] : [];
+    let words = 0;
+    for (let el = h2.nextElementSibling; el && el.tagName !== "H2"; el = el.nextElementSibling) {
+      if (el.dataset && el.dataset.audio) files.push(el.dataset.audio);
+      if (!el.matches(".memoir-callout, .scene-break")) words += el.textContent.trim().split(/\s+/).length;
+    }
+    const known = files.map(f => durations[`${session}/${f}`]);
+    if (known.length && known.every(Boolean)) return known.reduce((a, b) => a + b, 0);
+    return words / 230 * 60;
+  }
+
+  function addReadTimes(session) {
+    fetch("audio/durations.json")
+      .then(r => (r.ok ? r.json() : {}))
+      .catch(() => ({}))
+      .then(durations => {
+        let totalSecs = 0;
+        document.querySelectorAll(".container h2").forEach(h2 => {
+          const secs = chapterSeconds(h2, session, durations);
+          totalSecs += secs;
+          const mins = Math.max(1, Math.round(secs / 60));
+          const label = () => {
+            const span = document.createElement("span");
+            span.className = "read-time";
+            span.textContent = `${mins} min`;
+            return span;
+          };
+          h2.insertBefore(label(), h2.querySelector(".audio-play-btn"));
+          const tocLink = document.querySelector(`#toc-panel a[href="#${h2.id}"]`);
+          if (tocLink) tocLink.appendChild(label());
+        });
+        const subtitle = document.querySelector(".container .chapter-subtitle");
+        if (subtitle && totalSecs) {
+          const total = document.createElement("span");
+          total.className = "read-time read-time-total";
+          const mins = Math.max(1, Math.round(totalSecs / 60));
+          total.textContent = mins >= 60
+            ? `${Math.floor(mins / 60)} h ${mins % 60} min`
+            : `${mins} min`;
+          subtitle.appendChild(total);
+        }
+      });
+  }
+
   function addChapterButtons() {
     const session = sessionFromPath();
     document.querySelectorAll(".container h2").forEach((h2, idx) => {
@@ -226,6 +273,7 @@
       const btn = makePlayBtn(src, label, 14);
       h2.appendChild(btn);
     });
+    addReadTimes(session);
 
     // Add continuation buttons on mid-scene breaks — visible so users can
     // trigger the second half manually; also picked up by auto-advance in
