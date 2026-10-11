@@ -72,6 +72,16 @@ LIKELY NEXT ACTIONS
 
 Keep each entry short. The DM chooses; this is orientation, not a script.
 
+Then list the NPCs the party is likely to talk to, so the main thread can warm their agents (see `.claude/rules/npc-memory.md`). Draw them from the likely actions above and from open threads in state.md; aim for 4–6, ordered most to least likely. Use the slugs of existing files in `campaigns/[name]/info/npcs/`:
+
+```
+LIKELY NPCS
+───────────
+vajra-safahr      — Force Grey follow-up; Meloon verification
+renaer-neverember — lives at the Manor; has not heard the Villa outcome
+...
+```
+
 ### 6. Flag encounters to pre-validate
 
 Identify any encounter files that may come up this session based on the likely actions above. List them and note their verification status:
@@ -89,18 +99,9 @@ If any unverified encounters are likely, prompt: *"Run `/dm-load-encounter [name
 
 Ask: *"Ready to begin?"* and wait for the DM to confirm before doing anything else.
 
-### 8. Spawn session-context agent
+### 8. Hand the warm pool to the main thread
 
-After the DM confirms, spawn the `session-context` agent:
-
-```
-Project root: [absolute path]
-Campaign: [name]
-```
-
-Keep its agent ID and pass it to the main thread so DM input can be relayed to it when NPC conversations begin. Signal to the main thread:
-
-> "Session context agent is live — send NPC conversation requests to it via SendMessage."
+This agent is one-shot and exits after step 7; it does not spawn anything. The **main thread**, once the DM confirms, spawns one `conversation-npc` agent per slug in `LIKELY NPCS` in a single parallel message (`name: "npc-[slug]"`, prompt beginning `WARM-UP`), as described in `.claude/rules/npc-memory.md`. The `session-context` agent is retired.
 
 ---
 

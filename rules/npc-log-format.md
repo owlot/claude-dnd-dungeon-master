@@ -26,6 +26,8 @@ If `campaigns/[name]/party/session-[N]/` does not exist, stop and report: *"Camp
 
 `Write` is correct exactly once per conversation: creating the file with its header.
 
+**Who appends:** the NPC agent writes the header (once) and the `Conversation End` block. Every exchange in between is appended by the **main thread**, right after it relays the scene to the DM (the agent returns the scene only; see `.claude/rules/npc-memory.md`). If a conversation agent is told to log exchanges itself, the same heredoc applies.
+
 For every exchange after that, append with a single Bash heredoc:
 
 ```bash

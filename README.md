@@ -62,7 +62,7 @@ The system runs inside **Claude Code** using three layers:
 | `combat-tracker` | Initiative, HP, conditions, combat log |
 | `character-tracker` | PC stats between sessions and mid-session |
 | `character-creation` | Walk through character creation |
-| `session-context` | Hold shared campaign context, spawn and route NPC conversation sub-agents |
+| `session-context` | **Retired** — replaced by warm per-NPC `conversation-npc` agents with per-NPC memory (see `rules/npc-memory.md`) |
 | `conversation-npc` | Voice NPCs, track disposition, write NPC logs |
 | `conversation-log-appender` | Append NPC conversation summaries to session log |
 | `encounter-verifier` | Cross-check stat blocks against SRD before combat |
