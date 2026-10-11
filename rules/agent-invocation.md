@@ -24,7 +24,7 @@ Omit it and the call silently succeeds as a `general-purpose` agent: none of the
 
 Valid values are the `name:` field of the agent files:
 
-`character-creation`, `character-tracker`, `combat-tracker`, `conversation-log-appender`, `conversation-npc`, `encounter-verifier`, `indexer`, `scene-image-generator`, `session-context`, `session-manager`, `srd-lookup`, `story-teller`, `website-generator`
+`character-creation`, `character-tracker`, `combat-tracker`, `conversation-log-appender`, `conversation-npc`, `encounter-verifier`, `indexer`, `scene-image-generator`, `session-manager`, `srd-lookup`, `story-teller`, `website-generator`
 
 ### `Project root:` — required first line of the prompt
 
@@ -42,7 +42,7 @@ A background spawn ends your turn the moment it is issued. The agent's completio
 
 ## Long-lived agents: spawn once, reuse the ID
 
-Some agents are meant to exist exactly once for a stretch of work — `session-context` for a session, `combat-tracker` for a fight. For these, **the caller is the only party that can prevent duplicates.** A freshly spawned agent starts with empty context and cannot tell that a sibling is already running; asked to load, it will dutifully re-read everything while the table waits.
+Some agents are meant to exist exactly once for a stretch of work — `conversation-npc` (one per NPC, warmed at session start, see `.claude/rules/npc-memory.md`), `combat-tracker` for a fight. For these, **the caller is the only party that can prevent duplicates.** A freshly spawned agent starts with empty context and cannot tell that a sibling is already running; asked to load, it will dutifully re-read everything while the table waits.
 
 So the rule lives with the caller:
 

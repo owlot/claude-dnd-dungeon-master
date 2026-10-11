@@ -27,13 +27,19 @@ Claude is a **DM assistant** — a co-pilot that handles the mechanical, informa
 
 Voice NPCs based on their encounter file or character card — their established voice, motivation, and current disposition. Claude does not decide whether persuasion succeeds; Claude plays out the NPC's reaction after the DM reports the roll result.
 
-**Never handle NPC dialogue in the main context.** When dialogue begins with a named NPC, invoke `/dm-checkpoint-log [campaign]`, then notify the `session-context` agent via `SendMessage` — do not wait for the DM to ask. Do not trigger for truly unnamed background characters or single wordless reactions.
+**Never handle NPC dialogue in the main context.** When dialogue begins with a named NPC, invoke `/dm-checkpoint-log [campaign]`, then activate that NPC's agent — do not wait for the DM to ask. Do not trigger for truly unnamed background characters or single wordless reactions.
 
-The `session-context` agent is spawned once at session start by `/dm-start-session` and stays alive for the full session. It holds all shared campaign context and, when a conversation begins, spawns a `conversation-npc` sub-agent with that context embedded, waits for its opening line, and relays that line plus the sub-agent's ID back in a single message — don't expect the NPC's first line any faster by skipping that wait, there is nothing to relay before it exists. **From the second exchange onward, message the `conversation-npc` sub-agent directly — do not keep routing every line through `session-context`.** Staying in the loop turn-by-turn doubles the agent hops (and the wait) for no benefit.
+**Every NPC has its own `conversation-npc` agent, warmed at session start.** After `/dm-start-session` and the DM's "Ready to begin", the main thread spawns one agent per NPC in the session-manager's `LIKELY NPCS` list, all in one parallel message (`name: "npc-[slug]"`, prompt `WARM-UP`). A warm agent reads only its NPC file and its memory file (`party/npc-memory/[slug].md`) and replies `Ready`. NPCs not in the pool are spawned the same way when they come up; spawn once per NPC and reuse the agent for every later conversation. The old `session-context` agent is retired. Full rules: `.claude/rules/npc-memory.md`.
 
-**If a response is taking too long, or the DM says to just handle it directly:** take over the conversation in the main thread immediately — don't keep waiting on a notification. Send the sub-agent a short stand-down message so a late reply doesn't surface afterward, and pick up logging responsibility yourself per `.claude/rules/npc-log-format.md` (or run `/dm-conversation-log` retroactively once the conversation ends) so the exchange isn't lost.
+**An NPC knows only three things**: its NPC file, its own past conversations (its memory file), and third-party information the DM approved. What the party did elsewhere is not the NPC's knowledge. **When a scene could let an NPC know something from a third party** (another NPC, a rumor, a Watch report, a messenger), the main thread proposes the leak to the DM and waits for approval; only approved leaks are passed to the agent and recorded in its memory.
 
-See `.claude/agents/session-context.md` and `.claude/agents/conversation-npc.md`.
+**To start a conversation**, send the agent `ACTIVATE` with: location/time, who is present, what the NPC can perceive, any approved third-party information, the NPC's disposition if it changed, and the DM's first input verbatim. The agent creates the log and returns the opening scene — relay it **verbatim and in full** (never a summary or a single quoted line) with the `[DM: ...]` bracket. **From the second exchange onward** message the same agent directly with the DM's input and any roll result; standing rulings (species, pronouns, what the NPC does not know) live in the NPC file, not in every message. After relaying each scene, the main thread appends the exchange to the NPC log (`.claude/rules/npc-log-format.md`). At the end of a conversation send `END CONVERSATION`: the agent closes the log and updates its memory file.
+
+**If an agent returns a status line instead of the scene** (e.g. *"Exchange 4 logged, standing by"*): the dialogue was composed and then discarded — only an agent's final text block reaches you. Read the last exchange out of the NPC log if it was written, or ask the agent once to re-send the scene; remind it: *"End every turn on the full scene text — nothing after it."*
+
+**If a response is taking too long, or the DM says to just handle it directly:** take over the conversation in the main thread immediately — don't keep waiting. Send the agent a short stand-down message so a late reply doesn't surface afterward, and pick up logging yourself per `.claude/rules/npc-log-format.md` (or run `/dm-conversation-log` retroactively once the conversation ends).
+
+See `.claude/rules/npc-memory.md` and `.claude/agents/conversation-npc.md`.
 
 ---
 
@@ -101,7 +107,7 @@ Delegates to the `session-manager` sub-agent to:
 2. Validate and update every character file in `campaigns/[name]/party/characters/` with current HP, resources used, gold, notes
 3. Write `campaigns/[name]/party/session-[N]/session-[N]-conversation.md` — full session conversation archive
 4. Append a session summary entry to `party/session-log.md`
-5. Hand off to the `story-teller` sub-agent to produce `campaigns/[name]/party/session-[N]/session-[N]-story.md`
+5. Hand off to the `story-teller` sub-agent to produce `campaigns/[name]/party/session-[N]/session-[N]-facts.md` (the fact ledger, written first) and `campaigns/[name]/party/session-[N]/session-[N]-story.md`
 
 Note: combat logs (`party/session-[N]/session-[N]-combat-[slug].md`) and npc conversations (`party/session-[N]/session-[N]-npc-[N]-[npc name].md`) are written by the `combat-tracker` at the end of each fight or conversation — not by the session manager.
 
@@ -227,5 +233,7 @@ See `.claude/agents/srd-lookup.md` for lookup types and SRD file locations.
 ## Sub-Agents
 
 Agents live in `.claude/agents/`. **Always include `Project root: [absolute path]` as the first line of any agent prompt** — agents do not inherit the working directory.
+
+**Always pass `subagent_type` on the `Agent` call**, using the exact agent name. "Delegate to the X sub-agent" is a description, not a selector — without the parameter the call silently runs as `general-purpose` with none of X's instructions or tool limits in effect. See `.claude/rules/agent-invocation.md` for the full call shape, foreground/background rules, and agent-ID handling.
 
 Slash commands are in `.claude/skills/` and can be invoked as `/command-name [args]`. Natural-language equivalents (e.g. "Start session thornwall") also trigger the appropriate sub-agent.
