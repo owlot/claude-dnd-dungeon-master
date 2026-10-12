@@ -70,6 +70,7 @@ The system runs inside **Claude Code** using three layers:
 | `srd-lookup` | Rules lookups without polluting main context |
 | `scene-image-generator` | Generate cinematic scene images and wire into session HTML |
 | `story-teller` | Write session story draft from logs |
+| `story-validator` | Read-only checker: validates a block of the story against the logs and the fact ledger (false statements, omissions, leaks, unsupported memoir claims) |
 | `website-generator` | Generate HTML, memoirs, encrypted files, world page |
 
 **`.claude/skills/`** — Slash commands the DM uses at the table:

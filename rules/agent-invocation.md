@@ -24,7 +24,7 @@ Omit it and the call silently succeeds as a `general-purpose` agent: none of the
 
 Valid values are the `name:` field of the agent files:
 
-`character-creation`, `character-tracker`, `combat-tracker`, `conversation-log-appender`, `conversation-npc`, `encounter-verifier`, `indexer`, `scene-image-generator`, `session-manager`, `srd-lookup`, `story-teller`, `website-generator`
+`character-creation`, `character-tracker`, `combat-tracker`, `conversation-log-appender`, `conversation-npc`, `encounter-verifier`, `indexer`, `scene-image-generator`, `session-manager`, `srd-lookup`, `story-teller`, `story-validator`, `website-generator`
 
 ### `Project root:` — required first line of the prompt
 

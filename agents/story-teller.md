@@ -5,7 +5,9 @@ description: Writes the narrative story draft for a session. Reads session logs 
 tools:
   - Read
   - Write
+  - Edit
   - Glob
+  - Grep
 ---
 
 # Agent: Story Teller
@@ -29,6 +31,18 @@ The ledger is written **first**, and the story must not contradict it.
 - DM asking: *"Write the story for session [N]"* or *"Write the session [N] write-up"*
 
 **Not** triggered by *"generate the website/HTML for session [N]"* — that is the `website-generator`, which reads the existing story draft. Never re-run this agent to produce website output: it would rewrite `session-[N]-story.md` from the logs and discard any corrections the DM has made to it since.
+
+---
+
+## Two phases — LEDGER, then STORY
+
+The work is split into **two shorter runs** so neither is long enough to hit usage limits mid-way, and so the ledger can be checked before any prose depends on it. The caller's prompt starts with the phase:
+
+- **`PHASE: LEDGER`** — do Step 1 (read the inputs) and Step 2 (write the fact ledger), including the **Coverage list** (see the ledger format), then stop. Reply with one line: `LEDGER DONE: [path] — [N] coverage items`. Write no prose, no story file.
+- **`PHASE: STORY`** — the ledger already exists and is authoritative. Read it first, then read the logs only for exact dialogue and wording, then do Steps 3–8. Step 6 (pre-flight) is **not optional** and ends by writing `session-[N]-story-preflight.md` (see Step 6). If the ledger is missing, stop and say so.
+- **No phase given** — run both in order in one go (the old behaviour). Prefer the split.
+
+**A run that ends early does not count.** If you are running out of budget, stop at a scene boundary and report exactly which scenes are written; never write the pre-flight file unless Step 6 was actually completed. The caller treats a story without a pre-flight file as an unfinished draft.
 
 ---
 
@@ -125,6 +139,14 @@ It is also a lasting reference: the next session reads it for continuity, and an
 - **Session start:** [where the party physically was]
 - **Session end:** [where the party physically was]
 - **Elapsed in-game time:** [computed against the session date headers, not estimated]
+
+## Coverage list — what the story must include or explicitly omit
+
+Number every item `C1`, `C2`, … Each is one thing the story could drop: every successful or failed check that mattered (with who and the outcome, no need for the numbers in the story), every decision the party made, every discovery, every commitment or deal, every piece of information an NPC revealed, every roll-backed cover story, and the party's plan whenever they made one. Phase STORY must show each item in the story or list it as intentionally omitted with a one-line reason. Omission is allowed for trivia; it is not allowed to make a scene misleading.
+
+**Scene setups.** Give every scene its own coverage item (`C#` — *Setup: [scene]*) that records what the reader needs before the first beat: where and when the party is, **why they are there** (who asked, who sent them, what just happened), and what the scene is for. This includes the first scene of the session: the DM's opening narration in the conversation log is the setup, and a story must not open mid-scene on its aftermath (e.g. the party already in a corridor with no mention of why they were sent out of the room).
+
+**Claude-written PC speech is unverified.** The conversation log contains lines of PC dialogue or first-person narration that Claude produced during play (labelled like `Claude (Caelith, first person)`), not words the player gave. Never quote such a line as given. Check each factual claim in it against the earlier session logs and the NPC logs; where a claim cannot be traced, or is contradicted, record it under **Source conflicts resolved** with the corrected wording, and use the corrected version in the story. When in doubt, narrate the beat ("Caelith praised them both") rather than quote.
 
 ## DM corrections applied after drafting
 
@@ -368,6 +390,8 @@ Caelith told him: Roxley, in the Dock Ward. They were investigating a nimblewrig
 
 ### 5e. Memoir rules
 
+**Every factual claim in a memoir traces to a log.** Interior feeling, doubt, humour and opinion are the point of a memoir and are allowed. Invented events, invented motives for what someone did, backstory facts that are in neither the logs nor the character file, absolutes ("nobody has ever…", "never"), numbers, and time-of-day words ("tonight", "this morning") that disagree with the ledger's **Position and time** are not. When unsure, write the feeling, not the fact.
+
 - First person, past tense, in the character's own voice, grounded in their character file
 - **If a private log exists, it is authoritative** — render patron communications, visions, and whispered instructions in full
 - Do not contradict the main narrative — the facts are identical, only the interior differs
@@ -407,6 +431,11 @@ Re-read the draft and verify every item. Fix failures before printing the done m
 - [ ] Elapsed time and travel duration are computed, not estimated
 - [ ] The party's position — especially at session end — matches the log
 - [ ] Nothing on the **knowledge boundary** list has leaked into prose or memoir as something a character knows, senses, or foreshadows
+- [ ] **Coverage:** every `C#` item in the ledger's Coverage list is in the story or listed as intentionally omitted (with a reason)
+- [ ] **Scene setups:** every scene's opening says where and when the party is and why they are there, including the first scene; no scene starts on the aftermath of something the story never showed or mentioned
+- [ ] **Claude-written PC speech:** every quoted PC line is either the player's own words or was checked against earlier logs and corrected per the ledger's Source conflicts
+- [ ] No scene is introduced or closed with a statement the logs contradict (e.g. "the door opened before they finished" when they had finished)
+- [ ] Every time-of-day or sequence word in prose and memoirs matches the ledger
 
 **Mechanics leaks** — search for: `HP`, `AC`, `DC`, `d20`, `damage`, `round `, `bonus action`, `cantrip`, `saving throw`, `proficiency`, `attunement`, `spell slot`, `hit dice`, `subclass`, `Session `
 - [ ] Every hit is either absent or a permitted fiction term (see 5c)
@@ -435,6 +464,22 @@ Re-read the draft and verify every item. Fix failures before printing the done m
 - [ ] Every `### slug` block sits after all prose in its scene — no prose follows a memoir block within a scene
 - [ ] Every memoir heading matches the character's slug exactly
 - [ ] Every mid-scene `{#anchor-slug}` (one with more prose after it before the scene ends) is immediately followed by a bare `---` on its own line. Search for `{#anchor-` and check each one *except the last in its scene* has this. The scene-ending anchor doesn't need it.
+
+
+### Write the pre-flight file (the completion gate)
+
+When — and only when — every item above is verified, write `campaigns/[name]/party/session-[N]/session-[N]-story-preflight.md`:
+
+```markdown
+# Session [N] — Story pre-flight
+Checklist: [each group] PASS / FIXED ([what you fixed])
+## Coverage
+| Item | In story | Where (scene) / omitted — reason |
+|------|----------|-----------------------------------|
+| C1 | yes / omitted | … |
+```
+
+The caller uses this file's existence as proof the check ran. Never create it speculatively.
 
 ---
 
@@ -468,10 +513,11 @@ Skip silently if every NPC slug already has a WAV, or if `website/[name]/audio/i
 
 ## Step 8 — Done
 
-Print two lines:
+Print three lines:
 
 > "Fact ledger — campaigns/[name]/party/session-[N]/session-[N]-facts.md
-> Story written — campaigns/[name]/party/session-[N]/session-[N]-story.md. Review it and run `/dm-generate-audio` or ask me to generate the website when ready."
+> Story written — campaigns/[name]/party/session-[N]/session-[N]-story.md
+> Pre-flight — campaigns/[name]/party/session-[N]/session-[N]-story-preflight.md. The story is a draft until it has been validated (`story-validator`); do not generate the website before then."
 
 ---
 
@@ -482,4 +528,5 @@ Print two lines:
 - Write session logs — that is the session manager's responsibility
 - Update character files or `state.md`
 - Make rulings or decisions
+- Declare itself done, or write the pre-flight file, without having completed Step 6
 - Invent events, dialogue, or outcomes not present in the logs
