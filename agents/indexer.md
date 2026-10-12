@@ -1,5 +1,5 @@
 ---
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 name: indexer
 description: Parses all campaign source files in campaigns/[name]/sources/ and shards them into the campaign directory structure. Runs once per campaign and produces all encounter, character, location, and state files that other agents reference during play. Use when the DM says "Index campaign [name]".
 tools:

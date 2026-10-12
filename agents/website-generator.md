@@ -1,5 +1,5 @@
 ---
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 name: website-generator
 description: Transforms a session story draft into website output — HTML session page, memoir JSON files, encrypted memoir files, world.html updates, and index/nav updates. Reads campaigns/[name]/party/session-[N]/session-[N]-story.md as its sole creative source. All prose, anchors, and memoir content come from that file; this agent makes no creative decisions.
 permissionMode: auto

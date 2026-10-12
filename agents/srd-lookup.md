@@ -1,5 +1,5 @@
 ---
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 name: srd-lookup
 description: Looks up a single entry in the D&D 5e SRD and returns only the relevant block. Use for monsters, spells, conditions, magic items, NPCs, class features, or creatures. Keeps the main context clean by returning only what was asked for.
 tools:

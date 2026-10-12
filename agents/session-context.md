@@ -1,5 +1,5 @@
 ---
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 name: session-context
 description: RETIRED — no longer used. NPC conversations now use one warm `conversation-npc` agent per NPC (see .claude/rules/npc-memory.md). Do not spawn this agent.
 tools:
