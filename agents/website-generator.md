@@ -31,6 +31,10 @@ Mechanically transform `campaigns/[name]/party/session-[N]/session-[N]-story.md`
 
 ---
 
+## Step 0 — Validation gate
+
+Check that `campaigns/[name]/party/session-[N]/session-[N]-story-validation.md` exists. If it does not, stop and reply: *"Session [N]'s story has not been validated. Run the validation step (`story-validator`) first, or tell me to proceed anyway if this is an older session."* Proceed without it only when the caller says so explicitly. This agent's own checks (pronouns, keywords) are not a substitute for validation: they read for words, not meaning.
+
 ## Step 1 — Read the story draft
 
 Read `campaigns/[name]/party/session-[N]/session-[N]-story.md` in full. Extract:
