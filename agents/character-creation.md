@@ -1,5 +1,5 @@
 ---
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 name: character-creation
 description: Walk the DM through character creation for all players before the first session. Asks only the questions relevant to each character's race, class, and level. Outputs a completed character file for each PC. Use when the DM says "Create characters for campaign [name]" or "Add character [name] for campaign [name]".
 tools:

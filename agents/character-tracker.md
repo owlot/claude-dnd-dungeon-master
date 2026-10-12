@@ -1,5 +1,5 @@
 ---
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 name: character-tracker
 description: Tracks all player character stats mid-session — HP, spell slots, conditions, resources, gold. Single source of truth for PC state between combat and session saves. Use when the DM reports damage, healing, spell slot usage, condition changes, rests, or asks to show a character.
 tools:

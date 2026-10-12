@@ -1,6 +1,6 @@
 ---
 name: scene-image-generator
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 description: Generates cinematic scene images for a D&D session — reads the session HTML, builds prompts from character/prop files, generates landscape PNGs, and wires them into the HTML. Uses SendMessage to show results to the DM and wait for approval before proceeding.
 tools:
   - Read

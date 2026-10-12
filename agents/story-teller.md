@@ -1,5 +1,5 @@
 ---
-model: claude-sonnet-5
+model: claude-sonnet-5-5
 name: story-teller
 description: Writes the narrative story draft for a session. Reads session logs and character files to produce an immersive, novel-chapter-style story.md file — prose narrative, anchor plan, and memoir entries for all PCs. Stops at the story draft — does not trigger website generation. Use when the session manager signals logs are ready, or when the DM asks for a session write-up.
 tools:

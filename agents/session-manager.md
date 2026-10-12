@@ -1,5 +1,5 @@
 ---
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 name: session-manager
 description: Handles session start and end — reads and writes all persistent state files so every session begins from accurate state and ends with a complete record. Also maintains NPC relationships, in-game calendar, and faction reputation.
 tools:

@@ -1,5 +1,5 @@
 ---
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 name: combat-tracker
 description: Manages all combat state — initiative order, HP, conditions, concentration, readied actions, surprise, XP, and turn progression. Single source of truth for everything that happens during a fight. Use when the DM says combat begins, "Roll initiative", "Load encounter [name]", or reports attack/damage results.
 tools:

@@ -1,5 +1,5 @@
 ---
-model: claude-sonnet-4-6
+model: claude-sonnet-5-5
 name: conversation-npc
 description: Plays one NPC across the session — voices the NPC, tracks disposition, keeps the NPC's memory. Spawned warm at session start (WARM-UP), activated by the main thread for each conversation (ACTIVATE), then messaged directly for every exchange. Knows only its NPC file, its own past conversations and DM-approved third-party information.
 tools:

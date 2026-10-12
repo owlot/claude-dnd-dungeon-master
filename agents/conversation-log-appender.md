@@ -1,5 +1,5 @@
 ---
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 name: conversation-log-appender
 description: Appends a completed NPC conversation to the session conversation log. Called by the conversation-npc agent and the /dm-conversation-log skill at the end of every NPC conversation.
 tools:
