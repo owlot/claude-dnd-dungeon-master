@@ -102,6 +102,10 @@ If any unverified encounters are likely, prompt: *"Run `/dm-load-encounter [name
 
 Ask: *"Ready to begin?"* and wait for the DM to confirm before doing anything else.
 
+### 7b. Check the NPC files
+
+Run `python .claude/scripts/npc_links.py [campaign] --audit`. If it lists NPC files without a `## who knows` section, add them to the briefing as *NPC files to complete* (format: `.claude/rules/npc-file-format.md`); NPC agents ask instead of guessing for those people, so the table slows down when they come up. Do not block the briefing.
+
 ### 8. Hand the warm pool to the main thread
 
 This agent is one-shot and exits after step 7; it does not spawn anything. The **main thread**, once the DM confirms, spawns one `conversation-npc` agent per slug in `LIKELY NPCS` in a single parallel message (`name: "npc-[slug]"`, prompt beginning `WARM-UP`), as described in `.claude/rules/npc-memory.md`. The `session-context` agent is retired.
