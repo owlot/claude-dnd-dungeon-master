@@ -52,6 +52,7 @@ From `state.md`, display:
 - **Active quests** (name + one-line status)
 - **Open threads** (bullet list)
 - **Faction standings** (if `relationships.md` exists: show any factions with non-neutral attitude)
+- **DM questions** (the `## DM Questions` section of `state.md`, if present): list every open `- [ ]` question verbatim under the heading *DM questions to settle*, with its bracketed file and default, and ask the DM to answer any they can. When the DM answers, make the change in the ledger, description, card or memory file named in brackets (follow the party/actual rules in 2b/2c), tick the question and move it to the end of the section under `### Answered` with the answer; leave unanswered ones in place. Never block the session on them
 - **Objects** (the `## Objects` table in `state.md`): who holds each tracked object and where it is, flagging anything lost, stolen, hidden or in someone else's hands
 - **Locations** (the `## Locations` table in `state.md`): places the party knows about but has not visited, and places only partly explored, with what remains. Use these as the source for the likely-actions prediction
 
