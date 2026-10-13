@@ -412,6 +412,9 @@ def extract_world_refs(world_html_path):
                     refs.setdefault(anchor_id, [])
                     if name not in refs[anchor_id]:
                         refs[anchor_id].append(name)
+                for alias in card.get("aliases", []):  # extra names the story uses ("Laeral")
+                    if alias and alias not in refs.setdefault(anchor_id, []):
+                        refs[anchor_id].append(alias)
         return refs
 
     # Fallback: parse world.html
