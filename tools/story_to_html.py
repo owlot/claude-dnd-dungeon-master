@@ -28,6 +28,13 @@ Speaker slug → display name table. Add entries here as new NPCs appear.
 import re
 import sys
 import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts"))
+from bump_asset_versions import version as _av_raw  # content-hash cache busting
+
+
+def _av(name):
+    return _av_raw(name) or "0"
 import json
 import argparse
 
@@ -353,11 +360,11 @@ def wrap_page(body_html, session_number, subtitle, campaign_title, toc_scenes):
     <head>
         <meta charset="UTF-8" />
         <title>{title_tag}</title>
-        <link rel="stylesheet" href="../style/story.css" />
-        <script src="../js/lightbox.js" defer></script>
-        <script src="../js/memoir.js?v=2" defer></script>
-        <script src="../js/nav.js" defer></script>
-        <script src="../js/audio.js" defer></script>
+        <link rel="stylesheet" href="../style/story.css?v={_av('story.css')}" />
+        <script src="../js/lightbox.js?v={_av('lightbox.js')}" defer></script>
+        <script src="../js/memoir.js?v={_av('memoir.js')}" defer></script>
+        <script src="../js/nav.js?v={_av('nav.js')}" defer></script>
+        <script src="../js/audio.js?v={_av('audio.js')}" defer></script>
     </head>
     <body>
         <div id="lightbox" onclick="this.classList.remove('open')">
