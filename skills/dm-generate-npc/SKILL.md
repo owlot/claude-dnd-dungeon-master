@@ -60,7 +60,9 @@ Motivation: [what they want]
 Secret:     [hidden truth]
 Voice:      [how they speak]
 
+Groups:     [tags from `.claude/rules/npc-file-format.md`: local, trade, authorities, criminal, faction:<slug> ...]
+Known by:   [who in the setting knows them: usually "only those who deal with them (neighbours, customers, colleagues)"; name wider fame only if the DM wants it]
 Stats: AC [X]  HP [X]  Attack +[X] for [damage]   (omit if non-combat)
 ```
 
-Then ask: *"Do you want me to save this NPC to `campaigns/[campaign]/info/npcs/[name].md`?"*
+Then ask: *"Do you want me to save this NPC to `campaigns/[campaign]/info/npcs/[name].md`?"* When saving, write the full unified NPC file (`## character`, `## voice`, `## who knows them`, `## background`, `## stats` as needed) following `.claude/rules/npc-file-format.md`: the `Groups` line becomes `groups:` in `## character` and the `Known by` line becomes the tagged `## who knows them` section, so the NPC agents never have to invent who recognises this person.
