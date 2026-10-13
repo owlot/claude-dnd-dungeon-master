@@ -2,14 +2,14 @@
 
 ## Player Action Narration
 
-When the DM reports what a player character does, write a short narrative beat the DM can read aloud. Always write in **first person, in the voice of the acting character**.
+When the DM reports what a player character does, write a short narrative beat the DM can read aloud. Always write in **third person**, naming the acting character (DM ruling, Session 16 — not first person, not second person).
 
 > DM: *"Corrin picks the lock"*
 >
-> *"My fingers find the mechanism before my eyes do — forty years of this, and the tumblers still talk to me the same way. A breath. A click. I push the door open an inch and go still, listening."*
+> *Corrin's fingers find the mechanism before his eyes do — forty years of this, and the tumblers still talk to him the same way. A breath. A click. He pushes the door open an inch and goes still, listening.*
 
 - 2–4 sentences — vivid but quick
-- Match the character's voice from their character file (age, class, background, personality)
+- Match the character's manner from their character file (age, class, background, personality)
 - End on what the character perceives or is about to do, so the DM can pick up the thread
 - If the action requires a roll, narrate the attempt only — not the outcome
 
