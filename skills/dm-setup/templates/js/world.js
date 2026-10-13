@@ -24,8 +24,74 @@
     return node;
   }
 
-  function renderCard(card) {
+  // ── Party-view cards (places / objects) ────────────────────────────────────
+  // world-public.json holds only what the party knows; see export_world_public.py.
+
+  function factRows(pub) {
+    const rows = pub.holder !== undefined
+      ? [["Held by", pub.holder], ["Where", pub.location], ["Status", pub.status]]
+      : [["State", pub.state], ["Detail", pub.detail]];
+    if (pub.last_changed_session) rows.push(["Last changed", `Session ${pub.last_changed_session}`]);
+    return rows.filter(([, v]) => v);
+  }
+
+  function renderFacts(pub) {
+    const dl = el("dl", { class: "card-facts" });
+    for (const [k, v] of factRows(pub)) {
+      const dt = el("dt", {});
+      dt.textContent = k;
+      const dd = el("dd", {});
+      dd.textContent = v;
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    }
+    return dl;
+  }
+
+  function historyLine(h) {
+    const parts = h.holder !== undefined
+      ? [h.holder, h.location, h.status]
+      : [h.state, h.detail];
+    return parts.filter(Boolean).join(" · ");
+  }
+
+  function renderHistory(pub) {
+    const hist = (pub.history || []).slice().reverse();
+    if (!hist.length) return null;
+    const details = el("details", { class: "card-history" });
+    const summary = el("summary", {});
+    summary.textContent = `History (${hist.length})`;
+    details.appendChild(summary);
+    const ol = el("ol", { class: "card-history-list" });
+    for (const h of hist) {
+      const li = el("li", {});
+      const head = el("div", { class: "hist-head" });
+      head.textContent = h.when ? `Session ${h.session} · ${h.when}` : `Session ${h.session}`;
+      const ev = el("div", { class: "hist-event" });
+      ev.textContent = h.event;
+      li.appendChild(head);
+      li.appendChild(ev);
+      const st = historyLine(h);
+      if (st) {
+        const stEl = el("div", { class: "hist-state" });
+        stEl.textContent = st;
+        li.appendChild(stEl);
+      }
+      ol.appendChild(li);
+    }
+    details.appendChild(ol);
+    return details;
+  }
+
+  function renderCard(card, pub) {
     const div = el("div", { class: "card", id: card.id });
+    if (pub) {
+      card = Object.assign({}, card, {
+        name: pub.name,
+        meta: pub.holder !== undefined ? pub.holder : pub.state,
+        tags: [pub.tag],
+      });
+    }
 
     // Header
     const header = el("div", { class: "card-header" });
@@ -71,10 +137,22 @@
     }
 
     const content = el("div", { class: "card-body-content" });
-    for (const para of (card.body || [])) {
-      const p = document.createElement("p");
-      p.innerHTML = para;
-      content.appendChild(p);
+    if (pub) {
+      const paras = (pub.description && pub.description.length) ? pub.description : (pub.what ? [pub.what] : []);
+      for (const text of paras) {
+        const p = document.createElement("p");
+        p.textContent = text;
+        content.appendChild(p);
+      }
+      content.appendChild(renderFacts(pub));
+      const hist = renderHistory(pub);
+      if (hist) content.appendChild(hist);
+    } else {
+      for (const para of (card.body || [])) {
+        const p = document.createElement("p");
+        p.innerHTML = para;
+        content.appendChild(p);
+      }
     }
     body.appendChild(content);
     div.appendChild(body);
@@ -82,13 +160,15 @@
     return div;
   }
 
-  function renderSection(section) {
+  function renderSection(section, pubIndex) {
     const frag = document.createDocumentFragment();
     const h2 = el("h2", { id: section.id });
     h2.textContent = section.title;
     frag.appendChild(h2);
+    const usesPublic = section.id === "section-places" || section.id === "section-objects";
     for (const card of section.cards) {
-      frag.appendChild(renderCard(card));
+      const pub = usesPublic ? pubIndex[card.public || card.id] : null;
+      frag.appendChild(renderCard(card, pub));
     }
     return frag;
   }
@@ -190,7 +270,7 @@
     const jsonPath = "world.json";
     let world;
     try {
-      const r = await fetch(jsonPath);
+      const r = await fetch(jsonPath, { cache: "no-store" });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       world = await r.json();
     } catch (e) {
@@ -198,8 +278,18 @@
       return;
     }
 
+    // Party-view data for places and objects (optional; cards fall back to world.json)
+    const pubIndex = {};
+    try {
+      const pr = await fetch("world-public.json", { cache: "no-store" });
+      if (pr.ok) {
+        const pub = await pr.json();
+        for (const e of [...(pub.places || []), ...(pub.objects || [])]) pubIndex[e.id] = e;
+      }
+    } catch (e) { /* no world-public.json: render world.json as-is */ }
+
     for (const section of world.sections) {
-      root.appendChild(renderSection(section));
+      root.appendChild(renderSection(section, pubIndex));
     }
 
     initSearch(root);

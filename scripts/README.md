@@ -349,3 +349,35 @@ python scripts/update_character.py <campaign> raven features_restore_all
 # After combat ends
 python scripts/party_status.py <campaign>
 ```
+
+---
+
+## export_world_public.py
+
+Exports the spoiler-free (party view) data of tracked objects and locations for the website. Reads `campaigns/<campaign>/party/objects/*.md` and `party/locations/*.md` but only the party-view columns, the Event column and each file's *What it is* line; the *Actual (DM-only)* and *Source* columns never reach the output. Refuses to write if a ledger has the wrong header, if a DM marker (`[DM`, `DM ruling`, ...) is in public text, or if a term from `party/dm-secrets.txt` appears.
+
+```
+python scripts/export_world_public.py <campaign> [--out FILE]
+```
+
+Output: JSON with `places` (id, name, what, state, detail, tag, last_changed_session, history) and `objects` (id, name, what, holder, location, status, tag, last_changed_session, history). Locations whose party state is `—` are left out.
+
+---
+
+## sync_world_cards.py
+
+Publishes the party view to the website and keeps `world.json` in step: runs `export_world_public.py`, writes `website/<campaign>/world-public.json`, and for every tracked place and object makes sure a card exists in `world.json` (section-places / section-objects). Existing cards keep their id and image but lose their hand-written body, meta and tags (rendered from the public JSON by `world.js`); missing ones get a stub card. Old ids can be mapped to ledger slugs in `website/<campaign>/world-aliases.json`. Backs up the first world.json to `world.json.pre-public`. Nothing is written if the export reports an ERROR.
+
+```
+python scripts/sync_world_cards.py <campaign>
+```
+
+---
+
+## bump_asset_versions.py
+
+Cache-busts the site: every `<script src>` / `<link href>` pointing at `js/NAME.js` or `style/NAME.css` gets `?v=<content hash>`, so browsers refetch a file exactly when it changes. Updates `website/**/*.html` and the `dm-setup` template pages. `--check` reports stale tags without writing. `story_to_html.py` imports it so new session pages are born with the right version. A Claude Code `PostToolUse` hook in `.claude/settings.json` runs it automatically (`--hook`) whenever a file under `website/js`, `website/style` or the template `js`/`style` folders is edited or written through Edit/Write; if you change those files any other way (sed, an editor), run the script by hand.
+
+```
+python scripts/bump_asset_versions.py [--check]
+```
