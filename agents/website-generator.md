@@ -344,6 +344,8 @@ python .claude/scripts/update_world.py [name] list_cards
 
 Then apply each change with the appropriate command. Derive all changes from the story draft and logs — do not ask the DM. If something is ambiguous, add it.
 
+**Places and Objects cards come from the party view only.** Run `python .claude/scripts/sync_world_cards.py [name]`. It publishes `website/[name]/world-public.json` (the party view only) and makes sure every tracked place and object has a card in `world.json`; `world.js` renders the latest state and a History panel from that file. Do not write Places or Objects card bodies yourself and never read `party/objects/` or `party/locations/` directly: their *Actual (DM-only)* columns hold secrets. Old card ids that differ from a ledger slug go in `website/[name]/world-aliases.json` so existing `world.html#anchor` links keep working. If the script prints an ERROR it wrote nothing; stop and report it to the DM rather than working around it. Cards for places or objects that are not tracked keep their hand-written body; mention them in your report so the DM can decide to track them.
+
 ### New NPC introduced
 
 ```bash

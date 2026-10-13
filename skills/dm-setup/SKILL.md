@@ -108,6 +108,8 @@ Then copy each file from `.claude/skills/dm-setup/templates/` to `website/` usin
 - `templates/js/memoir.js` → `website/js/memoir.js`
 - `templates/js/nav.js` → `website/js/nav.js`
 - `templates/js/world.js` → `website/js/world.js`
+
+After copying any js or css, run `python .claude/scripts/bump_asset_versions.py` so the pages load the fresh files (see `.claude/rules/web-assets.md`).
 - `templates/style/story.css` → `website/style/story.css`
 - `templates/style/private.css` → `website/style/private.css`
 - `templates/index.html` → `website/index.html` (only if it does not already exist — this file contains the campaign list and must not be overwritten)
@@ -181,6 +183,16 @@ For each file below, **only write it if it does not already exist**:
 ## Next Session Prep Notes
 
 ## Factions
+
+## Objects
+
+| Object | Holder (party view) | Location (party view) | Status (party view) | Actual (DM-only) | Last changed | Ledger |
+|--------|---------------------|-----------------------|---------------------|------------------|--------------|--------|
+
+## Locations
+
+| Location | State (party view) | Detail (party view) | Actual state (DM-only) | Actual detail (DM-only) | Last changed | Ledger |
+|----------|--------------------|---------------------|------------------------|-------------------------|--------------|--------|
 ```
 
 `campaigns/[CAMPAIGN]/party/session-log.md`:

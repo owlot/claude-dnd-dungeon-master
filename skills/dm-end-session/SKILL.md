@@ -9,7 +9,7 @@ End session $ARGUMENTS
 
 2. Delegate to the `session-manager` sub-agent (`subagent_type: "session-manager"`) to:
    1. Derive the session summary from the conversation log just written
-   2. Update `party/state.md` with current situation, open threads, next steps
+   2. Update `party/state.md` with current situation, open threads, next steps, and its `## Objects` and `## Locations` tables; append what changed to each affected `party/objects/[slug].md` and `party/locations/[slug].md` ledger (the DM approves the rows first)
    3. Update every character file in `campaigns/[campaign]/party/characters/` with current HP, resources used, gold, notes
    4. Append a session log entry to `party/session-log.md`
    5. List all files touched with a one-line description of what changed

@@ -1268,3 +1268,67 @@ a.ref:hover {
 .chapter-subtitle .read-time-total::before {
     content: " · ";
 }
+
+/* ── Party-view cards: latest state + history panel ─────────────────────── */
+.card-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.15rem 0.75rem;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.card-facts dt {
+    color: #888;
+    font-style: italic;
+}
+
+.card-facts dd {
+    margin: 0;
+    color: #d8d0c0;
+}
+
+.card-history {
+    margin-top: 0.6rem;
+    border-top: 1px dashed #2a2a2a;
+    padding-top: 0.4rem;
+    font-size: 0.88rem;
+}
+
+.card-history summary {
+    cursor: pointer;
+    color: #a89a78;
+    user-select: none;
+}
+
+.card-history summary:hover {
+    color: #e8e0d0;
+}
+
+.card-history-list {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0 0 0 0.75rem;
+    border-left: 2px solid #2a2a2a;
+}
+
+.card-history-list li {
+    margin: 0 0 0.65rem;
+}
+
+.card-history-list .hist-head {
+    font-size: 0.78rem;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.card-history-list .hist-event {
+    color: #d8d0c0;
+}
+
+.card-history-list .hist-state {
+    font-size: 0.82rem;
+    color: #888;
+    font-style: italic;
+}

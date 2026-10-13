@@ -103,7 +103,7 @@ Delegates to the `session-manager` sub-agent to:
 
 **`/dm-end-session`** or **`End session`**
 Delegates to the `session-manager` sub-agent to:
-1. Update `campaigns/[name]/party/state.md` with current situation, open threads, next steps
+1. Update `campaigns/[name]/party/state.md` with current situation, open threads, next steps, and its `## Objects` and `## Locations` tables (latest holder/location of each tracked object; state of each tracked location: rumored, exact location unknown, known on map, visited, partially explored, explored, changed; each kept as a party view, safe for the website, and a DM-only actual); append what changed to each ledger in `campaigns/[name]/party/objects/[slug].md` and `party/locations/[slug].md`
 2. Validate and update every character file in `campaigns/[name]/party/characters/` with current HP, resources used, gold, notes
 3. Write `campaigns/[name]/party/session-[N]/session-[N]-conversation.md` — full session conversation archive
 4. Append a session summary entry to `party/session-log.md`
