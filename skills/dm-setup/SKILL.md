@@ -184,6 +184,8 @@ For each file below, **only write it if it does not already exist**:
 
 ## Factions
 
+## DM Questions
+
 ## Objects
 
 | Object | Holder (party view) | Location (party view) | Status (party view) | Actual (DM-only) | Last changed | Ledger |

@@ -11,9 +11,16 @@ column and the "Campaign file" line are never read into the output, so the
 website generator cannot leak them.
 
 Usage:
-    python .claude/scripts/export_world_public.py <campaign> [--out FILE]
+    python .claude/scripts/export_world_public.py <campaign> [--out FILE] [--through N]
 
 Output: JSON with "places" and "objects" (written to FILE or stdout).
+
+--through N publishes only what the party knew up to Session N (the last
+published session page): ledger rows from later sessions are dropped, items
+with no row up to N are left out, and an item that has later rows loses its
+Description (the card falls back to its one-line "What it is"), because a
+Description is rewritten as the party learns more. sync_world_cards.py passes
+the highest session in website/<campaign>/sessions.json.
 
 Safety (structural first: the Actual and Source columns are never read):
   ERROR (exit 1, nothing written)
@@ -44,7 +51,6 @@ DM_MARKERS = re.compile(
     r"|\b[A-Z]{1,2}\d{1,2}[a-z]?\b",  # map room codes (X7, Q11, Z3) and session shorthand (S14)
     re.I,
 )
-PARTY_NAMES = re.compile(r"\b(party|caelith|corrin|lylnyler)\b", re.I)
 PLACE_TAG = {
     "rumored": "tag-unknown",
     "exact location unknown": "tag-unknown",
@@ -123,6 +129,24 @@ def clean_session(label):
     return m.group(0) if m else label.strip()
 
 
+def session_no(label):
+    m = re.match(r"\d+", label.strip())
+    return int(m.group(0)) if m else 0
+
+
+def through(rec, n):
+    """Drop rows after session n; None if nothing is left."""
+    if n is None:
+        return rec
+    kept = [r for r in rec["rows"] if session_no(r["Session"]) <= n]
+    if not kept:
+        return None
+    out = dict(rec, rows=kept)
+    if len(kept) < len(rec["rows"]):
+        out["description"] = []  # rewritten after session n: fall back to "What it is"
+    return out
+
+
 def latest(rec):
     """Latest row (current state) and the session of the last real change.
 
@@ -155,10 +179,22 @@ def build_place(rec):
     }
 
 
-def build_object(rec):
+def party_pattern(campaign):
+    """'party' plus the first name of every card in world.json's Party section."""
+    names = ["party"]
+    path = os.path.join("website", campaign, "world.json")
+    if os.path.exists(path):
+        for sec in json.load(open(path, encoding="utf-8")).get("sections", []):
+            if sec["id"] == "section-party":
+                for c in sec["cards"]:
+                    names += [w for w in re.findall(r"[A-Za-z']+", c["name"].split(" — ")[0])[:1]]
+    return re.compile(r"\b(" + "|".join(re.escape(n) for n in names) + r")\b", re.I)
+
+
+def build_object(rec, party_re):
     last, changed = latest(rec)
     holder = last["Holder (party)"]
-    if PARTY_NAMES.search(holder):
+    if party_re.search(holder):
         tag = "tag-with-party"
     elif holder.lower().startswith("unknown"):
         tag = "tag-unknown"
@@ -187,12 +223,14 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("campaign")
     ap.add_argument("--out")
+    ap.add_argument("--through", type=int)
     args = ap.parse_args()
 
     base = os.path.join("campaigns", args.campaign, "party")
     errors = []
     places, objects = [], []
     records = []  # (kind, rec, party_cols)
+    party_re = party_pattern(args.campaign)
 
     for path in sorted(glob.glob(os.path.join(base, "locations", "*.md"))):
         rec, e = parse(path, LOCATION_HEADER)
@@ -202,7 +240,8 @@ def main():
         ce = check(rec, ["State (party)", "Detail (party)"])
         errors += ce
         records.append(("place", rec, ["State (party)", "Detail (party)"]))
-        p = build_place(rec)
+        rec = through(rec, args.through)
+        p = build_place(rec) if rec else None
         if p:
             places.append(p)
 
@@ -214,7 +253,9 @@ def main():
         ce = check(rec, ["Holder (party)", "Location (party)", "Status (party)"])
         errors += ce
         records.append(("object", rec, ["Holder (party)", "Location (party)", "Status (party)"]))
-        objects.append(build_object(rec))
+        rec = through(rec, args.through)
+        if rec:
+            objects.append(build_object(rec, party_re))
 
     secrets_path = os.path.join(base, "dm-secrets.txt")
     if os.path.exists(secrets_path):

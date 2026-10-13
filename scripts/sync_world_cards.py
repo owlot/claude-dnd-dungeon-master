@@ -20,6 +20,8 @@ What it does:
        - a tracked item without a card gets a stub card {id, name, public}
        - cards for things that are not tracked (no public entry) are left
          untouched
+     (published through the highest session in website/<campaign>/sessions.json;
+     stub cards of items not yet published are removed)
   3. Backs up the first-ever world.json to world.json.pre-public.
 
 world.js merges world-public.json into those cards: latest state in the card
@@ -44,8 +46,13 @@ def main():
     pub_path = os.path.join(site, "world-public.json")
     world_path = os.path.join(site, "world.json")
 
-    r = subprocess.run([sys.executable, os.path.join(HERE, "export_world_public.py"),
-                        campaign, "--out", pub_path])
+    cmd = [sys.executable, os.path.join(HERE, "export_world_public.py"), campaign, "--out", pub_path]
+    sessions_path = os.path.join(site, "sessions.json")
+    if os.path.exists(sessions_path):
+        nums = [int(x["number"]) for x in json.load(open(sessions_path, encoding="utf-8")).get("sessions", [])]
+        if nums:
+            cmd += ["--through", str(max(nums))]  # publish only what the published pages cover
+    r = subprocess.run(cmd)
     if r.returncode != 0:
         print("Export failed; world.json not touched.", file=sys.stderr)
         sys.exit(r.returncode)
@@ -67,9 +74,14 @@ def main():
                 return s
         raise SystemExit(f"world.json has no section {sid}")
 
-    stats = {"converted": 0, "stubs": 0}
+    stats = {"converted": 0, "stubs": 0, "pruned": 0}
     for sid, key in (("section-places", "places"), ("section-objects", "objects")):
         sec = section(sid)
+        live = {e["id"] for e in pub[key]}
+        before = len(sec["cards"])
+        sec["cards"] = [c for c in sec["cards"]
+                        if not (c.get("public") and c["public"] not in live and "body" not in c and not (c.get("place") or c.get("portrait")))]
+        stats["pruned"] += before - len(sec["cards"])
         by_public = {}
         for card in sec["cards"]:
             slug = card.get("public") or aliases.get(card["id"]) or card["id"]
@@ -90,7 +102,7 @@ def main():
     with open(world_path, "w", encoding="utf-8") as f:
         json.dump(world, f, indent=2, ensure_ascii=False)
         f.write("\n")
-    print(f"world.json: {stats['converted']} cards converted, {stats['stubs']} stub cards added", file=sys.stderr)
+    print(f"world.json: {stats['converted']} cards converted, {stats['stubs']} stub cards added, {stats['pruned']} unpublished stubs removed", file=sys.stderr)
 
 
 if __name__ == "__main__":
