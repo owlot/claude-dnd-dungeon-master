@@ -37,6 +37,8 @@ Copy each file from `.claude/skills/dm-setup/templates/` using `Bash(cp ...)`, o
 - `templates/style/story.css` → `website/style/story.css`
 - `templates/style/private.css` → `website/style/private.css`
 
+After copying, run `python .claude/scripts/bump_asset_versions.py` so every page loads the fresh js/css (see `.claude/rules/web-assets.md`).
+
 ---
 
 ## Step 3 — Confirm

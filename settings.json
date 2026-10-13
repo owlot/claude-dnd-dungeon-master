@@ -24,5 +24,18 @@
       "Write(campaigns/*/info/**)",
       "Write(campaigns/*/party/**)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/bump_asset_versions.py --hook"
+          }
+        ]
+      }
+    ]
   }
 }
