@@ -1,0 +1,57 @@
+@col 4131 3404 29
+S1|The Swords' Rest|tavern, C, 1
+S2|The Stone House|guildhall, D, 1
+S3|The House of Good Spirits|guildhall, B, 3
+S4|The Redbridle Stables|business, C, 2
+S5|The Coach and Wagon Hall|guildhall, B, 3
+S6|Saddlers' & Harness-Makers' Hall|guildhall, B, 2
+S7|Brian the Swordmaster's Smithy|business, C, 2
+S8|The Old Monster Shop|business, D, 4
+S9|Midnight Sun|tavern, D, 1
+S10|Flurmastyr residence|row house, C, 2
+S11|Builders' Hall|guildhall, B, 2
+S12|Nelkaush the Weaver|business, C, 1
+S13|The Road House|guild house, B, 2
+S14|The Full Cup|tavern, D, 1
+S15|The Jade Dancer|festhall, B, 3
+S16|Tehmak's Coaches|business, B, 3
+S17|Hlakken Stables|business, C, 2
+S18|The Spouting Fish|tavern, C, 4
+S19|Nueth's Fine Nets|business, C, 1
+S20|Metalmasters' Hall|guildhall, B, 3
+@col 4741 3404 29
+S21|Aurora's Realms Shop, South High Road Catalogue Counter|business, C, 4 ##2
+S22|The Red Gauntlet|tavern, D, 2
+S23|Pelauvir's Counter|business, C, 5
+S24|Bellister's Hand|business, C, 2
+S25|Bellister's House|warehouse, C, 3
+S26|Orm's Highbench|business, D, 4
+S27|Athal's Stables|business, D, 2
+S28|Essimuth's Equipment|business, C, 2
+S29|Temple of Good Cheer|row house, C, 3
+S30|Madame Garah's Boarding House|row house, B, 2 ##2
+S31|Amrani's Laundry|business, C, 1
+S32|Piatran's Clothiers|business, C, 1
+S33|Rokkek Ingerr's residence|row house, B, 2
+S34|Hemmerem's Stables|business, B, 1s & 2s
+S35|Kolat's Towers|wizards' domiciles, B, 4s
+S36|Watch Guardpost|city building, B, 2
+S37|The Garrulous Grocer|home/business, B & C, 1, 2, & 3 ##2
+@col 5349 3404 29
+S38|Krabbellor Silversmiths|business, C, 2
+S39|Laran's Cartographers|business^ B, 2
+S40|Waukeen's Wares|business, D, 2
+S41|The Safehaven Inn|inn, B, 3
+S42|Ingerr & Ingerr Warehouses|warehouse, C, 2
+S43|The Beer Golem|tavern, C, 2
+S44|Phaulkonmere|noble villa, A, 2s & 3s
+S45|The Daily Trumpet|business, C, 3
+S46|Helm's Hall|temple/house, C3
+S47|Tymora's Blessing|tavern, D, 1
+S48|The Medusa's Glare|business, B, 2
+S49|Flame of Hope|business, C, 2
+S50|Berendarr's World of Words|business, D, 1
+S51|Hlethvagi's Coins|business, B, 2
+S52|The South Gate|city building, A, 4
+S53|East Torch Tower|city building, A, 5
+S54|Formerly Prestar's Furniture|ruined building, D, 1 ##2

@@ -14,3 +14,5 @@ If the verifier gives the all-clear (or DM confirms to proceed despite issues), 
 1. Display the full verified encounter stat block
 2. Prompt for surprise check
 3. Collect initiative rolls and begin combat
+
+If `sources/` has a map for this encounter, offer: *"Load the map for this encounter? (`/dm-battlemap [campaign] load [encounter]`)"* before initiative. After the DM confirms the board, run `/dm-battlemap [campaign] sync` so the tracker has positions.

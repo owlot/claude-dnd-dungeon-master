@@ -21,6 +21,17 @@ def schema(props, required=()):
             "required": list(required), "additionalProperties": False}
 
 
+def one_of(a):
+    """The document argument of map-set / map-merge: inline JSON, or @file."""
+    if a.get("file") and a.get("json"):
+        sys.exit("give either json or file, not both")
+    if a.get("file"):
+        return "@" + a["file"]
+    if a.get("json"):
+        return a["json"]
+    sys.exit("give json or file")
+
+
 # name -> (description, input schema, argv builder)
 TOOLS = {
     "table_chat_status": ("Server health and the live conversation: who is in the room, who is addressed, any waiting draft or NEED.", schema({}), lambda a: ["status"]),
@@ -63,6 +74,25 @@ TOOLS = {
     "table_chat_stop_audio": ("Silence the tablet.", schema({}), lambda a: ["stop"]),
     "table_chat_end": ("End the conversation and save it: drafts each NPC's closing record from what it heard and writes the log blocks and memory entries. 'review' prints the drafts instead.",
                        schema({"review": "?true to print the drafts without saving"}), lambda a: ["end", "--review"] if a.get("review") else ["end"]),
+    "map_docs": ("The battle map and the city map (served by the table chat at /map/): list the stored documents.", schema({}), lambda a: ["map-docs"]),
+    "map_get": ("Read a map document as JSON. dm/state = the DM's battle map, table/state = what the players see, moves/table = pending player moves, city / citypub / citypins/<id> = the city map.",
+                schema({"path": "document path", "out": "optional: write the document to this file (a path inside the repo) instead of returning it, for large documents"}, ["path"]),
+                lambda a: ["map-get", a["path"]] + (["--out", a["out"]] if a.get("out") else [])),
+    "map_collection": ("Read every document of a map collection (for example citypins).", schema({"name": "collection name"}, ["name"]), lambda a: ["map-col", a["name"]]),
+    "map_set": ("Replace a map document with the given JSON. Read it first with map_get and change only what the DM asked for.",
+                schema({"path": "document path", "json": "the full new document, as JSON text", "file": "alternatively, a JSON file (a path inside the repo) holding the full document"}, ["path"]),
+                lambda a: ["map-set", a["path"], one_of(a)]),
+    "map_merge": ("Merge top-level keys into a map document (creates it if missing); the other keys stay as they are.",
+                  schema({"path": "document path", "json": "JSON object with the keys to set", "file": "alternatively, a JSON file holding the keys to set"}, ["path"]),
+                  lambda a: ["map-merge", a["path"], one_of(a)]),
+    "map_delete": ("Delete a map document.", schema({"path": "document path"}, ["path"]), lambda a: ["map-delete", a["path"]]),
+    "map_asset": ("Register a map image from a file on the DM's machine (for example campaigns/<c>/sources/...) and get the asset id the map documents refer to.",
+                  schema({"file": "path of the image file"}, ["file"]), lambda a: ["map-asset", a["file"]]),
+    "map_assets": ("List the registered map images.", schema({}), lambda a: ["map-assets"]),
+    "map_route": ("How far and how long on foot between two places on the Waterdeep city map: saved routes between them (DM's and players') plus up to three computed street routes, the shortest first (walking at 3 mph, about 264 ft a minute). Use it when the party asks how long it takes to get somewhere. Each place is a pin label, a building from the poster's printed legend (name or code such as C48) or 'x,y' in poster pixels. The poster is an illustration: narrow alleys are approximate, so say 'about'.",
+                  schema({"origin": "where from: pin label, legend building or code, or x,y", "destination": "where to"}, ["origin", "destination"]), lambda a: ["map-route", a["origin"], a["destination"]]),
+    "map_routes": ("List every saved route on the city map (the DM's and the players') with distance and walking time.", schema({}), lambda a: ["map-routes"]),
+    "map_links": ("The map page links for the DM and for the tablet.", schema({}), lambda a: ["map-links"]),
     "table_chat_discard": ("End without saving anything to memory; optionally delete the log.", schema({"delete_log": "?true to delete the log file"}), lambda a: ["discard"] + (["--delete-log"] if a.get("delete_log") else [])),
 }
 

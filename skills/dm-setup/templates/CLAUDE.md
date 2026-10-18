@@ -144,6 +144,9 @@ Walk through a level-up — new features, HP roll, spell choices, ASI/feat. Upda
 **`/dm-checkpoint [campaign]`**
 Snapshot all character files and `combat_state.json` to `.checkpoints/`. Use before risky operations.
 
+**`/dm-battlemap [campaign] [setup | load <encounter> | sync | move Name=Cell ...]`**
+Run the Combat Positions battle map: publish the page once, load an encounter's party map and DM map from `sources/` and draft its walls, doors and enemy tokens from the map and room descriptions, hide the rest behind fog for the DM to reveal, and sync token positions to `party/battlefield/` so the combat tracker can use them. See `.claude/skills/dm-battlemap/SKILL.md`.
+
 **`/dm-checkpoint-log [campaign]`**
 Flush the current session conversation to `party/session-[N]/session-[N]-conversation.md`. Appends everything since the last checkpoint. Triggered automatically before combat starts and at end-session — use manually on long sessions or before a break.
 
@@ -164,6 +167,10 @@ Recovery only — rebuilds `session-[N]-conversation.md` from the raw JSONL tran
 ## Combat Flow
 
 **Never run combat in the main context.** When combat begins, invoke `/dm-checkpoint-log [campaign]`, then spawn the `combat-tracker` agent and relay all DM input via `SendMessage` for the entire fight. See `.claude/agents/combat-tracker.md` for full procedure.
+
+**Battle map.** If the map has a board (the MCP tool `map_get` with path `dm/state` returns a document; the map is served by the table-chat server at `/map/`, state in `campaigns/[name]/party/maps/`), the `combat-tracker` reads the map's database itself (the MCP tools `map_get` and `map_set`, loaded through ToolSearch) at combat start, each round and before position-dependent rulings, and writes DM-confirmed enemy/ally moves back through `battlemap.py move`. At every turn it runs `battlemap.py turn` (sets the active character on the board; the tablet's table mode lets players move only that character) and, before resolving what the mover does next, `battlemap.py lastmove` (who moved where on the table, and the opportunity attacks it provoked). It uses `battlemap.py area`, `path` and `reach` for areas of effect, movement cost, opportunity attacks and who a creature can reach. No relay is needed; `/dm-battlemap [campaign] sync` and `move` remain as a manual fallback, and the tracker may end a turn with a `BATTLEFIELD MOVES:` line if its own write fails (then apply it with `/dm-battlemap [campaign] move`). When an encounter is loaded and a map exists in `sources/`, offer `/dm-battlemap [campaign] load [encounter]`.
+
+**Travel times in Waterdeep.** When the party asks how long it takes to get somewhere in the city, do not guess: run `python .claude/tools/table-chat/table_chat.py map-route "<from>" "<to>"` (MCP tool `map_route`; each place is a pin label, a building from the poster's printed legend by name or code such as C48, or `x,y`). It lists the routes the DM or the players saved on the city map between those places and up to three computed street routes, shortest first, with distance and walking time at 3 mph (264 ft a minute). `map-routes` (`map_routes`) lists every saved route. The poster is an illustration, so say "about"; for a horse, a cart or hurry, scale the time yourself and say so. Needs the table-chat server running (`.claude/skills/dm-citymap/SKILL.md`).
 
 ---
 

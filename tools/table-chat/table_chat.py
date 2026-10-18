@@ -28,12 +28,28 @@ The server does the work (drafts, voice, log, memory); this only calls its HTTP 
   table_chat.py end --confirm records.json          save edited records ({"npc-slug": {...}})
   table_chat.py discard [--delete-log]              end without saving
   table_chat.py watch                               stream events (one line each)
+
+The standalone map (battle map + city map, served at /map/ by the same server):
+  table_chat.py map-docs                            every stored document (path, revision, size)
+  table_chat.py map-get <path> [--out FILE]         read one document as JSON (or write it to a file) (dm/state, table/state, moves/table, city, citypub, citypins/<id>)
+  table_chat.py map-col <name>                      read a collection (e.g. citypins)
+  table_chat.py map-set <path> <json | @file | ->   replace a document
+  table_chat.py map-merge <path> <json | @file | -> merge top-level keys into a document (creates it if missing)
+  table_chat.py map-delete <path>
+  table_chat.py map-asset <file>                    register a map image (a path on this machine) and print its asset id
+  table_chat.py map-assets                          list registered images
+  table_chat.py map-links                           the page links for the DM and for the tablet
+  table_chat.py map-route <from> <to>               walking distance and time between two places on the city map: saved routes between them
+                                                    plus up to three computed routes (from/to: a pin label, a printed-legend building or
+                                                    code such as C48, or x,y in poster pixels)
+  table_chat.py map-routes                          every saved route (DM and players) with distance and walking time
 """
 import json
 import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -200,8 +216,114 @@ def main(argv):
         print("ended without saving;", "log deleted" if r["deleted"] else f"{r['exchanges']} exchanges stay in {r['log']}")
     elif cmd == "watch":
         watch()
+    elif cmd.startswith("map-"):
+        map_command(cmd, a)
     else:
         sys.exit(f"unknown command: {cmd}\n\n{__doc__}")
+
+
+def json_arg(v):
+    if v == "-":
+        v = sys.stdin.read()
+    elif v.startswith("@"):
+        v = Path(v[1:]).read_text()
+    try:
+        return json.loads(v)
+    except ValueError as exc:
+        sys.exit(f"error: not valid JSON ({exc})")
+
+
+def city_data():
+    """Pins and saved routes of the city map: the DM's (city/state) and every player's (citypins/*)."""
+    d = call("/map/_doc?path=city/state")
+    st = d["data"] if d.get("exists") else {}
+    pins = [{"label": p.get("label", ""), "x": p["x"], "y": p["y"], "id": p.get("id")} for p in st.get("pins", [])]
+    routes = [dict(r, owner=None) for r in st.get("routes", [])]
+    for doc in call("/map/_col?name=citypins").get("docs", []):
+        data = doc.get("data") or {}
+        pins += [{"label": p.get("label", ""), "x": p["x"], "y": p["y"], "id": p.get("id")} for p in data.get("pins", [])]
+        routes += [dict(r, owner=doc.get("id")) for r in data.get("routes", [])]
+    return pins, routes
+
+
+def map_routes(cmd, a):
+    sys.path.insert(0, str(HERE.parents[1] / "skills" / "dm-citymap" / "src"))
+    import route
+    pins, routes = city_data()
+    saved = route.saved_summary(routes)
+    if cmd == "map-routes":
+        if not saved:
+            print("No saved routes.")
+        for r in saved:
+            print(f"{r['name']}: {r['from']} to {r['to']}, {route.fmt_ft(r['ft'])}, {route.fmt_time(r['ft'])} on foot ({'shared with players' if r['pub'] else 'DM only'}, saved by {r['by']})")
+        return
+    if len(a) != 2:
+        sys.exit("usage: map-route <from> <to>")
+    try:
+        pa, pb = route.resolve(a[0], pins), route.resolve(a[1], pins)
+    except ValueError as exc:
+        sys.exit(f"error: {exc}")
+    res = route.find_routes(pa[1:], pb[1:])
+    if "error" in res:
+        sys.exit("error: " + res["error"])
+
+    def near(p, q):
+        return abs(p["x"] - q[1]) < 40 and abs(p["y"] - q[2]) < 40
+    between = [saved[i] for i, r in enumerate(routes) if len(r.get("pts", [])) >= 2 and
+               ((near(r["pts"][0], pa) and near(r["pts"][-1], pb)) or (near(r["pts"][0], pb) and near(r["pts"][-1], pa)))]
+    print(route.describe(pa, pb, res["options"], between))
+
+
+def map_command(cmd, a):
+    q = urllib.parse.quote
+    if cmd == "map-docs":
+        for d in call("/map/_docs"):
+            print(f"{d['path']}  rev {d['rev']}  {d['bytes']} bytes")
+    elif cmd == "map-get":
+        out = flag(a, "--out")
+        r = call(f"/map/_doc?path={q(a[0])}")
+        if not r["exists"]:
+            sys.exit("error: no such document")
+        text = json.dumps(r["data"], indent=1, ensure_ascii=False)
+        if out:
+            Path(out).parent.mkdir(parents=True, exist_ok=True)
+            Path(out).write_text(text)
+            print(f"{a[0]} rev {r['rev']} -> {out}")
+        else:
+            print(text)
+    elif cmd == "map-col":
+        print(json.dumps(call(f"/map/_col?name={q(a[0])}")["docs"], indent=1, ensure_ascii=False))
+    elif cmd == "map-set":
+        r = call(f"/map/_doc?path={q(a[0])}", {"data": json_arg(a[1])}, method="PUT")
+        print(f"{a[0]} saved, rev {r['rev']}")
+    elif cmd == "map-merge":
+        cur = call(f"/map/_doc?path={q(a[0])}")
+        data = cur["data"] if cur["exists"] and isinstance(cur["data"], dict) else {}
+        patch = json_arg(a[1])
+        if not isinstance(patch, dict):
+            sys.exit("error: map-merge needs a JSON object")
+        data.update(patch)
+        r = call(f"/map/_doc?path={q(a[0])}", {"data": data}, method="PUT")
+        print(f"{a[0]} merged ({', '.join(patch)}), rev {r['rev']}")
+    elif cmd == "map-delete":
+        r = call(f"/map/_doc?path={q(a[0])}", method="DELETE")
+        print("deleted" if r["deleted"] else "(nothing there)")
+    elif cmd == "map-asset":
+        src = Path(a[0]).resolve()
+        repo = HERE.parents[2]  # the server may run where the repo has another absolute path: send the path inside the repo
+        r = call("/map/_asset_path", {"path": str(src.relative_to(repo)) if repo in src.parents else str(src)})
+        print(f"asset {r['id']} ({r['name']}, {r['width']}x{r['height']})")
+    elif cmd == "map-assets":
+        for r in call("/map/_assets"):
+            print(f"{r['id']}  {r['name']}  {r['width']}x{r['height']}{'' if r['present'] else '  (file missing)'}")
+    elif cmd in ("map-route", "map-routes"):
+        map_routes(cmd, a)
+    elif cmd == "map-links":
+        tt = HERE / ".table-token"
+        print(f"DM:     {BASE}/map/?k={KEY}")
+        print(f"tablet: {BASE}/map/?t={tt.read_text().strip() if tt.exists() else '(no .table-token yet)'}")
+    else:
+        sys.exit(f"unknown map command: {cmd}")
 
 
 def print_saved(r):

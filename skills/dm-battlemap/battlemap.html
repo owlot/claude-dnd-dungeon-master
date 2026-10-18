@@ -1,0 +1,1810 @@
+<title>Combat Positions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: DM table view = tools + board on the left, roster / distances / map / snapshot on the right.
+   Player view = the board alone, fog opaque, no controls. */
+:root {
+  --bg: #eceff3;
+  --panel: #ffffff;
+  --board: #f7f9fb;
+  --ink: #1b2430;
+  --muted: #5b6978;
+  --line: #cfd7e0;
+  --grid: #c3ccd6;
+  --accent: #2557c7;
+  --pc: #0d8a7a;
+  --foe: #c23a30;
+  --npc: #b4771a;
+  --wall: #3a4552;
+  --diff: #8a7a4a;
+  --cover: #5a7fb0;
+  --hazard: #7a4fb0;
+  --door: #8a5a2b;
+  --fog: #121820;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141b; --panel: #171f29; --board: #121a23; --ink: #e5ebf1; --muted: #8b9aab;
+    --line: #2b3846; --grid: #2c3a4a; --accent: #6b97f0; --pc: #2bb8a5; --foe: #ea6a5e; --npc: #e0a145;
+    --wall: #7d8a99; --diff: #b5a368; --cover: #7fa5d6; --hazard: #a883dc; --door: #c58f55; --fog: #05080c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141b; --panel: #171f29; --board: #121a23; --ink: #e5ebf1; --muted: #8b9aab;
+  --line: #2b3846; --grid: #2c3a4a; --accent: #6b97f0; --pc: #2bb8a5; --foe: #ea6a5e; --npc: #e0a145;
+  --wall: #7d8a99; --diff: #b5a368; --cover: #7fa5d6; --hazard: #a883dc; --door: #c58f55; --fog: #05080c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; padding-inline: 16px; padding-block: 16px 28px; }
+.wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+h1 { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; font: 700 30px/1 var(--font-display); letter-spacing: .02em; text-transform: uppercase; margin: 0; margin-right: auto; }
+h2 { font: 600 13px/1 var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.chip { font: 500 12px var(--font-mono); padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); }
+.chip.ok { color: var(--pc); border-color: var(--pc); }
+.chip.warn { color: var(--npc); border-color: var(--npc); }
+.stepper { display: flex; align-items: center; gap: 6px; font: 600 15px var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
+.stepper b { font: 500 16px var(--font-mono); min-width: 2ch; text-align: center; }
+button, select, input { font: inherit; color: inherit; }
+button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 11px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.sq { width: 30px; padding: 4px 0; }
+button[aria-pressed="true"].toggle { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+input, select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
+@media (max-width: 920px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tool { display: inline-flex; align-items: center; gap: 7px; }
+.tool[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--ink); }
+.sw.wall { background: var(--wall); } .sw.difficult { background: repeating-linear-gradient(45deg, var(--diff) 0 2px, transparent 2px 4px); }
+.sw.cover { background: linear-gradient(var(--cover) 0 0) bottom/100% 50% no-repeat; } .sw.hazard { background: var(--hazard); opacity: .6; }
+.sw.door { background: var(--door); height: 8px; } .sw.move { border-radius: 50%; background: var(--pc); border-color: transparent; }
+.sw.erase { background: transparent; border-style: dashed; }
+.sw.reveal { background: transparent; border-color: var(--npc); } .sw.hide { background: var(--fog); }
+.sw.room { background: var(--npc); border-radius: 1px 6px 1px 6px; border-color: transparent; }
+.spacer { flex: 1; }
+.boardbox { background: var(--board); border: 1px solid var(--line); border-radius: 8px; padding: 6px; overflow: auto; touch-action: none; }
+svg#board { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
+.gl { font: 500 11px var(--font-mono); fill: var(--muted); }
+.t-wall { fill: var(--wall); } .t-difficult { fill: url(#hatch); } .t-cover { fill: var(--cover); opacity: .6; } .t-hazard { fill: var(--hazard); opacity: .35; }
+.t-door { fill: var(--door); } .t-opendoor { fill: none; stroke: var(--door); stroke-width: 2.5; stroke-dasharray: 4 3; }
+.mapimg.dim { opacity: .9; }
+.walls-over .t-wall { opacity: .45; }
+.tg { font: 600 10px var(--font-mono); fill: var(--ink); opacity: .75; }
+.fog { fill: var(--fog); }
+.fog.soft { opacity: .55; }
+.ov-reach { fill: var(--pc); fill-opacity: .28; stroke: var(--pc); stroke-opacity: .5; stroke-width: 1; }
+.ov-area { fill: var(--npc); fill-opacity: .38; stroke: var(--npc); stroke-opacity: .7; stroke-width: 1; }
+.ov-cost { font: 700 15px var(--font-mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--board); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.ov-path { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.ov-dot { fill: var(--accent); stroke: var(--board); stroke-width: 2; }
+.ov-start { fill: var(--board); stroke: var(--accent); stroke-width: 3; }
+.ov-mark { fill: none; stroke: var(--foe); stroke-width: 3; stroke-dasharray: 6 3; }
+.ovbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; padding: 6px 10px; border: 1px solid var(--accent); border-radius: 8px; background: var(--panel); }
+.ovbar .stale { color: var(--npc); }
+.tok .ring2 { fill: none; stroke: var(--accent); stroke-width: 4; }
+.tmark { fill: var(--accent); stroke: var(--board); stroke-width: 1.5; }
+.tablebar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 4px 10px; border: 1px solid var(--accent); border-radius: 8px; background: var(--panel); font-size: 13px; }
+.tablebar b { font: 700 15px var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
+.tablebar button { padding: 3px 10px; font-size: 13px; }
+#toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 8px; background: var(--ink); color: var(--bg); font-size: 15px; z-index: 5; }
+.fx { fill-opacity: .30; stroke-width: 1; stroke-opacity: .7; }
+.fx-damage { fill: var(--foe); stroke: var(--foe); } .fx-obscure { fill: var(--muted); stroke: var(--muted); }
+.fx-dark { fill: #000; stroke: var(--ink); fill-opacity: .55; } .fx-terrain { fill: var(--diff); stroke: var(--diff); }
+.fx-utility { fill: var(--accent); stroke: var(--accent); } .fx-preview { fill: var(--npc); stroke: var(--npc); fill-opacity: .4; stroke-width: 2; }
+.fx.hid { stroke-dasharray: 4 3; fill-opacity: .18; }
+.fxlab { font: 700 12px var(--font-body); fill: var(--ink); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--board); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.fxorg { fill: none; stroke: var(--ink); stroke-width: 2; }
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 6; display: flex; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto; }
+.sheet .card { width: min(640px, 100%); margin-top: 4vh; }
+.sheet h3 { font: 700 20px var(--font-display); letter-spacing: .05em; text-transform: uppercase; margin: 0 0 8px; }
+.spells { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.spells button { text-align: left; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.spells button small { color: var(--muted); font-size: 12px; }
+.fxlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.fxlist li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; }
+.fxlist .who { flex: 1; min-width: 160px; }
+.fxlist small { color: var(--muted); display: block; }
+.placebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px; border: 1px solid var(--npc); border-radius: 8px; background: var(--panel); }
+.boardwrap { position: relative; }
+.zoomctl { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; flex-direction: column; gap: 4px; }
+.zoomctl button { width: 40px; height: 40px; padding: 0; font: 600 20px var(--font-body); background: var(--panel); opacity: .92; }
+.zoomctl button.fit { font-size: 12px; width: auto; min-width: 40px; padding: 0 6px; }
+.mwalk { stroke: var(--pc); stroke-width: 5px; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.mwb { stroke: #000; stroke-width: 10px; opacity: .45; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.mline2 { stroke: #ffd24a; stroke-width: 4px; stroke-dasharray: 9 7; fill: none; }
+.mlb2 { stroke: #000; stroke-width: 8px; opacity: .5; fill: none; }
+.mdot2 { fill: #ffd24a; stroke: #000; stroke-width: 2px; }
+.mlab2 { font: 700 15px var(--font-mono); fill: #ffe9a0; paint-order: stroke; stroke: #000; stroke-width: 5px; stroke-linejoin: round; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.rectsel { fill: var(--accent); fill-opacity: .15; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; }
+.tok .body { stroke: var(--board); stroke-width: 2; }
+.tok.pc .body { fill: var(--pc); } .tok.enemy .body { fill: var(--foe); } .tok.npc .body { fill: var(--npc); }
+.tok text { font: 700 15px var(--font-display); letter-spacing: .03em; fill: #fff; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.tok .rim { fill: none; stroke-width: 3.5; }
+.tok.pc .rim { stroke: var(--pc); } .tok.enemy .rim { stroke: var(--foe); } .tok.npc .rim { stroke: var(--npc); }
+.tok.hid .rim { stroke-dasharray: 4 3; }
+.tok.down { opacity: .4; }
+.tok.hid { opacity: .6; }
+.tok.hid .body { stroke: var(--ink); stroke-dasharray: 4 3; }
+.tok.sel .ring { fill: none; stroke: var(--accent); stroke-width: 3; }
+.ghost { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.mline { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; }
+.mlab { font: 600 12px var(--font-mono); fill: var(--accent); paint-order: stroke; stroke: var(--board); stroke-width: 4px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.below { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; align-items: start; }
+.below:empty { display: none; }
+.below { min-width: 0; }
+.dropbars { position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; display: none; gap: 10px; padding: 10px 16px; background: color-mix(in srgb, var(--bg) 85%, transparent); }
+.carddrag .dropbars { display: flex; }
+.dropbars div { flex: 1; text-align: center; padding: 18px 8px; border: 2px dashed var(--accent); border-radius: 8px; color: var(--accent); font: 600 14px var(--font-display); letter-spacing: .08em; text-transform: uppercase; background: var(--panel); }
+.dropbars div.on { background: var(--accent); color: var(--bg); }
+body.carddrag .below:empty, .app.carddrag .below:empty { display: block; min-height: 90px; border: 2px dashed var(--line); border-radius: 8px; }
+.below .card > h2, .side .card > h2 { cursor: grab; touch-action: none; user-select: none; }
+.below .card > h2::before, .side .card > h2::before { content: "⠿ "; color: var(--muted); }
+.below .card.dragging, .side .card.dragging { opacity: .6; outline: 2px dashed var(--accent); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
+.addrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; }
+.roster { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow-y: auto; }
+.roster li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto auto auto auto; gap: 6px; align-items: center; padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+.roster li:hover { background: var(--bg); }
+.roster li.act .nm { font-weight: 600; color: var(--accent); }
+.roster li.sel { background: var(--bg); box-shadow: inset 0 0 0 1px var(--accent); }
+.roster .dot { width: 10px; height: 10px; border-radius: 50%; }
+.roster .nm[data-act="info"] { text-decoration: underline dotted; text-underline-offset: 3px; }
+.roster .st:empty { display: none; }
+.roster .st { grid-column: 2 / -1; order: 99; font: 500 12px var(--font-mono); color: var(--ink); white-space: nowrap; }
+.roster .st.low { color: var(--foe); }
+.tinfo-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 4px 0 10px; }
+.tinfo-top label { display: flex; gap: 6px; align-items: center; }
+.tinfo-top input { width: 70px; }
+.abil { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 0 0 12px; text-align: center; }
+.abil div { border: 1px solid var(--line); border-radius: 6px; padding: 4px 2px; }
+.abil b { display: block; font: 700 12px var(--font-display); letter-spacing: .08em; color: var(--muted); }
+.abil span { font: 600 16px var(--font-mono); }
+.abil small { display: block; color: var(--muted); font: 500 12px var(--font-mono); }
+.atk { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; }
+.atk th, .atk td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.atk th { color: var(--muted); font: 600 12px var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
+.roster .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster li.down .nm { text-decoration: line-through; color: var(--muted); }
+.roster li.hid .nm { font-style: italic; color: var(--muted); }
+.roster .at { font: 500 12px var(--font-mono); color: var(--muted); }
+.mini { padding: 2px 6px; font-size: 12px; }
+#endcombat.on { background: var(--foe); border-color: var(--foe); color: #fff; }
+.mini.on { border-color: var(--accent); color: var(--accent); }
+.dist { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.dist td { padding: 3px 0; border-bottom: 1px solid var(--line); }
+.dist td:last-child { text-align: right; font-family: var(--font-mono); }
+.adj { color: var(--foe); font-weight: 600; }
+.hint { color: var(--muted); margin: 0; }
+textarea { width: 100%; height: 210px; resize: vertical; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px; font: 12px/1.45 var(--font-mono); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.fields label { display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 12px; }
+.fields input { width: 78px; }
+.note { font-size: 12px; color: var(--npc); margin: 0; }
+.wait { text-align: center; padding: 40px 16px; color: var(--muted); font: 600 18px var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+body.player .dm-only { display: none !important; }
+body.player .main { grid-template-columns: minmax(0, 1fr); }
+body.player .boardbox { cursor: default; overflow: hidden; }
+body.table .boardbox { touch-action: none; }
+@media (prefers-reduced-motion: no-preference) { button { transition: border-color .12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Combat Positions</h1>
+    <div class="stepper" aria-label="Round">Round
+      <button class="sq dm-only" id="rminus" aria-label="Previous round">−</button><b id="round">1</b><button class="sq dm-only" id="rplus" aria-label="Next round">+</button>
+    </div>
+    <button class="dm-only" id="endcombat" title="End combat: no active turn, round back to 1, movement reset. The party can move freely again.">End combat</button>
+    <button id="spells" hidden title="Place or remove a spell area on the board">Spells</button>
+    <button class="toggle" id="measure" aria-pressed="false" title="Tap two places to see how far apart they are">Measure</button>
+    <button class="toggle" id="ovtoggle" aria-pressed="true" title="Show or hide the movement markers on this screen">Movement overlay</button>
+    <button class="toggle" id="tbgroup" aria-pressed="false" hidden title="Out of combat: moving one party member moves the whole party, keeping the formation">Move together</button>
+    <button class="toggle dm-only" id="tablemode" aria-pressed="false" title="Players' board for a tablet at the table: only the active character can be moved. Press and hold the page title to leave.">Table mode</button>
+    <button class="toggle" id="preview" aria-pressed="false" hidden title="Switch between the DM board and the players' board">Players' view</button>
+    <span class="chip" id="status">Local only</span>
+  </header>
+
+  <div class="main">
+    <section class="stage">
+      <div class="tools dm-only" id="tools"></div>
+      <div class="ovbar dm-only" id="ovbar" hidden><b>Highlight</b><span id="ovlabel"></span><span class="stale" id="ovstale"></span><span class="spacer"></span><button id="ovclear">Clear</button></div>
+      <div class="placebar" id="measurebar" hidden><b>Measure</b><span id="mbinfo"></span><span class="spacer"></span><button id="mbnew">New measurement</button><button id="mbdone">Done</button></div>
+      <div class="placebar" id="placebar" hidden>
+        <b id="pbname"></b><span id="pbinfo"></span><span class="spacer"></span>
+        <label style="display:flex;gap:6px;align-items:center">Snap <select id="pbsnap"><option value="auto">nearest dot or centre</option><option value="corner">grid crossing</option><option value="center">square centre</option></select></label>
+        <button class="primary" id="pbgo">Place</button><button id="pbcancel">Cancel</button>
+      </div>
+      <div class="tablebar" id="tablebar" hidden><b id="tbname"></b><span id="tbleft"></span><span class="spacer"></span><button id="tbundo">Undo move</button></div>
+      <div class="boardwrap">
+        <div class="boardbox" id="boardbox"><svg id="board" role="img" aria-label="Battle grid"></svg></div>
+        <div class="zoomctl" aria-label="Zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" class="fit" aria-label="Show the whole map">Fit</button><button id="zfollow" class="fit toggle" aria-pressed="true" title="Recentre the map on whoever's turn it is">Follow</button></div>
+      </div>
+      <p class="wait" id="wait" hidden>Waiting for the DM to open the table</p>
+      <div class="legend"><span><i style="background:var(--pc)"></i>Party</span><span><i style="background:var(--foe)"></i>Enemy</span><span><i style="background:var(--npc)"></i>Ally / NPC</span><span>1 square = 5 ft</span><span class="dm-only">Drag a token with any tool, or select one and tap a square with Move · V switches to Move · arrow keys nudge · fog tools drag a box · Reveal room fills up to walls and doors</span></div>
+      <p class="note dm-only" id="example" hidden>Example layout from the Xanathar's Lair bout. Use Clear board to start a new fight.</p>
+      <div class="below dm-only" id="below"></div>
+    </section>
+
+    <aside class="side dm-only">
+      <div class="card">
+        <h2>Tokens</h2>
+        <form class="addrow" id="addform">
+          <input id="newname" placeholder="Name, e.g. Goblin" autocomplete="off" aria-label="Token name">
+          <select id="newside" aria-label="Side"><option value="enemy">Enemy</option><option value="pc">Party</option><option value="npc">Ally</option></select>
+          <select id="newsize" aria-label="Size"><option value="1">Med</option><option value="2">Large</option><option value="3">Huge</option><option value="4">Garg.</option></select>
+          <button class="primary" style="grid-column:1/-1" type="submit">Add token</button>
+        </form>
+        <ul class="roster" id="roster"></ul>
+      </div>
+
+      <div class="card">
+        <h2 id="selhead">Distances</h2>
+        <div class="row fields" id="tokmeta" style="margin-bottom:8px" hidden></div>
+        <div id="dists"></div>
+      </div>
+
+      <div class="card" id="mapcard">
+        <h2>Map &amp; fog</h2>
+        <div class="row">
+          <button id="loadmap">Party map…</button>
+          <button id="loaddm">DM map…</button>
+          <input id="mapfile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        </div>
+        <p class="hint" id="maphint" style="margin-top:8px">Load the party map (what players see). A DM map is optional: it shows only on your board and is never sent to players. Both must cover the same grid.</p>
+        <div class="row" id="mapsrow" style="margin-top:8px" hidden>
+          <button class="toggle" id="mapview" aria-pressed="true">Showing: DM map</button>
+          <button id="removemap">Remove this map</button>
+        </div>
+        <div class="row fields" id="mapfields" style="margin-top:8px" hidden>
+          <label>Scale <input id="mscale" type="number" min="0.2" max="4" step="0.01"></label>
+          <label>Shift X <input id="mox" type="number" step="0.1"></label>
+          <label>Shift Y <input id="moy" type="number" step="0.1"></label>
+        </div>
+        <div class="row" id="alignrow" style="margin-top:8px" hidden>
+          <button id="autoalign">Auto-align this map</button>
+        </div>
+        <p class="hint" id="alignmsg" style="margin-top:6px"></p>
+        <div class="row" style="margin-top:10px">
+          <button id="hideall">Hide everything</button>
+          <button id="revealall">Reveal everything</button>
+          <button class="toggle" id="gridtoggle" aria-pressed="true">Grid lines</button>
+        </div>
+        <p class="hint" id="foginfo" style="margin-top:8px"></p>
+        <p class="hint" style="margin-top:6px">Players get a filtered copy: hidden tokens and unrevealed squares are left out. The map image file itself is not protected.</p>
+      </div>
+
+      <div class="card">
+        <h2>Snapshot for the DM assistant</h2>
+        <textarea id="snap" readonly aria-label="Position snapshot"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button id="copy">Copy text</button>
+          <span class="hint" id="copied"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Board</h2>
+        <div class="row fields">
+          <label>Columns <input id="cols" type="number" min="8" max="60"></label>
+          <label>Rows <input id="rows" type="number" min="6" max="60"></label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="groupmove"> Out of combat, the party moves together (formation kept)</label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="tablemoves"> The table tablet can move the active character</label>
+        </div>
+        <div class="row fields" style="margin-top:10px">
+          <label>Diagonals <select id="diagrule"><option value="alt">5 ft, 10 ft, 5 ft…</option><option value="flat">Always 5 ft</option></select></label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="undo">Undo</button>
+          <button id="clearterrain">Clear terrain</button>
+          <button id="clearall">Clear board</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="dropbars dm-only" id="dropbars"><div id="dropbelow">Drop here: under the map</div><div id="dropside">Drop here: side column</div></div>
+<div class="sheet" id="tinfo" hidden>
+  <div class="card" role="dialog" aria-label="Token details">
+    <div class="row" style="justify-content:space-between"><h3 id="tinfoname">Token</h3><button id="tinfoclose">Close</button></div>
+    <div id="tinfobody"></div>
+  </div>
+</div>
+<div class="sheet" id="sheet" hidden>
+  <div class="card" role="dialog" aria-label="Spells">
+    <div class="row" style="justify-content:space-between"><h3>Spells</h3><button id="sheetclose">Close</button></div>
+    <p class="hint" id="sheetwho" style="margin:0 0 8px"></p>
+    <div class="spells" id="spelllist"></div>
+    <details id="customfx" style="margin-bottom:12px"><summary>Custom area</summary>
+      <div class="row fields" style="margin-top:8px">
+        <label>Name <input id="cfname" value="Custom area" style="width:140px"></label>
+        <label>Shape <select id="cfshape"><option value="sphere">Circle (radius)</option><option value="cube">Square (side)</option><option value="cone">Cone</option><option value="line">Line</option></select></label>
+        <label>Feet <input id="cfsize" type="number" min="5" max="200" step="5" value="10"></label>
+        <label>Rounds <input id="cfrounds" type="number" min="0" max="600" value="10"></label>
+        <button id="cfgo">Place</button>
+      </div>
+    </details>
+    <label id="hidewrap" class="row" style="gap:8px;margin-bottom:12px" hidden><input type="checkbox" id="fxhidden"> Hidden from players (a trap)</label>
+    <h3>On the board</h3>
+    <ul class="fxlist" id="fxlist"></ul>
+  </div>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  var S = 40;                       // svg units per square
+  var SIZE_NAMES = {1: "Medium", 2: "Large", 3: "Huge", 4: "Gargantuan"};
+  var TERRAIN = { wall: "Wall", door: "Closed door", opendoor: "Open door", difficult: "Difficult", cover: "Half cover", hazard: "Hazard / water" };
+  var GLYPH = { difficult: "D", cover: "C", hazard: "H" };
+  var PAINT = { wall: 1, door: 1, difficult: 1, cover: 1, hazard: 1, erase: 1 };
+
+  function demo() {
+    var t = {};
+    [[9,2],[9,3],[9,4],[9,8],[9,9],[9,10],[9,11]].forEach(function (c) { t[c.join(",")] = "wall"; });
+    t["9,6"] = "door"; t["9,5"] = "wall"; t["9,7"] = "wall";
+    [[6,5],[7,5],[6,6]].forEach(function (c) { t[c.join(",")] = "difficult"; });
+    [[11,6],[11,7]].forEach(function (c) { t[c.join(",")] = "cover"; });
+    [[14,9],[15,9],[14,10],[15,10]].forEach(function (c) { t[c.join(",")] = "hazard"; });
+    var fog = {};
+    for (var x = 10; x < 20; x++) for (var y = 0; y < 14; y++) fog[x + "," + y] = 1;
+    return {
+      cols: 20, rows: 14, round: 1, rev: 0, example: true, terrain: t, fog: fog, img: null, dmImg: null, grid: true, diag: "alt", tableMoves: true, reqSeq: 0, active: null, lastMove: null, effects: [],
+      tokens: [
+        { id: "a1", name: "Yagra Stonefist", side: "pc", size: 1, x: 3, y: 5, down: false, hid: false },
+        { id: "a2", name: "Caelith Morn", side: "pc", size: 1, x: 3, y: 6, down: false, hid: false },
+        { id: "a3", name: "Lylnyler Fienderck", side: "pc", size: 1, x: 2, y: 7, down: false, hid: false },
+        { id: "b1", name: "Groz", side: "enemy", size: 1, x: 13, y: 6, down: false, hid: false },
+        { id: "b2", name: "Bonegnasher 1", side: "enemy", size: 1, x: 14, y: 4, down: false, hid: false },
+        { id: "b3", name: "Bonegnasher 2", side: "enemy", size: 1, x: 15, y: 7, down: false, hid: false }
+      ]
+    };
+  }
+
+  var st = demo(), tool = "move", sel = null, drag = null, painting = null, rect = null;
+  var undo = [], db = null, dmDoc = null, pubDoc = null, assets = null, saveT = null, saveState = "local";
+  var measuring = false, mpts = [], view = { z: 1, cx: null, cy: null }, pointers = {}, gesture = null, panning = null, ignoreUp = false, spaceDown = false, PRESETS = [{"key": "cloud-of-daggers", "name": "Cloud of Daggers", "shape": "cube", "size": 5, "rounds": 10, "conc": true, "kind": "damage", "source": "PHB, not in the SRD: verify", "note": "Verify against the PHB (not in the SRD). As commonly run: a creature that enters the area for the first time on a turn or starts its turn there takes 4d4 slashing damage; no save."}, {"key": "moonbeam", "name": "Moonbeam", "shape": "sphere", "size": 5, "rounds": 10, "conc": true, "kind": "damage", "source": "SRD", "note": "5-foot-radius, 40-foot-high cylinder; dim light inside. A creature that enters the area for the first time on a turn or starts its turn there makes a Constitution save: 2d10 radiant on a failure, half on a success (a shapechanger saves with disadvantage and reverts on a failure)."}, {"key": "spirit-guardians", "name": "Spirit Guardians", "shape": "sphere", "size": 15, "rounds": 100, "conc": true, "follow": true, "kind": "damage", "source": "SRD", "note": "15-foot radius around the caster (moves with them). Affected creatures' speed is halved in the area. A creature that enters the area for the first time on a turn or starts its turn there makes a Wisdom save: 3d8 radiant (caster good or neutral) or necrotic (caster evil) on a failure, half on a success. The caster can exempt creatures."}, {"key": "fog-cloud", "name": "Fog Cloud", "shape": "sphere", "size": 20, "rounds": 600, "conc": true, "kind": "obscure", "source": "SRD", "note": "20-foot-radius sphere of fog that spreads around corners; heavily obscured. Lasts until a moderate or stronger wind disperses it."}, {"key": "stinking-cloud", "name": "Stinking Cloud", "shape": "sphere", "size": 20, "rounds": 10, "conc": true, "kind": "obscure", "source": "SRD", "note": "20-foot-radius sphere of gas, heavily obscured. A creature completely within it at the start of its turn makes a Constitution save against poison or spends its action retching and reeling. Creatures that don't breathe or are immune to poison succeed."}, {"key": "cloudkill", "name": "Cloudkill", "shape": "sphere", "size": 20, "rounds": 100, "conc": true, "kind": "damage", "source": "SRD", "note": "20-foot-radius poisonous fog, heavily obscured. A creature that enters the area for the first time on a turn or starts its turn there makes a Constitution save: 5d8 poison on a failure, half on a success. The fog moves 10 feet away from the caster at the start of each of the caster's turns."}, {"key": "darkness", "name": "Darkness", "shape": "sphere", "size": 15, "rounds": 100, "conc": true, "kind": "dark", "source": "SRD", "note": "15-foot-radius magical darkness that spreads around corners. A creature with darkvision can't see through it; nonmagical light can't illuminate it."}, {"key": "web", "name": "Web", "shape": "cube", "size": 20, "rounds": 600, "conc": true, "kind": "terrain", "source": "SRD", "note": "20-foot cube of webs: difficult terrain, lightly obscured. A creature that starts its turn in the webs or enters them during its turn makes a Dexterity save or is restrained until it breaks free (Strength check against the spell save DC as an action)."}, {"key": "entangle", "name": "Entangle", "shape": "cube", "size": 20, "rounds": 10, "conc": true, "kind": "terrain", "source": "SRD", "note": "20-foot square of weeds and vines: difficult terrain. A creature in the area when cast makes a Strength save or is restrained until the spell ends (Strength check against the spell save DC as an action)."}, {"key": "spike-growth", "name": "Spike Growth", "shape": "sphere", "size": 20, "rounds": 100, "conc": true, "kind": "terrain", "source": "SRD", "note": "20-foot radius of spikes: difficult terrain. A creature that moves into or within the area takes 2d4 piercing damage for every 5 feet it travels. Camouflaged as natural ground."}, {"key": "grease", "name": "Grease", "shape": "cube", "size": 10, "rounds": 10, "conc": false, "kind": "terrain", "source": "SRD", "note": "10-foot square: difficult terrain. Each creature standing in it when it appears, and each that enters or ends its turn there, makes a Dexterity save or falls prone."}, {"key": "silence", "name": "Silence", "shape": "sphere", "size": 20, "rounds": 100, "conc": true, "kind": "utility", "source": "SRD", "note": "20-foot-radius sphere: no sound can be created within or pass through it; creatures and objects entirely inside are immune to thunder damage and are deafened; verbal spells cannot be cast inside."}, {"key": "faerie-fire", "name": "Faerie Fire", "shape": "cube", "size": 20, "rounds": 10, "conc": true, "kind": "utility", "source": "SRD", "note": "20-foot cube. Objects are outlined; a creature in the area when cast is outlined if it fails a Dexterity save. Attack rolls against an outlined creature have advantage if the attacker can see it, and it can't benefit from being invisible."}, {"key": "hypnotic-pattern", "name": "Hypnotic Pattern", "shape": "cube", "size": 30, "rounds": 10, "conc": true, "kind": "utility", "source": "SRD", "note": "30-foot cube. Each creature in the area that sees the pattern makes a Wisdom save (see the SRD for the effect on a failure). The pattern appears for a moment and vanishes."}, {"key": "fireball", "name": "Fireball", "shape": "sphere", "size": 20, "rounds": 1, "conc": false, "instant": true, "kind": "damage", "source": "SRD", "note": "20-foot-radius sphere, instantaneous. Each creature in it makes a Dexterity save: 8d6 fire on a failure, half on a success (higher slots add 1d6 per level above 3rd). The fire spreads around corners."}, {"key": "burning-hands", "name": "Burning Hands", "shape": "cone", "size": 15, "rounds": 1, "conc": false, "instant": true, "kind": "damage", "source": "SRD", "note": "15-foot cone from the caster, instantaneous. Dexterity save: 3d6 fire on a failure, half on a success."}, {"key": "thunderwave", "name": "Thunderwave", "shape": "cube", "size": 15, "rounds": 1, "conc": false, "instant": true, "kind": "damage", "source": "SRD", "note": "15-foot cube originating from the caster, instantaneous. Constitution save: 2d8 thunder and pushed 10 feet away on a failure, half damage and no push on a success."}, {"key": "lightning-bolt", "name": "Lightning Bolt", "shape": "line", "size": 100, "width": 5, "rounds": 1, "conc": false, "instant": true, "kind": "damage", "source": "SRD", "note": "100-foot line, 5 feet wide, from the caster. Dexterity save: 8d6 lightning on a failure, half on a success."}, {"key": "cone-of-cold", "name": "Cone of Cold", "shape": "cone", "size": 60, "rounds": 1, "conc": false, "instant": true, "kind": "damage", "source": "SRD", "note": "60-foot cone from the caster, instantaneous. Constitution save: 8d8 cold on a failure, half on a success."}], place = null, canSend = null, pending = null, pendTimer = null, userApi = null, overlayOn = true, tableMode = false, toastT = null, overlay = null, isDM = true, preview = false, loadedPlayer = false, mapView = "dm", uploadFor = "img";
+  var SID = Math.random().toString(36).slice(2), gotFirst = false;   // identifies this open copy of the page
+  var $ = function (id) { return document.getElementById(id); };
+  var svg = $("board");
+  function shownMap() {            // players always get the party map; the DM can look at either
+    if (playerView()) return st.img;
+    return (st.dmImg && (mapView === "dm" || !st.img)) ? st.dmImg : st.img;
+  }
+  function shownKey() { return shownMap() === st.dmImg && st.dmImg ? "dmImg" : "img"; }
+  // Portraits: the page crops a small square around the face once per image (kept in memory, not in the database).
+  var thumbs = {};
+  function thumbFor(id) {
+    if (thumbs[id]) return thumbs[id].url;
+    thumbs[id] = { url: null };
+    var im = new Image();
+    im.onload = function () {
+      var url = "/_blob/" + id;
+      try {
+        var w = im.naturalWidth, hh = im.naturalHeight, side = Math.min(w * 0.62, hh);
+        var sx = Math.max(0, Math.min(w - side, w * 0.5 - side / 2)), sy = Math.max(0, Math.min(hh - side, hh * 0.27 - side / 2));
+        var cv = document.createElement("canvas"); cv.width = cv.height = 160;
+        cv.getContext("2d").drawImage(im, sx, sy, side, side, 0, 0, 160, 160);
+        url = cv.toDataURL("image/jpeg", 0.85);
+      } catch (err) { /* keep the full image */ }
+      thumbs[id].url = url; renderBoard();
+    };
+    im.src = "/_blob/" + id;
+    return null;
+  }
+  // The table tablet is not necessarily the DM's account. Any signed-in account that can write shared data may send a move
+  // request for the active character; the DM's page checks it against the real board, applies it and answers.
+  function canMoveHere() {
+    if (preview) return false;
+    if (tableMode && isDM) return true;
+    return !isDM && st.tableMoves !== false && canSend !== false;
+  }
+  // Spell areas. A square is affected when its CENTRE is inside the shape or on its edge, so an origin on a grid crossing
+  // puts a 5 ft cube (or 5 ft radius) over the 4 squares around it, and an origin on a square centre puts it over that square.
+  function effOrigin(e) {
+    if (e.follow && e.owner) { var o = st.tokens.filter(function (t) { return t.id === e.owner; })[0]; if (o) return [o.x + o.size / 2, o.y + o.size / 2]; }
+    return [e.ox, e.oy];
+  }
+  function effCells(e) {
+    var og = effOrigin(e), ox = og[0], oy = og[1], size = e.size / 5, eps = 1e-9, out = [];
+    var ang = (e.ang || 0) * Math.PI / 180, dx = Math.cos(ang), dy = Math.sin(ang), cosHalf = Math.cos(Math.atan(0.5)), halfW = (e.width || 5) / 10;
+    var own = {};
+    if (e.owner && (e.shape === "cone" || e.shape === "line")) { var ot = st.tokens.filter(function (t) { return t.id === e.owner; })[0]; if (ot) for (var a = 0; a < ot.size; a++) for (var b = 0; b < ot.size; b++) own[(ot.x + a) + "," + (ot.y + b)] = 1; }
+    for (var cx = 0; cx < st.cols; cx++) for (var cy = 0; cy < st.rows; cy++) {
+      var vx = cx + 0.5 - ox, vy = cy + 0.5 - oy, ok = false;
+      if (e.shape === "sphere" || e.shape === "cylinder") ok = Math.hypot(vx, vy) <= size + eps;
+      else if (e.shape === "cube") ok = Math.abs(vx) <= size / 2 + eps && Math.abs(vy) <= size / 2 + eps;
+      else if (e.shape === "cone") { var dist = Math.hypot(vx, vy); ok = !own[cx + "," + cy] && dist > 0 && dist <= size + eps && (vx * dx + vy * dy) / dist >= cosHalf - eps; }
+      else if (e.shape === "line") { var along = vx * dx + vy * dy, perp = Math.abs(-vx * dy + vy * dx); ok = !own[cx + "," + cy] && along > 0 && along <= size + 0.5 + eps && perp <= halfW + eps; }
+      if (ok) out.push([cx, cy]);
+    }
+    return out;
+  }
+  function effTokens(cells) {
+    var set = {}; cells.forEach(function (c) { set[c[0] + "," + c[1]] = 1; });
+    return st.tokens.filter(function (t) { for (var a = 0; a < t.size; a++) for (var b = 0; b < t.size; b++) if (set[(t.x + a) + "," + (t.y + b)]) return true; return false; });
+  }
+  // ----- zoom and pan: the view is a window (viewBox) onto the board; hit testing keeps working because it reads the screen matrix -----
+  function viewBoxFor(W, H) {
+    var z = Math.max(1, Math.min(8, view.z)), w = W / z, hh = H / z;
+    var cx = view.cx == null ? W / 2 : view.cx, cy = view.cy == null ? H / 2 : view.cy;
+    cx = Math.max(w / 2, Math.min(W - w / 2, cx)); cy = Math.max(hh / 2, Math.min(H - hh / 2, cy));
+    view.z = z; view.cx = cx; view.cy = cy;
+    return [cx - w / 2, cy - hh / 2, w, hh];
+  }
+  function pxPerUnit() { var m = svg.getScreenCTM(); return m && m.a ? m.a : 1; }
+  function unitsPerPx() { return 1 / pxPerUnit(); }
+  function unitPoint(clientX, clientY) {         // client coordinates -> svg units (correct even when the svg is letterboxed)
+    var m = svg.getScreenCTM(); if (!m) return [0, 0];
+    var pt = svg.createSVGPoint(); pt.x = clientX; pt.y = clientY;
+    var q = pt.matrixTransform(m.inverse()); return [q.x, q.y];
+  }
+  function baseScale() { var r = svg.getBoundingClientRect(); return Math.min(r.width / ((st.cols + 1) * S), r.height / ((st.rows + 1) * S)); }
+  function setViewKeeping(anchor, clientX, clientY, z) {    // keep the board point `anchor` under the screen point
+    var r = svg.getBoundingClientRect(), sc = baseScale() * z;
+    view.z = z;
+    view.cx = anchor[0] - (clientX - (r.left + r.width / 2)) / sc;
+    view.cy = anchor[1] - (clientY - (r.top + r.height / 2)) / sc;
+  }
+  function zoomAround(newZ, clientX, clientY) {
+    var anchor = unitPoint(clientX, clientY);
+    setViewKeeping(anchor, clientX, clientY, Math.max(1, Math.min(8, newZ)));
+    renderBoard();
+  }
+  function zoomButton(f) { var r = svg.getBoundingClientRect(); zoomAround(view.z * f, r.left + r.width / 2, r.top + r.height / 2); }
+  function startPan(e, tapCell) { panning = { id: e.pointerId, sx: e.clientX, sy: e.clientY, cx: view.cx, cy: view.cy, moved: false, tap: tapCell || null }; }
+  function startGesture() {
+    var ids = Object.keys(pointers); if (ids.length < 2) return;
+    drag = null; painting = null; rect = null; panning = null; if (place) place.dragging = false;
+    var a = pointers[ids[0]], b = pointers[ids[1]];
+    gesture = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: view.z };
+    gesture.anchor = unitPoint((a.x + b.x) / 2, (a.y + b.y) / 2);
+    ignoreUp = true; renderBoard();
+  }
+  function moveGesture() {
+    var ids = Object.keys(pointers); if (ids.length < 2 || !gesture) return;
+    var a = pointers[ids[0]], b = pointers[ids[1]], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    setViewKeeping(gesture.anchor, mx, my, Math.max(1, Math.min(8, gesture.z0 * (Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0))));
+    renderBoard();
+  }
+  // Out of combat (no active turn) the party moves freely: any party character, any distance, still blocked by walls, enemies and
+  // unrevealed squares. No movement is counted. When the DM or the tracker starts a turn, the speed limit applies again.
+  var freeSel = null;
+  var endT = null;
+  function freeMode() { return !st.active && !st.combat; }
+  function inCombat() { return !!(st.active || st.combat); }
+  function budgetFor(a) { return freeMode() ? 1000 : remaining(a); }
+  function isParty(t) { return t.side === "pc" || t.side === "npc"; }   // party characters and allied companions can be moved from the table
+  function pcAt(x, y) {
+    for (var i = st.tokens.length - 1; i >= 0; i--) { var t = st.tokens[i]; if (isParty(t) && visibleToken(t) && x >= t.x && x < t.x + t.size && y >= t.y && y < t.y + t.size) return t; }
+    return null;
+  }
+  // ----- measuring: tap two places; a token snaps to its whole footprint. Distance follows the board's diagonal rule; walking
+  // cost goes round walls and difficult terrain (other creatures ignored).
+  function mEnd(sx, sy) {
+    var u = unitPoint(sx, sy), cx = Math.floor(u[0] / S) - 1, cy = Math.floor(u[1] / S) - 1;
+    if (cx < 0 || cy < 0 || cx >= st.cols || cy >= st.rows) return null;
+    if (playerView() && st.fog[cx + "," + cy]) { toast("That part of the map has not been revealed yet."); return null; }
+    var t = tokAt(cx, cy);
+    if (t && playerView() && !visibleToken(t)) t = null;
+    return t ? { x: t.x, y: t.y, size: t.size, label: t.name } : { x: cx, y: cy, size: 1, label: cellName(cx, cy) };
+  }
+  function mWalk(a, b) {                                              // {cost, route: [[x, y], ...]} or null when walls close it off
+    var save = st.tokens; st.tokens = [];
+    try {
+      var f = moveField({ id: "__m", side: "pc", size: 1, x: a.x, y: a.y, dpar: 0 }, 5000), k = b.x + "," + b.y;
+      if (f.dist[k] === undefined) return null;
+      var route = [], key = k + "," + f.par[k];
+      while (key) { var q = key.split(","); route.push([+q[0], +q[1]]); key = f.prev[key]; }
+      route.reverse();
+      return { cost: f.dist[k], route: route };
+    } finally { st.tokens = save; }
+  }
+  function mCenter(q) { return [q.x + q.size / 2, q.y + q.size / 2]; }
+  function mMetrics() {
+    var a = mpts[0], b = mpts[1], sq = squares(a, b), ca = mCenter(a), cb = mCenter(b), w = mWalk(a, b);
+    return { sq: sq, ft: sq * 5, line: Math.hypot(ca[0] - cb[0], ca[1] - cb[1]) * 5, walk: w ? w.cost : undefined, route: w ? w.route : null };
+  }
+  function mText() {
+    if (!mpts.length) return "Tap the first place.";
+    if (mpts.length === 1) return mpts[0].label + ": now tap the second place.";
+    var m = mMetrics(), a = mpts[0], b = mpts[1];
+    return a.label + " to " + b.label + ": " + m.ft + " ft (" + m.sq + " square" + (m.sq === 1 ? "" : "s") + (st.diag === "flat" ? "" : ", diagonals 5/10") + "), straight line " + Math.round(m.line) + " ft, " + (m.walk === undefined ? "no walking route (walls)" : "walking " + m.walk + " ft") + ". Yellow dashes: straight; green: the walking route.";
+  }
+  function mTap(sx, sy) {
+    var q = mEnd(sx, sy); if (!q) return;
+    if (mpts.length >= 2) mpts = [];
+    mpts.push(q); $("mbinfo").textContent = mText(); renderBoard();
+  }
+  function setMeasure(on) { measuring = on; if (!on) mpts = []; $("measure").setAttribute("aria-pressed", String(on)); $("measurebar").hidden = !on; $("mbinfo").textContent = mText(); renderBoard(); }
+  function activeTok() { return st.active ? (st.tokens.filter(function (t) { return t.id === st.active; })[0] || null) : null; }
+  function remaining(t) { return Math.max(0, (t.speed || 30) - (t.moved || 0)); }
+  function toast(msg) {
+    var el = $("toast"); el.textContent = msg; el.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { el.hidden = true; }, 3500);
+  }
+  // Cheapest cost (ft) to every square a token can reach within a budget: 5 ft a square, diagonals 5 ft, difficult terrain
+  // doubles, walls and enemies block, wall corners cannot be cut, friends can be passed (not stopped on).
+  function moveField(tok, budget) {
+    var cols = st.cols, rows = st.rows, size = tok.size, hostile = {}, occupied = {};
+    st.tokens.forEach(function (o) {
+      if (o.id === tok.id) return;
+      var foe = (o.side === "enemy") !== (tok.side === "enemy");
+      for (var dx = 0; dx < o.size; dx++) for (var dy = 0; dy < o.size; dy++) {
+        var k = (o.x + dx) + "," + (o.y + dy); occupied[k] = 1; if (foe && !o.down) hostile[k] = 1;
+      }
+    });
+    function fits(x, y) {
+      if (x < 0 || y < 0 || x + size > cols || y + size > rows) return false;
+      for (var dx = 0; dx < size; dx++) for (var dy = 0; dy < size; dy++) { var k = (x + dx) + "," + (y + dy); if (st.terrain[k] === "wall" || hostile[k]) return false; }
+      return true;
+    }
+    function mult(x, y) { for (var dx = 0; dx < size; dx++) for (var dy = 0; dy < size; dy++) if (st.terrain[(x + dx) + "," + (y + dy)] === "difficult") return 2; return 1; }
+    // Diagonals alternate 5 ft, 10 ft, 5 ft ... (board rule "alt"), counted across the whole turn: the search runs over
+    // (x, y, parity) where parity is how many diagonals have been walked so far, odd or even.
+    var alt = st.diag !== "flat", p0 = alt ? ((tok.dpar || 0) % 2) : 0;
+    var d2 = {}, prevMap = {}, open = [[0, tok.x, tok.y, p0]]; d2[tok.x + "," + tok.y + "," + p0] = 0;
+    while (open.length) {
+      var bi = 0; for (var i = 1; i < open.length; i++) if (open[i][0] < open[bi][0]) bi = i;
+      var cur = open.splice(bi, 1)[0], d = cur[0], x = cur[1], y = cur[2], p = cur[3];
+      if (d > d2[x + "," + y + "," + p]) continue;
+      for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
+        if (!dx && !dy) continue;
+        var nx = x + dx, ny = y + dy;
+        if (!fits(nx, ny)) continue;
+        if (dx && dy && !(fits(x + dx, y) && fits(x, y + dy))) continue;
+        var diag = alt && dx && dy, base = diag ? (p === 0 ? 5 : 10) : 5, np = diag ? 1 - p : p;
+        var nd = d + base * mult(nx, ny);
+        if (nd > budget) continue;
+        var nk = nx + "," + ny + "," + np;
+        if (d2[nk] === undefined || nd < d2[nk]) { d2[nk] = nd; prevMap[nk] = x + "," + y + "," + p; open.push([nd, nx, ny, np]); }
+      }
+    }
+    var dist = {}, par = {};
+    Object.keys(d2).forEach(function (k) {
+      var q = k.split(","), cell = q[0] + "," + q[1], c = d2[k], pp = +q[2];
+      if (dist[cell] === undefined || c < dist[cell] || (c === dist[cell] && pp < par[cell])) { dist[cell] = c; par[cell] = pp; }
+    });
+    return { dist: dist, par: par, occupied: occupied, prev: prevMap };
+  }
+  function stopOk(tok, f, x, y, ignoreFog) {   // can the token end here: free of tokens and (for the table) not in unrevealed fog?
+    for (var dx = 0; dx < tok.size; dx++) for (var dy = 0; dy < tok.size; dy++) {
+      var k = (x + dx) + "," + (y + dy);
+      if (f.occupied[k] || (!ignoreFog && st.fog[k])) return false;
+    }
+    return true;
+  }
+  function reachOverlayFor(tok) {
+    var f = moveField(tok, remaining(tok)), cells = [], pv = playerView();
+    Object.keys(f.dist).forEach(function (k) {
+      var p = k.split(","), c = f.dist[k];
+      if (c > 0 && stopOk(tok, f, +p[0], +p[1], !pv)) cells.push(k + "," + c);
+    });
+    return { layers: [{ kind: "reach", cells: cells }], marks: [], label: tok.name + " can move " + remaining(tok) + " ft" };
+  }
+  function currentOverlay(pv) {
+    if (!overlayOn) return null;
+    var a = activeTok();
+    if (!pv) {
+      var fresh = overlay && overlay.layers && overlay.layers.length && (overlay.boardRev === undefined || overlay.boardRev === st.rev);
+      if (fresh) return overlay;                                  // a highlight drawn for the board as it is now
+      if (a && remaining(a) > 0) return reachOverlayFor(a);   // otherwise the active token's reach (the DM sees enemies too)
+      return overlay && overlay.layers && overlay.layers.length ? overlay : null;      // an older highlight, only when nothing else is shown
+    }
+    if (!a || a.side === "enemy" || (a.hid && a.side !== "pc") || remaining(a) <= 0) return null;
+    return reachOverlayFor(a);
+  }
+  function playerView() { return !isDM || preview || tableMode; }
+
+  /* ---------- helpers ---------- */
+  function colName(i) { var s = ""; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+  function cellName(x, y) { return colName(x) + (y + 1); }
+  function statCell(t) {
+    if (t.ac == null && t.hp == null) return '<span class="st"></span>';
+    var low = t.maxhp && t.hp != null && t.hp <= t.maxhp / 4;
+    return '<span class="st' + (low ? " low" : "") + '" title="Armor class, current / maximum hit points">' + (t.ac != null ? "AC " + t.ac : "") + (t.hp != null ? " · HP " + t.hp + (t.maxhp ? "/" + t.maxhp : "") + (t.thp ? " +" + t.thp : "") : "") + '</span>';
+  }
+  var infoId = null;
+  function renderInfo() {
+    var t = st.tokens.filter(function (x) { return x.id === infoId; })[0];
+    if (!t) { $("tinfo").hidden = true; return; }
+    $("tinfoname").textContent = t.name;
+    var i = t.info || {}, h = '<div class="tinfo-top">' +
+      '<label>AC <input type="number" id="iac" value="' + (t.ac == null ? "" : t.ac) + '"></label>' +
+      '<label>HP <input type="number" id="ihp" value="' + (t.hp == null ? "" : t.hp) + '"> / <input type="number" id="imax" value="' + (t.maxhp == null ? "" : t.maxhp) + '"></label>' +
+      '<label>Temp <input type="number" id="ithp" min="0" value="' + (t.thp || 0) + '"></label>' +
+      '<span class="hint" style="margin:0">Speed ' + (t.speed || 30) + ' ft</span></div>';
+    if (i.abil && Object.keys(i.abil).length) {
+      h += '<div class="abil">' + ["STR", "DEX", "CON", "INT", "WIS", "CHA"].filter(function (k) { return i.abil[k]; }).map(function (k) { var a = i.abil[k]; return '<div><b>' + k + '</b><span>' + a[0] + '</span><small>' + (a[1] >= 0 ? "+" : "") + a[1] + '</small></div>'; }).join("") + '</div>';
+    }
+    if (i.attacks && i.attacks.length) {
+      h += '<table class="atk"><tr><th>Attack</th><th>To hit</th><th>Damage</th><th>Notes</th></tr>' + i.attacks.map(function (a) { return '<tr><td>' + esc(a.n) + '</td><td>' + esc(a.b) + '</td><td>' + esc(a.d) + (a.t ? " " + esc(a.t) : "") + '</td><td>' + esc(a.note || "") + '</td></tr>'; }).join("") + '</table>';
+    } else h += '<p class="hint">No attacks on file for this token.</p>';
+    if (i.facts && i.facts.length) h += '<p class="hint">' + i.facts.map(function (f) { return esc(f[0]) + " " + esc(f[1]); }).join(" · ") + '</p>';
+    if (i.traits && i.traits.length) h += '<ul class="hint" style="margin:0;padding-left:18px">' + i.traits.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + '</ul>';
+    if (t.ac == null && !i.attacks) h += '<p class="hint">Stats come from the character sheet (apply-roster) or the encounter file (apply-stats).</p>';
+    $("tinfobody").innerHTML = h;
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function initials(n) {
+    var w = n.trim().split(/\s+/);
+    if (w.length > 1 && /^\d+$/.test(w[w.length - 1])) return (w[0][0] + w[w.length - 1]).toUpperCase();
+    return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 2)).toUpperCase();
+  }
+  function tokAt(x, y, skip) {
+    for (var i = st.tokens.length - 1; i >= 0; i--) {
+      var t = st.tokens[i];
+      if (t.id !== skip && x >= t.x && x < t.x + t.size && y >= t.y && y < t.y + t.size) return t;
+    }
+    return null;
+  }
+  function squares(a, b) {
+    var gx = Math.max(a.x - (b.x + b.size), b.x - (a.x + a.size));
+    var gy = Math.max(a.y - (b.y + b.size), b.y - (a.y + a.size));
+    var ax = Math.max(gx + 1, 0), ay = Math.max(gy + 1, 0);
+    return Math.max(ax, ay) + (st.diag === "flat" ? 0 : Math.floor(Math.min(ax, ay) / 2));
+  }
+  function feet(a, b) { return squares(a, b) * 5; }
+  function diagFt(dx, dy) { return (Math.max(dx, dy) + (st.diag === "flat" ? 0 : Math.floor(Math.min(dx, dy) / 2))) * 5; }
+  function terrainAt(t) {
+    var found = null;
+    for (var dx = 0; dx < t.size; dx++) for (var dy = 0; dy < t.size; dy++) {
+      var k = st.terrain[(t.x + dx) + "," + (t.y + dy)];
+      if (k && k !== "wall" && k !== "door" && k !== "opendoor") found = found || k;
+    }
+    return found;
+  }
+  function fogAt(t) {           // token footprint entirely in fog
+    for (var dx = 0; dx < t.size; dx++) for (var dy = 0; dy < t.size; dy++) if (!st.fog[(t.x + dx) + "," + (t.y + dy)]) return false;
+    return true;
+  }
+  // Party characters are always visible to the players, even when "hiding" (shown dashed, like the DM sees them), so they can still
+  // move their character and keep track of its state. Hidden enemies and allies, and anything in unrevealed fog, stay hidden.
+  function visibleToken(t) { return t.side === "pc" || (!t.hid && !fogAt(t)); }
+  function snapshotState() { return JSON.stringify({ combat: !!st.combat, cols: st.cols, rows: st.rows, round: st.round, tokens: st.tokens, terrain: st.terrain, fog: st.fog, img: st.img, dmImg: st.dmImg, grid: st.grid, diag: st.diag, active: st.active, lastMove: st.lastMove, effects: st.effects }); }
+  function pushUndo() { undo.push(snapshotState()); if (undo.length > 40) undo.shift(); }
+  function clampTokens() {
+    st.tokens.forEach(function (t) { t.x = Math.max(0, Math.min(st.cols - t.size, t.x)); t.y = Math.max(0, Math.min(st.rows - t.size, t.y)); });
+    [st.terrain, st.fog].forEach(function (m) {
+      Object.keys(m).forEach(function (k) { var p = k.split(","); if (+p[0] >= st.cols || +p[1] >= st.rows) delete m[k]; });
+    });
+  }
+  function fogCount() { return Object.keys(st.fog).length; }
+
+  /* ---------- snapshot text (DM-side, for Claude) ---------- */
+  function buildSummary() {
+    var L = [];
+    L.push("BATTLEFIELD rev " + st.rev + " · Round " + st.round + " · " + st.cols + "x" + st.rows + " grid, 5 ft squares, diagonals " + (st.diag === "flat" ? "5 ft" : "alternate 5/10 ft") + " (A1 = top-left, columns letters, rows numbers)");
+    L.push("POSITIONS");
+    [["pc", "PARTY"], ["npc", "ALLIES"], ["enemy", "ENEMIES"]].forEach(function (s) {
+      st.tokens.filter(function (t) { return t.side === s[0]; }).forEach(function (t) {
+        var ter = terrainAt(t), flags = [];
+        if (t.size > 1) flags.push(SIZE_NAMES[t.size] + ", " + t.size + "x" + t.size);
+        if (t.down) flags.push("DOWN");
+        if (t.hid) flags.push("hidden from players");
+        else if (fogAt(t)) flags.push("in unrevealed area");
+        if (ter) flags.push("on " + ter);
+        L.push("  " + s[1] + " " + t.name + " — " + cellName(t.x, t.y) + (flags.length ? " (" + flags.join("; ") + ")" : ""));
+      });
+    });
+    var allies = st.tokens.filter(function (t) { return t.side !== "enemy"; });
+    var foes = st.tokens.filter(function (t) { return t.side === "enemy"; });
+    if (allies.length && foes.length) {
+      L.push("DISTANCES (ft, edge to edge, diagonals per the board rule)");
+      allies.forEach(function (a) {
+        L.push("  " + a.name + " → " + foes.map(function (f) { return f.name + " " + feet(a, f); }).join(", "));
+      });
+    }
+    var adj = [];
+    for (var i = 0; i < st.tokens.length; i++) for (var j = i + 1; j < st.tokens.length; j++) {
+      var a = st.tokens[i], b = st.tokens[j];
+      if (squares(a, b) <= 1 && (a.side === "enemy") !== (b.side === "enemy")) adj.push(a.name + " ↔ " + b.name);
+    }
+    L.push("IN MELEE REACH (5 ft, opposing sides): " + (adj.length ? adj.join("; ") : "none"));
+    var byType = {};
+    Object.keys(st.terrain).forEach(function (k) {
+      var p = k.split(",").map(Number); (byType[st.terrain[k]] = byType[st.terrain[k]] || []).push(p);
+    });
+    var tl = Object.keys(TERRAIN).filter(function (k) { return byType[k]; }).map(function (k) {
+      var cells = byType[k].sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; }).map(function (p) { return cellName(p[0], p[1]); });
+      return TERRAIN[k] + ": " + cells.slice(0, 40).join(" ") + (cells.length > 40 ? " +" + (cells.length - 40) + " more" : "");
+    });
+    L.push("TERRAIN: " + (tl.length ? tl.join(" | ") : "none"));
+    if ((st.effects || []).length) {
+      L.push("SPELL EFFECTS");
+      st.effects.forEach(function (e) {
+        var inside = effTokens(effCells(e)).map(function (t) { return t.name; }).join(", ") || "nobody";
+        L.push("  " + e.name + " [" + e.id + "] " + e.shape + " " + e.size + " ft" + (e.rounds != null ? ", " + e.rounds + " round(s) left" : "") + (e.conc ? " (concentration)" : "") + (e.hidden ? " [hidden from players]" : "") + ": inside " + inside);
+      });
+    }
+    L.push("MAP: " + (st.img ? "party map" : "no party map") + (st.dmImg ? " + DM map" : "") + " · FOG: " + fogCount() + " of " + (st.cols * st.rows) + " squares hidden from players");
+    return L.join("\n");
+  }
+
+  /* ---------- render ---------- */
+  function fogRuns() {
+    var runs = [];
+    for (var y = 0; y < st.rows; y++) {
+      var x = 0;
+      while (x < st.cols) {
+        if (st.fog[x + "," + y]) { var x0 = x; while (x < st.cols && st.fog[x + "," + y]) x++; runs.push([x0, y, x - x0]); }
+        else x++;
+      }
+    }
+    return runs;
+  }
+  function renderBoard() {
+    var M = S, W = (st.cols + 1) * S, H = (st.rows + 1) * S, h = [], pv = playerView(), mi = shownMap(), hasImg = !!mi;
+    var vb = viewBoxFor(W, H);
+    svg.setAttribute("viewBox", vb.join(" "));
+    svg.style.maxWidth = Math.max(560, (st.cols + 1) * 44) + "px";
+    h.push('<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="var(--diff)" stroke-width="3" opacity=".7"/></pattern>' +
+      '<pattern id="gridp" x="' + M + '" y="' + M + '" width="' + S + '" height="' + S + '" patternUnits="userSpaceOnUse"><path d="M' + S + ' 0H0V' + S + '" fill="none" stroke="var(--grid)" stroke-width="1"' + (hasImg ? ' opacity=".8"' : "") + '/></pattern></defs>');
+    h.push('<g clip-path="url(#clipb)"><clipPath id="clipb"><rect x="' + M + '" y="' + M + '" width="' + st.cols * S + '" height="' + st.rows * S + '"/></clipPath>');
+    if (hasImg) {
+      var iw = st.cols * S * mi.scale, ih = iw * mi.ih / mi.iw;
+      h.push('<image class="mapimg" href="/_blob/' + esc(mi.id) + '" x="' + (M + mi.ox * S) + '" y="' + (M + mi.oy * S) + '" width="' + iw + '" height="' + ih + '" preserveAspectRatio="none"/>');
+    }
+    if (st.grid) h.push('<rect x="' + M + '" y="' + M + '" width="' + st.cols * S + '" height="' + st.rows * S + '" fill="url(#gridp)"/>');
+    h.push('<g class="' + (hasImg && !pv ? "walls-over" : "") + '">');
+    Object.keys(st.terrain).forEach(function (key) {
+      var p = key.split(","), cx = +p[0], cy = +p[1], k = st.terrain[key];
+      if (hasImg && pv && (k === "wall")) return;
+      var px = M + cx * S, py = M + cy * S;
+      if (k === "cover") h.push('<rect class="t-cover" x="' + (px + 3) + '" y="' + (py + S / 2) + '" width="' + (S - 6) + '" height="' + (S / 2 - 3) + '" rx="2"/>');
+      else if (k === "door") h.push('<rect class="t-door" x="' + (px + 2) + '" y="' + (py + S / 2 - 5) + '" width="' + (S - 4) + '" height="10" rx="2"/>');
+      else if (k === "opendoor") h.push('<rect class="t-opendoor" x="' + (px + 3) + '" y="' + (py + S / 2 - 5) + '" width="' + (S - 6) + '" height="10" rx="2"/>');
+      else h.push('<rect class="t-' + k + '" x="' + (px + 1) + '" y="' + (py + 1) + '" width="' + (S - 2) + '" height="' + (S - 2) + '"/>');
+      if (GLYPH[k]) h.push('<text class="tg" x="' + (px + 4) + '" y="' + (py + 12) + '">' + GLYPH[k] + "</text>");
+    });
+    h.push("</g>");
+    (st.effects || []).forEach(function (e) {
+      if (pv && e.hidden) return;
+      var cells = effCells(e), sx = 0, sy = 0;
+      cells.forEach(function (c) { h.push('<rect class="fx fx-' + (e.kind || "utility") + (e.hidden ? " hid" : "") + '" x="' + (M + c[0] * S + 1) + '" y="' + (M + c[1] * S + 1) + '" width="' + (S - 2) + '" height="' + (S - 2) + '"/>'); sx += c[0] + 0.5; sy += c[1] + 0.5; });
+      var og = effOrigin(e);
+      h.push('<circle class="fxorg" cx="' + (M + og[0] * S) + '" cy="' + (M + og[1] * S) + '" r="4"/>');
+      if (cells.length) h.push('<text class="fxlab" x="' + (M + sx / cells.length * S) + '" y="' + (M + sy / cells.length * S) + '">' + esc(e.name) + (e.rounds != null ? " · " + e.rounds + "r" : "") + (e.hidden ? " (hidden)" : "") + "</text>");
+    });
+    if (place && place.origin) {
+      var pe = placeEffect(), pcells = effCells(pe);
+      pcells.forEach(function (c) { h.push('<rect class="fx-preview" x="' + (M + c[0] * S + 1) + '" y="' + (M + c[1] * S + 1) + '" width="' + (S - 2) + '" height="' + (S - 2) + '"/>'); });
+      h.push('<circle class="fxorg" cx="' + (M + pe.ox * S) + '" cy="' + (M + pe.oy * S) + '" r="5" style="stroke:var(--npc)"/>');
+      place.count = pcells.length;
+    }
+    fogRuns().forEach(function (r) {
+      h.push('<rect class="fog' + (pv ? "" : " soft") + '" x="' + (M + r[0] * S - 0.5) + '" y="' + (M + r[1] * S - 0.5) + '" width="' + (r[2] * S + 1) + '" height="' + (S + 1) + '"/>');
+    });
+    h.push("</g>");
+    var ov = currentOverlay(pv);
+    if (ov && ov.layers) {
+      var cen = function (k) { var p = k.split(","); return [M + (+p[0] + 0.5) * S, M + (+p[1] + 0.5) * S]; };
+      ov.layers.forEach(function (ly) {
+        var cells = ly.cells || [];
+        if (ly.kind === "path") {
+          if (cells.length < 2) return;
+          h.push('<polyline class="ov-path" points="' + cells.map(function (k) { return cen(k).join(","); }).join(" ") + '"/>');
+          cells.forEach(function (k, i) { var c = cen(k); h.push('<circle class="' + (i === 0 ? "ov-start" : "ov-dot") + '" cx="' + c[0] + '" cy="' + c[1] + '" r="' + (i === 0 ? 9 : i === cells.length - 1 ? 9 : 5) + '"/>'); });
+        } else {
+          cells.forEach(function (k) {
+            var p = k.split(","), px = M + +p[0] * S, py = M + +p[1] * S;
+            h.push('<rect class="ov-' + (ly.kind === "area" ? "area" : "reach") + '" x="' + (px + 1) + '" y="' + (py + 1) + '" width="' + (S - 2) + '" height="' + (S - 2) + '"/>');
+            if (ly.kind === "reach" && p[2] !== undefined) h.push('<text class="ov-cost" x="' + (px + S / 2) + '" y="' + (py + S / 2) + '">' + p[2] + "</text>");
+          });
+        }
+      });
+      (ov.marks || []).forEach(function (k) {
+        var p = k.split(","), tk = tokAt(+p[0], +p[1]), sz = tk ? tk.size : 1;
+        h.push('<rect class="ov-mark" x="' + (M + +p[0] * S + 1) + '" y="' + (M + +p[1] * S + 1) + '" width="' + (sz * S - 2) + '" height="' + (sz * S - 2) + '" rx="10"/>');
+      });
+    }
+    st.tokens.forEach(function (t, ti) {
+      if (pv && !visibleToken(t)) return;
+      var isDrag = drag && drag.id === t.id, tx = isDrag ? drag.cx : t.x, ty = isDrag ? drag.cy : t.y;
+      var px = M + tx * S + 3, py = M + ty * S + 3, w = t.size * S - 6;
+      if (isDrag) {
+        h.push('<rect class="ghost" x="' + (M + t.x * S + 3) + '" y="' + (M + t.y * S + 3) + '" width="' + w + '" height="' + w + '" rx="' + (w / 2 > 18 ? 12 : w / 2) + '"/>');
+        var c0 = [M + (t.x + t.size / 2) * S, M + (t.y + t.size / 2) * S], c1 = [M + (tx + t.size / 2) * S, M + (ty + t.size / 2) * S];
+        h.push('<line class="mline" x1="' + c0[0] + '" y1="' + c0[1] + '" x2="' + c1[0] + '" y2="' + c1[1] + '"/>');
+      }
+      if (drag && drag.table && drag.group && isParty(t) && !t.down && t.id !== drag.id && (!pv || visibleToken(t))) {     // preview where the rest of the party would land
+        var gx = M + (t.x + drag.cx - drag.sx) * S + 3, gy = M + (t.y + drag.cy - drag.sy) * S + 3;
+        h.push('<rect class="ghost" x="' + gx + '" y="' + gy + '" width="' + w + '" height="' + w + '" rx="' + (w / 2 > 18 ? 12 : w / 2) + '" style="stroke:var(--pc);stroke-width:2.5"/>');
+      }
+      var r = t.size === 1 ? w / 2 : 14, pimg = t.portrait ? thumbFor(t.portrait) : null;
+      h.push('<g class="tok ' + t.side + (t.down ? " down" : "") + (t.hid ? " hid" : "") + ((sel === t.id && !pv) || (pv && freeSel === t.id && !st.active) ? " sel" : "") + '" data-id="' + t.id + '">' +
+        '<rect class="body" x="' + px + '" y="' + py + '" width="' + w + '" height="' + w + '" rx="' + r + '"/>' +
+        (pimg ? '<clipPath id="tc' + ti + '"><rect x="' + px + '" y="' + py + '" width="' + w + '" height="' + w + '" rx="' + r + '"/></clipPath><image href="' + pimg + '" x="' + px + '" y="' + py + '" width="' + w + '" height="' + w + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#tc' + ti + ')"/><rect class="rim" x="' + px + '" y="' + py + '" width="' + w + '" height="' + w + '" rx="' + r + '"/>' : "") +
+        ((sel === t.id && !pv) || (pv && freeSel === t.id && !st.active) ? '<rect class="ring" x="' + (px - 2) + '" y="' + (py - 2) + '" width="' + (w + 4) + '" height="' + (w + 4) + '" rx="' + (r + 2) + '"/>' : "") +
+        (st.active === t.id ? '<rect class="ring2" x="' + (px - 3) + '" y="' + (py - 3) + '" width="' + (w + 6) + '" height="' + (w + 6) + '" rx="' + (r + 3) + '"/><path class="tmark" d="M' + (px + w / 2 - 8) + ' ' + (py - 15) + ' L' + (px + w / 2 + 8) + ' ' + (py - 15) + ' L' + (px + w / 2) + ' ' + (py - 5) + ' Z"/>' : "") +
+        (pimg ? "" : '<text x="' + (px + w / 2) + '" y="' + (py + w / 2) + '">' + esc(initials(t.name)) + "</text>") + "</g>");
+      if (isDrag) {
+        var moved = drag.field ? (drag.field.dist[drag.cx + "," + drag.cy] !== undefined ? drag.field.dist[drag.cx + "," + drag.cy] + " ft" : "too far") : diagFt(Math.abs(drag.cx - t.x), Math.abs(drag.cy - t.y)) + " ft";
+        h.push('<text class="mlab" x="' + (px + w / 2) + '" y="' + (py - 20) + '" text-anchor="middle">' + moved + "</text>");
+      }
+    });
+    if (pending && pending.type === "move") {
+      var pk = st.tokens.filter(function (x) { return x.id === pending.id; })[0];
+      if (pk) h.push('<rect class="ghost" x="' + (M + pending.x * S + 3) + '" y="' + (M + pending.y * S + 3) + '" width="' + (pk.size * S - 6) + '" height="' + (pk.size * S - 6) + '" rx="12" style="stroke:var(--accent);stroke-width:3"/>');
+    }
+    if (mpts.length) {
+      var ma = mpts[0], mb = mpts[1];
+      if (mb) {
+        var pa = mCenter(ma), pb = mCenter(mb), x0 = M + pa[0] * S, y0 = M + pa[1] * S, x1 = M + pb[0] * S, y1 = M + pb[1] * S;
+        var mm = mMetrics();
+        if (mm.route && mm.route.length > 1) {
+          var pts = mm.route.map(function (q) { return (M + (q[0] + 0.5) * S) + "," + (M + (q[1] + 0.5) * S); }).join(" ");
+          h.push('<polyline class="mwb" points="' + pts + '"/><polyline class="mwalk" points="' + pts + '"/>');
+        }
+        h.push('<line class="mlb2" x1="' + x0 + '" y1="' + y0 + '" x2="' + x1 + '" y2="' + y1 + '"/><line class="mline2" x1="' + x0 + '" y1="' + y0 + '" x2="' + x1 + '" y2="' + y1 + '"/>');
+        h.push('<circle class="mdot2" cx="' + x0 + '" cy="' + y0 + '" r="6"/><circle class="mdot2" cx="' + x1 + '" cy="' + y1 + '" r="6"/>');
+        h.push('<text class="mlab2" x="' + (x0 + x1) / 2 + '" y="' + ((y0 + y1) / 2 - 16) + '">' + mm.ft + " ft" + (mm.walk !== undefined && mm.walk !== mm.ft ? " · walk " + mm.walk : "") + "</text>");
+      } else {
+        var p0 = mCenter(ma); h.push('<circle class="mdot2" cx="' + (M + p0[0] * S) + '" cy="' + (M + p0[1] * S) + '" r="6"/>');
+      }
+    }
+    if (rect) {
+      var rx0 = Math.min(rect.x0, rect.x1), ry0 = Math.min(rect.y0, rect.y1), rw = Math.abs(rect.x1 - rect.x0) + 1, rh = Math.abs(rect.y1 - rect.y0) + 1;
+      h.push('<rect class="rectsel" x="' + (M + rx0 * S) + '" y="' + (M + ry0 * S) + '" width="' + rw * S + '" height="' + rh * S + '"/>');
+    }
+    // Column letters and row numbers stay on screen while zoomed: drawn last, pinned to the edges of the visible window.
+    var zk = view.z, up = unitsPerPx(), sr = svg.getBoundingClientRect(), tl = unitPoint(sr.left, sr.top), br = unitPoint(sr.right, sr.bottom), vx = tl[0], vy = tl[1], vw = br[0] - tl[0], vh = br[1] - tl[1], lk = Math.min(2.4, Math.max(1, Math.sqrt(zk))), fs = 12 * up * lk, th = 20 * up * lk, bgc = "var(--board)";   // the labels grow with the zoom (up to 2.4x)
+    h.push('<g class="axis" pointer-events="none"><rect x="' + vx + '" y="' + vy + '" width="' + vw + '" height="' + th + '" fill="' + bgc + '" opacity=".92"/><rect x="' + vx + '" y="' + vy + '" width="' + th + '" height="' + vh + '" fill="' + bgc + '" opacity=".92"/>');
+    for (var ax = 0; ax < st.cols; ax++) { var cxl = M + ax * S + S / 2; if (cxl < vx + th || cxl > vx + vw) continue; h.push('<text class="gl" style="font-size:' + fs + 'px" x="' + cxl + '" y="' + (vy + th / 2 + fs * 0.35) + '" text-anchor="middle">' + colName(ax) + "</text>"); }
+    for (var ay = 0; ay < st.rows; ay++) { var cyl = M + ay * S + S / 2; if (cyl < vy + th || cyl > vy + vh) continue; h.push('<text class="gl" style="font-size:' + fs + 'px" x="' + (vx + th / 2) + '" y="' + (cyl + fs * 0.35) + '" text-anchor="middle">' + (ay + 1) + "</text>"); }
+    h.push("</g>");
+    // Wind rose pinned to the lower-left of the visible window, constant size on screen. North is up the page.
+    var R = 26 * up, rcx = vx + 20 * up * lk + 14 * up + R, rcy = vy + vh - 14 * up - R, rf = 11 * up;
+    h.push('<g class="rose" pointer-events="none"><circle cx="' + rcx + '" cy="' + rcy + '" r="' + (R + 6 * up) + '" fill="var(--board)" opacity=".8" stroke="var(--line)" stroke-width="' + up + '"/>' +
+      '<path d="M' + rcx + " " + (rcy - R) + "L" + (rcx + 6 * up) + " " + rcy + "L" + rcx + " " + (rcy + R) + "L" + (rcx - 6 * up) + " " + rcy + 'Z" fill="var(--muted)" opacity=".55"/>' +
+      '<path d="M' + (rcx - R) + " " + rcy + "L" + rcx + " " + (rcy - 6 * up) + "L" + (rcx + R) + " " + rcy + "L" + rcx + " " + (rcy + 6 * up) + 'Z" fill="var(--muted)" opacity=".35"/>' +
+      '<path d="M' + rcx + " " + (rcy - R) + "L" + (rcx + 6 * up) + " " + rcy + "L" + (rcx - 6 * up) + " " + rcy + 'Z" fill="var(--accent)"/>' +
+      [["N", 0, -1], ["E", 1, 0], ["S", 0, 1], ["W", -1, 0]].map(function (d) { return '<text class="gl" style="font-size:' + rf + 'px;font-weight:700;' + (d[0] === "N" ? "fill:var(--accent)" : "") + '" x="' + (rcx + d[1] * (R + 14 * up)) + '" y="' + (rcy + d[2] * (R + 14 * up) + rf * 0.35) + '" text-anchor="middle">' + d[0] + "</text>"; }).join("") + "</g>");
+    svg.innerHTML = h.join("");
+  }
+
+  function renderSide() {
+    var pv = playerView();
+    document.body.classList.toggle("player", pv);
+    document.body.classList.toggle("table", tableMode);
+    $("round").textContent = st.round;
+    if (!place) $("pbinfo").textContent = "";
+    var hasOv = isDM && !preview && overlay && overlay.layers && overlay.layers.length;
+    $("ovbar").hidden = !hasOv;
+    if (hasOv) { $("ovlabel").textContent = overlay.label || ""; $("ovstale").textContent = overlay.boardRev !== undefined && overlay.boardRev !== st.rev ? "The board has changed since this was drawn." : ""; }
+    $("wait").hidden = !(!isDM && !loadedPlayer);
+    $("boardbox").hidden = !isDM && !loadedPlayer;
+    $("preview").setAttribute("aria-pressed", String(preview));
+    $("preview").hidden = !isDM || tableMode;
+    $("ovtoggle").setAttribute("aria-pressed", String(overlayOn));
+    $("spells").hidden = !canPlace() || !!place;
+    if (place) { $("pbname").textContent = "Placing " + place.name; if (!$("pbinfo").textContent) $("pbinfo").textContent = place.fromSelf ? "Drag on the board to aim it from " + (place.owner ? place.owner.name : "the caster") + ", then Place." : "Tap or drag on the board to aim it. Snaps to grid crossings and square centres."; }
+    $("tablemode").setAttribute("aria-pressed", String(tableMode));
+    if (!endT) $("endcombat").textContent = inCombat() ? "End combat" : "Start combat";
+    var ta = activeTok();
+    $("tablebar").hidden = !(tableMode || !isDM || preview);
+    $("tbgroup").setAttribute("aria-pressed", String(!!st.groupMove)); $("tbgroup").hidden = true;
+    $("tbgroup").textContent = "Move together: " + (st.groupMove ? "on" : "off");
+    document.body.classList.toggle("table", tableMode || (!isDM && canMoveHere()));
+    if (tableMode) {
+      $("tbname").textContent = ta ? ta.name : (st.combat ? "Combat" : "Out of combat");
+      $("tbleft").textContent = !ta ? (st.combat ? "Combat has started: waiting for the first turn." : "Free movement: drag any party character, or tap one and then a square.") : ta.side === "enemy" ? "Enemy turn: the DM moves them." : remaining(ta) + " of " + (ta.speed || 30) + " ft left" + (ta.hid ? " (hiding)" : "") + ". Drag the token, or tap a lit square.";
+      $("tbundo").hidden = !st.lastMove;
+      $("tbgroup").hidden = false; $("tbgroup").disabled = !!ta; $("tbgroup").title = ta ? "Only the active character moves during combat. Available again when combat ends." : "Moving one party member moves the whole party, keeping the formation.";
+    } else if (!isDM) {
+      if (canMoveHere()) {
+        $("tbname").textContent = ta ? ta.name : (st.combat ? "Combat" : "Out of combat");
+        $("tbleft").textContent = !ta ? (st.combat ? "Combat has started: waiting for the first turn." : "Free movement: drag any party character, or tap one and then a square. The DM's page applies the move.") : ta.side === "enemy" ? "Enemy turn: the DM moves them." : remaining(ta) + " of " + (ta.speed || 30) + " ft left" + (ta.hid ? " (hiding)" : "") + ". Drag the token, or tap a lit square. The DM's page applies the move.";
+        $("tbundo").hidden = !(ta ? ta.moved > 0 : st.canUndo);
+        $("tbgroup").hidden = false; $("tbgroup").disabled = !!ta; $("tbgroup").title = ta ? "Only the active character moves during combat. Available again when combat ends." : "Moving one party member moves the whole party, keeping the formation.";
+      } else {
+        $("tbname").textContent = "View only";
+        $("tbleft").textContent = st.tableMoves === false ? "The DM moves the tokens." : "This account can only watch. Ask the DM to give it Contributor access in the Share menu so it can move the active character.";
+        $("tbundo").hidden = true;
+      }
+    } else if (preview) {
+      $("tbname").textContent = "Preview";
+      $("tbleft").textContent = "This is the players' view, so nothing can be moved here. Go back to the DM view and press Table mode for the tablet.";
+      $("tbundo").hidden = true;
+    }
+    $("preview").textContent = preview ? "Back to DM view" : "Players' view";
+    var chip = $("status");
+    if (!isDM) { chip.className = "chip ok"; chip.textContent = loadedPlayer ? "Live" : "Connecting…"; }
+    else {
+      chip.className = "chip " + (saveState === "saved" ? "ok" : saveState === "local" ? "warn" : "");
+      chip.textContent = saveState === "saved" ? "Shared · rev " + st.rev : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed — use Copy text" : "Local only";
+    }
+    if (!isDM) return;
+    $("cols").value = st.cols; $("rows").value = st.rows; $("diagrule").value = st.diag || "alt"; $("groupmove").checked = !!st.groupMove; $("tablemoves").checked = st.tableMoves !== false;
+    $("example").hidden = !st.example;
+    var any = !!(st.img || st.dmImg), both = !!(st.img && st.dmImg);
+    $("mapsrow").hidden = !any; $("mapfields").hidden = !any; $("alignrow").hidden = !any;
+    $("mapview").hidden = !both; $("mapview").textContent = "Showing: " + (shownKey() === "dmImg" ? "DM map" : "Party map");
+    $("removemap").textContent = "Remove " + (shownKey() === "dmImg" ? "DM map" : "party map");
+    $("loadmap").textContent = st.img ? "Replace party map…" : "Party map…"; $("loaddm").textContent = st.dmImg ? "Replace DM map…" : "DM map…";
+    $("maphint").hidden = any; $("loadmap").hidden = !assets; $("loaddm").hidden = !assets;
+    $("gridtoggle").setAttribute("aria-pressed", String(st.grid));
+    var sm = shownMap(); if (sm) { $("mscale").value = sm.scale; $("mox").value = sm.ox; $("moy").value = sm.oy; }
+    var hidden = fogCount(), total = st.cols * st.rows;
+    $("foginfo").textContent = hidden ? hidden + " of " + total + " squares are hidden from players." : "Nothing is hidden. Players see the whole board.";
+    var ro = $("roster");
+    ro.innerHTML = st.tokens.length ? st.tokens.map(function (t) {
+      var col = t.side === "pc" ? "--pc" : t.side === "enemy" ? "--foe" : "--npc";
+      return '<li data-id="' + t.id + '" class="' + (sel === t.id ? "sel " : "") + (st.active === t.id ? "act " : "") + (t.down ? "down " : "") + (t.hid ? "hid" : "") + '"><span class="dot" style="background:var(' + col + ')"></span><span class="nm" data-act="info" title="Show stats and attacks">' + esc(t.name) + '</span>' + statCell(t) + '<span class="at">' + cellName(t.x, t.y) + '</span>' +
+        '<button class="mini' + (st.active === t.id ? " on" : "") + '" data-act="turn" title="Make this the active turn (resets its movement)">' + (st.active === t.id ? "Turn ●" : "Turn") + '</button>' +
+        '<button class="mini" data-act="hid" title="' + (t.side === "pc" ? (t.hid ? "Not hiding any more" : "Mark as hiding: players still see it, dashed") : (t.hid ? "Show to players" : "Hide from players")) + '">' + (t.hid ? "Show" : "Hide") + '</button>' +
+        '<button class="mini" data-act="down" title="Toggle down">' + (t.down ? "Up" : "Down") + '</button><button class="mini" data-act="del" aria-label="Remove ' + esc(t.name) + '">✕</button></li>';
+    }).join("") : '<li class="hint" style="cursor:default">No tokens yet. Add one above.</li>';
+
+    var t = st.tokens.filter(function (x) { return x.id === sel; })[0], d = $("dists");
+    var tm = $("tokmeta");
+    if (t && t.side !== "enemy") { tm.hidden = false; tm.innerHTML = '<label>Speed (ft) <input id="tspeed" type="number" min="0" step="5" value="' + (t.speed || 30) + '"></label><label>Moved this turn <input id="tmoved" type="number" min="0" step="5" value="' + (t.moved || 0) + '"></label>'; }
+    else { tm.hidden = true; tm.innerHTML = ""; }
+    if (!t) { $("selhead").textContent = "Distances"; d.innerHTML = '<p class="hint">Select a token to see how far it is from everyone else.</p>'; }
+    else {
+      $("selhead").textContent = "From " + t.name + " · " + cellName(t.x, t.y);
+      var others = st.tokens.filter(function (o) { return o.id !== t.id; }).map(function (o) { return { o: o, f: feet(t, o) }; }).sort(function (a, b) { return a.f - b.f; });
+      d.innerHTML = others.length ? '<table class="dist">' + others.map(function (r) {
+        var opp = (r.o.side === "enemy") !== (t.side === "enemy");
+        return "<tr><td>" + esc(r.o.name) + (r.f <= 5 && opp ? ' <span class="adj">· in reach</span>' : "") + "</td><td>" + r.f + " ft</td></tr>";
+      }).join("") + "</table>" : '<p class="hint">No other tokens.</p>';
+    }
+    $("snap").value = buildSummary();
+  }
+  // When the turn passes to another token the map recentres on it (zoom is kept). The Follow button turns this off on this device.
+  function fitBoard() {
+    if (!document.body.classList.contains("player")) { svg.style.height = ""; return; }
+    var top = $("boardbox").getBoundingClientRect().top + window.scrollY;
+    var avail = Math.max(260, window.innerHeight - top - 64);
+    svg.style.height = avail + "px";
+  }
+  window.addEventListener("resize", function () { fitBoard(); renderBoard(); });
+  var lastActive = null, followOn = true;
+  function followActive() {
+    if (st.active === lastActive) return;
+    var t = activeTok();
+    if (!followOn || !t) { lastActive = st.active; return; }
+    if (playerView() && !visibleToken(t)) { lastActive = st.active; return; }   // never point the players at something they cannot see
+    var r = svg.getBoundingClientRect(); if (!r.width) return;                   // not laid out yet: try again on the next render
+    lastActive = st.active;
+    if (playerView()) {                                                         // players: zoom in to where squares are at least about 36 px
+      var need = 36 / (S * baseScale()); view.z = Math.max(view.z, Math.min(8, need));
+    }
+    if (view.z > 1) { view.cx = (t.x + t.size / 2 + 1) * S; view.cy = (t.y + t.size / 2 + 1) * S; }
+  }
+  function render() { renderSide(); fitBoard(); followActive(); renderBoard(); }
+
+  /* ---------- persistence ---------- */
+  function stripFlag(m) { var c = JSON.parse(JSON.stringify(m)); delete c.autoalign; return c; }
+  function publicState() {
+    var terrain = [];
+    Object.keys(st.terrain).forEach(function (k) { if (!st.fog[k]) terrain.push(k + "," + st.terrain[k]); });
+    return {
+      cols: st.cols, rows: st.rows, round: st.round, rev: st.rev, img: st.img ? stripFlag(st.img) : null, grid: st.grid,
+      fog: Object.keys(st.fog), terrain: terrain,
+      combat: !!st.combat, active: st.active || null, diag: st.diag || "alt", tableMoves: st.tableMoves !== false, groupMove: !!st.groupMove, canUndo: !!(st.lastMove && st.lastMove.free),
+      effects: (st.effects || []).filter(function (e) { return !e.hidden; }),
+      tokens: st.tokens.filter(visibleToken).map(function (t) { return { id: t.id, name: t.name, side: t.side, size: t.size, x: t.x, y: t.y, down: t.down, speed: t.speed || 30, moved: t.moved || 0, dpar: t.dpar || 0, hid: t.side === "pc" && !!t.hid, portrait: t.portrait || null }; }),
+      updatedAt: new Date().toISOString(), sid: SID
+    };
+  }
+  function fullState() {
+    var d = publicState();
+    d.terrain = Object.keys(st.terrain).map(function (k) { return k + "," + st.terrain[k]; });
+    d.tokens = st.tokens; d.summary = buildSummary(); d.dmImg = st.dmImg || null; d.lastMove = st.lastMove || null; d.reqSeq = st.reqSeq || 0; d.effects = st.effects || [];
+    return d;
+  }
+  function commit() {
+    st.rev++; st.example = false; clampTokens(); render(); scheduleSave();
+  }
+  function scheduleSave() {
+    if (!dmDoc) return;
+    saveState = "saving"; renderSide();
+    clearTimeout(saveT);
+    saveT = setTimeout(function () {
+      Promise.all([dmDoc.set(fullState()), pubDoc.set(publicState())]).then(function () { saveState = "saved"; renderSide(); }, function () { saveState = "error"; renderSide(); });
+    }, 350);
+  }
+  function loadRemote(d) {
+    d = JSON.parse(JSON.stringify(d));       // snapshot data can be read-only
+    var t = {}, f = {};
+    (d.terrain || []).forEach(function (s) { var p = s.split(","); t[p[0] + "," + p[1]] = p[2]; });
+    (d.fog || []).forEach(function (k) { f[k] = 1; });
+    st = { cols: d.cols || 20, rows: d.rows || 14, round: d.round || 1, rev: d.rev || 0, example: false, terrain: t, fog: f, img: d.img || null, dmImg: d.dmImg || null, grid: d.grid !== false, diag: d.diag || "alt", effects: d.effects || [], groupMove: !!d.groupMove, canUndo: !!d.canUndo, tableMoves: d.tableMoves !== false, reqSeq: d.reqSeq || 0, combat: !!d.combat, active: d.active || null, lastMove: d.lastMove || null,
+      tokens: (d.tokens || []).map(function (x) { x.hid = !!x.hid; x.speed = x.speed || 30; x.moved = x.moved || 0; x.dpar = x.dpar || 0; return x; }) };
+    if (sel && !st.tokens.some(function (x) { return x.id === sel; })) sel = null;
+    render();
+    if (isDM) processPending();
+  }
+  function startDb() {
+    if (!db) return;
+    if (isDM) {
+      dmDoc = db.doc("dm/state"); pubDoc = db.doc("table/state"); saveState = "saved"; renderSide();
+      db.doc("moves/table").onSnapshot(function (snap) { if (snap.exists) handleRequest(JSON.parse(JSON.stringify(snap.data()))); }, function () {});
+      db.doc("dm/overlay").onSnapshot(function (snap) {
+        overlay = snap.exists ? JSON.parse(JSON.stringify(snap.data())) : null;
+        render();
+      }, function () {});
+      dmDoc.onSnapshot(function (snap) {
+        if (!snap.exists || snap.metadata.hasPendingWrites || drag || painting || rect) return;
+        var data = snap.data(); if (!data) return;
+        // adopt the first stored copy, then only changes written by another open copy of this page
+        if (!gotFirst || (data.sid && data.sid !== SID)) {
+          gotFirst = true; loadRemote(data); saveState = "saved"; renderSide();
+          if (data.sid === "claude") scheduleSave();       // an agent wrote the board: refresh the summary and the players' copy
+        }
+      }, function () { saveState = "error"; renderSide(); });
+    } else {
+      db.doc("table/state").onSnapshot(function (snap) {
+        if (!snap.exists) return;
+        loadedPlayer = true; loadRemote(snap.data());
+        if (pending) { var pt = st.tokens.filter(function (x) { return x.id === pending.id; })[0]; if (pt && pending.type === "move" && pt.x === pending.x && pt.y === pending.y) { pending = null; renderBoard(); } }
+      }, function () {});
+      db.doc("table/reply").onSnapshot(function (snap) {
+        if (!snap.exists) return;
+        var r = snap.data();
+        if (pending && r.seq === pending.seq) { clearTimeout(pendTimer); pending = null; toast(r.msg); renderBoard(); }
+      }, function () {});
+    }
+  }
+  var userApiHolder = null;
+  function init() {
+    st = demo();
+    var up = window.claude && claude.use ? Promise.all([claude.use("db"), claude.use("user"), claude.use("assets")]) : Promise.resolve([null, null, null]);
+    up.then(function (r) {
+      db = r[0]; assets = r[2];
+      var u = r[1]; userApiHolder = u;
+      if (u) return u.canEdit().then(function (c) { return c; }, function () { return false; });
+      return db ? false : true;           // signed in but unknown to the owner's org = player; no backend at all = local DM
+    }).then(function (dm) {
+      isDM = !!dm;
+      userApi = userApiHolder;
+      try { followOn = localStorage.getItem("cp_follow") !== "0"; $("zfollow").setAttribute("aria-pressed", String(followOn)); } catch (err) {}
+      try { overlayOn = localStorage.getItem("cp_overlay") !== "0"; tableMode = isDM && localStorage.getItem("cp_table") === "1"; } catch (err) {}
+      if (isDM && location.hash === "#dm") { tableMode = false; try { localStorage.setItem("cp_table", "0"); } catch (err) {} }
+      if (!isDM) { st = { cols: 20, rows: 14, round: 1, rev: 0, example: false, terrain: {}, fog: {}, img: null, dmImg: null, grid: true, diag: "alt", active: null, lastMove: null, effects: [], tokens: [] }; }
+      startDb(); render();
+      if (!isDM && userApi && userApi.can) { try { Promise.resolve(userApi.can("data.write")).then(function (v) { canSend = v === false ? false : null; renderSide(); }, function () {}); } catch (err) {} }
+    }, function () { render(); });
+  }
+
+  /* ---------- tools ---------- */
+  function renderTools() {
+    var defs = [["move", "Move"], ["|"], ["wall", "Wall"], ["door", "Door"], ["difficult", "Difficult"], ["cover", "Cover"], ["hazard", "Hazard"], ["erase", "Erase"], ["|"], ["room", "Reveal room"], ["reveal", "Reveal box"], ["hide", "Hide box"]];
+    $("tools").innerHTML = defs.map(function (d) {
+      if (d[0] === "|") return '<span class="tsep"></span>';
+      return '<button class="tool" data-tool="' + d[0] + '" aria-pressed="' + (tool === d[0]) + '"><span class="sw ' + d[0] + '"></span>' + d[1] + "</button>";
+    }).join("");
+  }
+  $("tools").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tool]"); if (!b) return; tool = b.dataset.tool; renderTools();
+  });
+
+  /* ---------- fog ---------- */
+  function key(p) { return p.x + "," + p.y; }
+  function inGrid(c) { return c.x >= 0 && c.y >= 0 && c.x < st.cols && c.y < st.rows; }
+  function blocks(p) { var t = st.terrain[key(p)]; return t === "wall" || t === "door"; }
+  function floodReveal(c) {
+    var k = key(c), t = st.terrain[k], starts = [], revealed = [];
+    if (t === "door") {
+      st.terrain[k] = "opendoor"; delete st.fog[k]; revealed.push(c);
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(function (d) { starts.push({ x: c.x + d[0], y: c.y + d[1] }); });
+    } else if (!blocks(c)) starts.push(c);
+    var seen = {}, q = [];
+    starts.forEach(function (s) { if (inGrid(s) && st.fog[key(s)] && !blocks(s) && !seen[key(s)]) { seen[key(s)] = 1; q.push(s); } });
+    while (q.length) {
+      var p = q.pop(); delete st.fog[key(p)]; revealed.push(p);
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(function (d) {
+        var n = { x: p.x + d[0], y: p.y + d[1] };
+        if (inGrid(n) && !seen[key(n)] && st.fog[key(n)] && !blocks(n)) { seen[key(n)] = 1; q.push(n); }
+      });
+    }
+    revealed.forEach(function (p) {
+      for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
+        var n = { x: p.x + dx, y: p.y + dy };
+        if (inGrid(n) && st.fog[key(n)] && st.terrain[key(n)]) { var tt = st.terrain[key(n)]; if (tt === "wall" || tt === "door" || tt === "opendoor") delete st.fog[key(n)]; }
+      }
+    });
+    return revealed.length;
+  }
+  function applyRect(r, hide) {
+    for (var x = Math.min(r.x0, r.x1); x <= Math.max(r.x0, r.x1); x++) for (var y = Math.min(r.y0, r.y1); y <= Math.max(r.y0, r.y1); y++) {
+      if (hide) st.fog[x + "," + y] = 1; else delete st.fog[x + "," + y];
+    }
+  }
+
+  /* ---------- pointer interaction ---------- */
+  function cellFromEvent(e) {
+    var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    var p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return { x: Math.floor(p.x / S) - 1, y: Math.floor(p.y / S) - 1 };
+  }
+  function clampCell(c) { return { x: Math.max(0, Math.min(st.cols - 1, c.x)), y: Math.max(0, Math.min(st.rows - 1, c.y)) }; }
+  function paint(c) {
+    if (!inGrid(c)) return;
+    var k = key(c);
+    if (painting === "erase") delete st.terrain[k]; else st.terrain[k] = painting;
+  }
+  $("boardbox").addEventListener("pointerdown", function (e) {
+    // A primary pointer goes down only when no other touch is active, so anything still tracked is a finger whose pointerup was lost (seen inside an iframe on Android): forget it, or every later touch reads as a pinch
+    if (e.isPrimary) { pointers = {}; gesture = null; ignoreUp = false; panning = null; drag = null; painting = null; rect = null; }
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (Object.keys(pointers).length >= 2) { startGesture(); return; }
+    if (measuring) { e.preventDefault(); try { $("boardbox").setPointerCapture(e.pointerId); } catch (err) {} startPan(e, { measure: true }); return; }   // a tap picks a point, a drag still pans
+    if (place && canPlace()) {
+      e.preventDefault(); try { $("boardbox").setPointerCapture(e.pointerId); } catch (err) {}
+      place.dragging = true; place.aimDir = (place.shape === "cone" || place.shape === "line") && !place.fromSelf && !!place.origin && place.originSet;
+      placeAim(e);
+      if ((place.shape === "cone" || place.shape === "line") && !place.fromSelf) place.originSet = true;
+      return;
+    }
+    if (playerView()) {
+      e.preventDefault();
+      try { $("boardbox").setPointerCapture(e.pointerId); } catch (err) {}
+      if (!canMoveHere()) { startPan(e); return; }       // a viewer can still zoom and pan
+      var tc = cellFromEvent(e); if (!inGrid(tc)) { startPan(e); return; }
+      tableDown(tc, e);
+      return;
+    }
+    if (spaceDown || e.button === 1) { e.preventDefault(); try { $("boardbox").setPointerCapture(e.pointerId); } catch (err) {} startPan(e); return; }
+    var c = cellFromEvent(e);
+    e.preventDefault();
+    try { $("boardbox").setPointerCapture(e.pointerId); } catch (err) {}
+    if (!inGrid(c)) { startPan(e); return; }                         // dragging the margin pans the map
+    var t = tokAt(c.x, c.y);
+    if (t) { sel = t.id; drag = { id: t.id, ox: c.x - t.x, oy: c.y - t.y, cx: t.x, cy: t.y }; render(); return; }
+    if (tool === "move") {                                             // empty ground: a drag pans the map, a tap moves the selected token there
+      var s = sel ? st.tokens.filter(function (x) { return x.id === sel; })[0] : null;
+      if (s) startPan(e, { dm: true, a: s, x: Math.max(0, Math.min(st.cols - s.size, c.x)), y: Math.max(0, Math.min(st.rows - s.size, c.y)) }); else startPan(e);
+    } else if (PAINT[tool]) {
+      pushUndo(); painting = tool; paint(c); renderBoard();
+    } else if (tool === "reveal" || tool === "hide") {
+      rect = { x0: c.x, y0: c.y, x1: c.x, y1: c.y }; renderBoard();
+    } else if (tool === "room") {
+      pushUndo(); floodReveal(c); commit();
+    }
+  });
+  // Table mode: the tablet shows the players' board; only the active character can move, within its remaining speed.
+  function tableDown(c, e) {
+    var a = activeTok();
+    if (!a) {                                                       // out of combat: move any party character
+      var pc = pcAt(c.x, c.y);
+      if (pc) { freeSel = pc.id; drag = { id: pc.id, ox: c.x - pc.x, oy: c.y - pc.y, cx: pc.x, cy: pc.y, sx: pc.x, sy: pc.y, group: !!st.groupMove, table: true, field: moveField({ id: pc.id, side: pc.side, size: pc.size, x: pc.x, y: pc.y, dpar: 0 }, 1000) }; renderBoard(); return; }
+      var fs = freeSel ? st.tokens.filter(function (t) { return t.id === freeSel && isParty(t); })[0] : null;
+      if (fs) startPan(e, { a: fs, x: Math.max(0, Math.min(st.cols - fs.size, c.x)), y: Math.max(0, Math.min(st.rows - fs.size, c.y)) }); else startPan(e);
+      return;
+    }
+    if (a.side === "enemy") { toast("That is an enemy turn. The DM moves them."); startPan(e); return; }
+    if (remaining(a) <= 0) { toast(a.name + " has no movement left this turn."); startPan(e); return; }
+    if (c.x >= a.x && c.x < a.x + a.size && c.y >= a.y && c.y < a.y + a.size) {
+      drag = { id: a.id, ox: c.x - a.x, oy: c.y - a.y, cx: a.x, cy: a.y, table: true, field: moveField(a, remaining(a)) };
+      renderBoard();
+    } else startPan(e, { a: a, x: Math.max(0, Math.min(st.cols - a.size, c.x)), y: Math.max(0, Math.min(st.rows - a.size, c.y)) });
+  }
+  function applyMove(a, x, y) {            // runs on a page that can write the board; returns {ok, msg}
+    var free = freeMode();
+    if (free ? !isParty(a) : a.id !== st.active) return { ok: false, msg: free ? "Only party characters and allies can be moved from the table." : a.name + " is not the active turn." };
+    if (a.side === "enemy") return { ok: false, msg: "That is an enemy turn. The DM moves them." };
+    if (free && st.groupMove) return applyGroupMove(a, x, y);
+    var probe = free ? { id: a.id, side: a.side, size: a.size, x: a.x, y: a.y, dpar: 0 } : a;
+    var f = moveField(probe, budgetFor(a)), k = x + "," + y, cost = f.dist[k];
+    if (cost === undefined || cost === 0) {
+      var far = free ? undefined : moveField(a, 1000).dist[k];
+      return { ok: false, msg: far !== undefined ? "Too far: that costs " + far + " ft and " + a.name + " has " + remaining(a) + " ft left." : "That square cannot be reached." };
+    }
+    if (!stopOk(a, f, x, y)) return { ok: false, msg: "That square is taken or not yet revealed." };
+    pushUndo();
+    var from = cellName(a.x, a.y), fx = a.x, fy = a.y, dp0 = a.dpar || 0;
+    a.x = x; a.y = y;
+    if (!free) { a.moved = (a.moved || 0) + cost; a.dpar = f.par[k] || 0; }
+    st.lastMove = { id: a.id, name: a.name, from: from, to: cellName(x, y), fx: fx, fy: fy, dp0: dp0, cost: cost, left: free ? null : remaining(a), free: free, round: st.round, t: new Date().toISOString() };
+    commit();
+    return { ok: true, msg: a.name + " moved to " + cellName(x, y) + (free ? "" : " (" + cost + " ft, " + remaining(a) + " ft left)") };
+  }
+  // Group move (out of combat): every party member shifts by the same offset so the formation is kept. All or nothing: if anyone
+  // would end up in a wall, off the map, on someone else, in unrevealed ground or somewhere they cannot walk to, nobody moves.
+  function applyGroupMove(a, x, y) {
+    var dx = x - a.x, dy = y - a.y;
+    if (!dx && !dy) return { ok: false, msg: "That is where it already is." };
+    var members = st.tokens.filter(function (t) { return isParty(t) && visibleToken(t) && !t.down; });
+    if (members.indexOf(a) < 0) members.push(a);
+    var ids = {}, occ = {}; members.forEach(function (m) { ids[m.id] = 1; });
+    st.tokens.forEach(function (o) { if (ids[o.id]) return; for (var i = 0; i < o.size; i++) for (var j = 0; j < o.size; j++) occ[(o.x + i) + "," + (o.y + j)] = 1; });
+    for (var n = 0; n < members.length; n++) {
+      var m = members[n], tx = m.x + dx, ty = m.y + dy;
+      if (tx < 0 || ty < 0 || tx + m.size > st.cols || ty + m.size > st.rows) return { ok: false, msg: "The group can't go there: " + m.name + " would be off the map." };
+      for (var i = 0; i < m.size; i++) for (var j = 0; j < m.size; j++) {
+        var k = (tx + i) + "," + (ty + j);
+        if (st.terrain[k] === "wall") return { ok: false, msg: "The group can't go there: " + m.name + " would be in a wall (" + cellName(tx + i, ty + j) + ")." };
+        if (occ[k]) return { ok: false, msg: "The group can't go there: " + m.name + " would land on someone (" + cellName(tx + i, ty + j) + ")." };
+        if (st.fog[k]) return { ok: false, msg: "The group can't go there: " + m.name + " would be in unrevealed ground." };
+      }
+      var f = moveField({ id: m.id, side: m.side, size: m.size, x: m.x, y: m.y, dpar: 0 }, 1000);
+      if (f.dist[tx + "," + ty] === undefined) return { ok: false, msg: "The group can't go there: " + m.name + " can't walk to " + cellName(tx, ty) + " (something is in the way)." };
+    }
+    pushUndo();
+    var moves = members.map(function (m) { return { id: m.id, fx: m.x, fy: m.y }; });
+    members.forEach(function (m) { m.x += dx; m.y += dy; });
+    st.lastMove = { id: a.id, name: a.name, from: cellName(a.x - dx, a.y - dy), to: cellName(a.x, a.y), fx: a.x - dx, fy: a.y - dy, dp0: 0, cost: diagFt(Math.abs(dx), Math.abs(dy)), left: null, free: true, group: moves, round: st.round, t: new Date().toISOString() };
+    commit();
+    return { ok: true, msg: "The party moved together (" + members.length + " characters)." };
+  }
+  function undoLastMove() {
+    var lm = st.lastMove; if (!lm) return { ok: false, msg: "Nothing to undo." };
+    if (lm.group) {
+      pushUndo(); lm.group.forEach(function (g) { var tk = st.tokens.filter(function (x) { return x.id === g.id; })[0]; if (tk) { tk.x = g.fx; tk.y = g.fy; } }); st.lastMove = null; commit();
+      return { ok: true, msg: "The party is back where it was." };
+    }
+    var t = st.tokens.filter(function (x) { return x.id === lm.id; })[0]; if (!t) return { ok: false, msg: "Nothing to undo." };
+    pushUndo(); t.x = lm.fx; t.y = lm.fy; if (!lm.free) { t.dpar = lm.dp0 || 0; t.moved = Math.max(0, (t.moved || 0) - lm.cost); } st.lastMove = null;
+    commit();
+    return { ok: true, msg: t.name + " is back on " + cellName(t.x, t.y) };
+  }
+  function tableTry(a, x, y) {
+    if (!isDM) { sendRequest({ type: "move", token: a.id, x: x, y: y }, a, x, y); return; }
+    var r = applyMove(a, x, y);
+    toast(r.msg);
+    if (!r.ok) render();
+  }
+  // ----- tablet side: send a request, wait for the DM page's answer -----
+  function sendRequest(req, a, x, y) {
+    if (!db) { toast("Not connected."); render(); return; }
+    if (req.type === "move" && freeMode() && st.groupMove) { /* the DM's page checks the whole group */ }
+    else if (req.type === "move") {                       // quick check on what this screen can see, so obvious mistakes answer instantly
+      var f = moveField(freeMode() ? { id: a.id, side: a.side, size: a.size, x: a.x, y: a.y, dpar: 0 } : a, budgetFor(a)), k = x + "," + y, cost = f.dist[k];
+      if (cost === undefined || cost === 0) { toast(freeMode() ? "That square cannot be reached." : "Too far or not reachable: " + a.name + " has " + remaining(a) + " ft left."); render(); return; }
+      if (!stopOk(a, f, x, y)) { toast("That square is taken or not yet revealed."); render(); return; }
+    }
+    req.seq = Date.now(); req.t = new Date().toISOString();
+    pending = { seq: req.seq, id: a ? a.id : null, x: x, y: y, type: req.type };
+    renderBoard();
+    db.doc("moves/table").set(req).then(function () {
+      toast("Sent to the DM…");
+      clearTimeout(pendTimer);
+      pendTimer = setTimeout(function () { if (pending && pending.seq === req.seq) { pending = null; renderBoard(); toast("No answer yet. The DM's page must be open to apply moves."); } }, 8000);
+    }, function () {
+      pending = null; canSend = false; renderBoard(); renderSide();
+      toast("This account cannot send moves. Ask the DM to give it Contributor access in the Share menu.");
+    });
+  }
+  // ----- DM side: validate and apply a request from the tablet, then answer -----
+  function handleRequest(d) {
+    if (!isDM || tableMode || !gotFirst || !d || !d.seq || d.seq <= (st.reqSeq || 0)) return;
+    if (Date.now() - d.seq > 60000) return;           // never replay an old request when the page loads
+    if (drag || painting || rect) { setTimeout(function () { handleRequest(d); }, 600); return; }
+    st.reqSeq = d.seq;
+    var res;
+    if (st.tableMoves === false) res = { ok: false, msg: "The DM has switched table moves off." };
+    else if (d.type === "undo") res = undoLastMove();
+    else if (d.type === "set-group") { pushUndo(); st.groupMove = !!d.value; commit(); res = { ok: true, msg: st.groupMove ? "Move together on: the whole party moves with whoever you drag." : "Move together off." }; }
+    else if (d.type === "effect-add" || d.type === "effect-remove") res = applyEffectRequest(d);
+    else {
+      var a = st.tokens.filter(function (t) { return t.id === d.token; })[0];
+      res = a ? applyMove(a, +d.x, +d.y) : { ok: false, msg: "That token is not on the board." };
+    }
+    if (!res.ok) scheduleSave();                      // keep reqSeq so the request is not replayed
+    if (db) db.doc("table/reply").set({ seq: d.seq, ok: res.ok, msg: res.msg, t: Date.now() }).catch(function () {});
+  }
+  // ----- casting: choose a spell, aim it on the board, place it -----
+  function canPlace() { return (isDM && !preview) || canMoveHere(); }
+  function casterToken() {
+    if (isDM) { var s = st.tokens.filter(function (t) { return t.id === sel; })[0]; if (s && s.side !== "enemy") return s; }
+    var a = activeTok(); return a && a.side !== "enemy" ? a : null;
+  }
+  function placeEffect() {
+    var o = place.origin, e = { id: "", name: place.name, shape: place.shape, size: place.size, ox: o[0], oy: o[1], ang: place.ang || 0, kind: place.kind, rounds: place.rounds, conc: !!place.conc, follow: !!place.follow, note: place.note || "" };
+    if (place.width) e.width = place.width;
+    if (place.owner) { e.owner = place.owner.id; e.ownerName = place.owner.name; }
+    return e;
+  }
+  function snapPoint(px, py) {
+    var mode = $("pbsnap").value, c = [Math.round(px), Math.round(py)], m = [Math.floor(px) + 0.5, Math.floor(py) + 0.5];
+    if (mode === "corner") return c;
+    if (mode === "center") return m;
+    return Math.hypot(px - c[0], py - c[1]) <= Math.hypot(px - m[0], py - m[1]) ? c : m;
+  }
+  function boardPoint(e) {
+    var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    var p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return [p.x / S - 1, p.y / S - 1];
+  }
+  function startPlacing(spec) {
+    var owner = casterToken();
+    place = { name: spec.name, shape: spec.shape, size: spec.size, width: spec.width, rounds: spec.rounds == null ? null : spec.rounds, conc: spec.conc, follow: spec.follow, kind: spec.kind || "utility", note: spec.note || "", owner: owner, origin: null, ang: 0, hidden: !!($("fxhidden") && $("fxhidden").checked && isDM) };
+    var fromSelf = (spec.shape === "cone" || spec.shape === "line" || spec.follow) && owner;
+    if (fromSelf) place.origin = [owner.x + owner.size / 2, owner.y + owner.size / 2];
+    place.fromSelf = !!fromSelf;
+    $("sheet").hidden = true;
+    $("placebar").hidden = false;
+    render();
+  }
+  function finishPlacing() { place = null; $("placebar").hidden = true; render(); }
+  function sendEffectRequest(req) {
+    if (!db) { toast("Not connected."); return; }
+    req.seq = Date.now(); req.t = new Date().toISOString();
+    pending = { seq: req.seq, type: "effect" };
+    db.doc("moves/table").set(req).then(function () {
+      toast("Sent to the DM…");
+      clearTimeout(pendTimer);
+      pendTimer = setTimeout(function () { if (pending && pending.seq === req.seq) { pending = null; toast("No answer yet. The DM's page must be open to apply spells."); } }, 8000);
+    }, function () { pending = null; canSend = false; renderSide(); toast("This account cannot send spells. Ask the DM for Contributor access."); });
+  }
+  function newEffectFrom(e, by) {
+    e.id = "fx" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    e.by = by; e.hidden = !!place.hidden && by === "dm";
+    return e;
+  }
+  function goPlace() {
+    if (!place || !place.origin) { toast("Tap or drag on the board to aim it first."); return; }
+    var e = placeEffect();
+    if (isDM) { pushUndo(); newEffectFrom(e, "dm"); st.effects.push(e); toast(e.name + " placed on " + place.count + " squares" + (e.hidden ? " (hidden)" : "")); finishPlacing(); commit(); }
+    else { newEffectFrom(e, "player"); sendEffectRequest({ type: "effect-add", effect: e }); finishPlacing(); }
+  }
+  // DM page: validate and apply an effect request from the tablet
+  function applyEffectRequest(d) {
+    if (d.type === "effect-remove") {
+      var ef = (st.effects || []).filter(function (x) { return x.id === d.id; })[0];
+      if (!ef) return { ok: false, msg: "That spell is already gone." };
+      if (ef.by !== "player") return { ok: false, msg: "Only the DM can remove that one." };
+      pushUndo(); st.effects = st.effects.filter(function (x) { return x.id !== d.id; }); commit(); return { ok: true, msg: ef.name + " removed." };
+    }
+    var e = d.effect || {};
+    var shapes = { sphere: 1, cube: 1, cone: 1, line: 1 };
+    if (!shapes[e.shape] || !(e.size >= 5 && e.size <= 200) || typeof e.ox !== "number" || typeof e.oy !== "number" || e.ox < 0 || e.oy < 0 || e.ox > st.cols || e.oy > st.rows) return { ok: false, msg: "That spell area is not valid." };
+    if ((st.effects || []).length >= 30) return { ok: false, msg: "Too many spell areas on the board; remove one first." };
+    var owner = e.owner ? st.tokens.filter(function (t) { return t.id === e.owner; })[0] : null;
+    if (e.owner && (!owner || owner.side === "enemy")) return { ok: false, msg: "That caster is not on the board." };
+    var clean = { id: "fx" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: String(e.name || "Spell").slice(0, 40), shape: e.shape, size: +e.size, ox: e.ox, oy: e.oy, ang: +e.ang || 0,
+      kind: { damage: 1, obscure: 1, dark: 1, terrain: 1, utility: 1 }[e.kind] ? e.kind : "utility", rounds: e.rounds == null ? null : Math.max(1, Math.min(600, +e.rounds || 1)), conc: !!e.conc, follow: !!e.follow && !!owner, note: String(e.note || "").slice(0, 600), by: "player", hidden: false };
+    if (e.width) clean.width = Math.max(5, Math.min(60, +e.width));
+    if (owner) { clean.owner = owner.id; clean.ownerName = owner.name; }
+    pushUndo(); st.effects = (st.effects || []).concat([clean]); commit();
+    return { ok: true, msg: clean.name + " placed." };
+  }
+  function renderSheet() {
+    var who = casterToken();
+    $("sheetwho").textContent = who ? "Casting as " + who.name + "." : (isDM ? "No caster selected: the area has no owner." : "No active character: waiting for a turn.");
+    $("spelllist").innerHTML = PRESETS.map(function (p, i) {
+      return '<button data-p="' + i + '"><b>' + esc(p.name) + '</b><small>' + p.shape + " · " + p.size + " ft" + (p.conc ? " · concentration" : p.instant ? " · instant" : "") + '</small></button>';
+    }).join("");
+    $("hidewrap").hidden = !isDM;
+    var list = (st.effects || []).filter(function (e) { return isDM || !e.hidden; });
+    $("fxlist").innerHTML = list.length ? list.map(function (e) {
+      var inside = effTokens(effCells(e)).map(function (t) { return t.name; }).join(", ") || "nobody";
+      var mine = isDM || e.by === "player";
+      return '<li data-id="' + e.id + '"><span class="who"><b>' + esc(e.name) + '</b>' + (e.hidden ? " (hidden)" : "") + '<small>' + (e.ownerName ? esc(e.ownerName) + " · " : "") + (e.rounds != null ? e.rounds + " rounds left" : "no time limit") + " · in it: " + esc(inside) + '</small></span>' +
+        (isDM ? '<button data-fx="hide">' + (e.hidden ? "Show" : "Hide") + '</button><button data-fx="less" title="One round less">−1r</button><button data-fx="more" title="One round more">+1r</button>' : "") +
+        (mine ? '<button data-fx="rm">Remove</button>' : "") + '</li>';
+    }).join("") : '<li><span class="hint">Nothing placed yet.</span></li>';
+  }
+  function placeAim(e) {
+    var pt = boardPoint(e);
+    if (place.fromSelf && place.owner) {
+      var ox = place.origin[0], oy = place.origin[1];
+      if (place.shape === "cone" || place.shape === "line") { var a = Math.atan2(pt[1] - oy, pt[0] - ox) * 180 / Math.PI; place.ang = Math.round(a); }
+    } else {
+      var sp = snapPoint(pt[0], pt[1]);
+      if ((place.shape === "cone" || place.shape === "line") && place.origin && place.aimDir) { place.ang = Math.round(Math.atan2(pt[1] - place.origin[1], pt[0] - place.origin[0]) * 180 / Math.PI); }
+      else place.origin = [Math.max(0, Math.min(st.cols, sp[0])), Math.max(0, Math.min(st.rows, sp[1]))];
+    }
+    renderBoard();
+    var n = place.count || 0;
+    $("pbinfo").textContent = place.shape + " " + place.size + " ft · " + n + " squares" + (place.owner ? " · cast by " + place.owner.name : "");
+  }
+  function onMove(e) {
+    if (pointers[e.pointerId]) pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (gesture) { moveGesture(); return; }
+    if (panning && panning.id === e.pointerId) {
+      var dx = e.clientX - panning.sx, dy = e.clientY - panning.sy;
+      if (!panning.moved && Math.hypot(dx, dy) < 7) return;
+      panning.moved = true;
+      var upp = unitsPerPx(); view.cx = panning.cx - dx * upp; view.cy = panning.cy - dy * upp; renderBoard();
+      return;
+    }
+    if (place && place.dragging) { placeAim(e); return; }
+    if (!drag && !painting && !rect) return;
+    var c = cellFromEvent(e);
+    if (drag) {
+      var t = st.tokens.filter(function (x) { return x.id === drag.id; })[0];
+      var nx = Math.max(0, Math.min(st.cols - t.size, c.x - drag.ox)), ny = Math.max(0, Math.min(st.rows - t.size, c.y - drag.oy));
+      if (nx !== drag.cx || ny !== drag.cy) { drag.cx = nx; drag.cy = ny; renderBoard(); }
+    } else if (rect) { var cc = clampCell(c); rect.x1 = cc.x; rect.y1 = cc.y; renderBoard(); }
+    else { paint(c); renderBoard(); }
+  }
+  function onUp(e) {
+    if (e && e.pointerId != null) delete pointers[e.pointerId];
+    if (gesture) { if (Object.keys(pointers).length < 2) gesture = null; if (!Object.keys(pointers).length) ignoreUp = false; return; }
+    if (ignoreUp) { if (!Object.keys(pointers).length) ignoreUp = false; return; }
+    if (panning && (!e || e.pointerId == null || panning.id === e.pointerId)) {
+      var pn = panning; panning = null;
+      if (!pn.moved && pn.tap && pn.tap.measure) { mTap(pn.sx, pn.sy); return; }
+      if (!pn.moved && pn.tap) {                                                // a tap, not a pan: move there
+        if (pn.tap.dm) { pushUndo(); pn.tap.a.x = pn.tap.x; pn.tap.a.y = pn.tap.y; commit(); }
+        else tableTry(pn.tap.a, pn.tap.x, pn.tap.y);
+      }
+      return;
+    }
+    if (place && place.dragging) { place.dragging = false; renderBoard(); return; }
+    if (drag) {
+      var t = st.tokens.filter(function (x) { return x.id === drag.id; })[0], d = drag; drag = null;
+      if (d.table) { if (t && (d.cx !== t.x || d.cy !== t.y)) tableTry(t, d.cx, d.cy); else render(); }
+      else if (t && (d.cx !== t.x || d.cy !== t.y)) { pushUndo(); t.x = d.cx; t.y = d.cy; commit(); } else render();
+    } else if (painting) { painting = null; commit(); }
+    else if (rect) { var r = rect; rect = null; pushUndo(); applyRect(r, tool === "hide"); commit(); }
+  }
+  // listen on the board (with pointer capture) and on window, so an embedded viewer that
+  // loses the pointer or cancels the gesture still ends the drag cleanly
+  ["pointermove"].forEach(function (n) { $("boardbox").addEventListener(n, onMove); window.addEventListener(n, onMove); });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { $("boardbox").addEventListener(n, onUp); window.addEventListener(n, onUp); });
+  document.addEventListener("keydown", function (e) {
+    if (playerView() || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (e.key === "v" || e.key === "V") { tool = "move"; renderTools(); return; }
+    if (!sel) return;
+    var t = st.tokens.filter(function (x) { return x.id === sel; })[0]; if (!t) return;
+    var dx = { ArrowLeft: -1, ArrowRight: 1 }[e.key] || 0, dy = { ArrowUp: -1, ArrowDown: 1 }[e.key] || 0;
+    if (dx || dy) { e.preventDefault(); pushUndo(); t.x += dx; t.y += dy; commit(); }
+    else if (e.key === "Escape") { sel = null; render(); }
+  });
+
+  /* ---------- panel controls ---------- */
+  $("addform").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var base = $("newname").value.trim() || ($("newside").value === "enemy" ? "Enemy" : "Token");
+    var names = st.tokens.map(function (t) { return t.name; });
+    var name = base;
+    if (names.indexOf(base) >= 0 || names.indexOf(base + " 1") >= 0) {
+      var n = 2; while (names.indexOf(base + " " + n) >= 0) n++;
+      var i1 = names.indexOf(base); if (i1 >= 0) st.tokens[i1].name = base + " 1";
+      name = base + " " + n;
+    }
+    var size = +$("newsize").value, side = $("newside").value, spot = null;
+    for (var y = 0; y <= st.rows - size && !spot; y++) for (var x = 0; x <= st.cols - size && !spot; x++) {
+      var free = true;
+      for (var a = 0; a < size && free; a++) for (var b = 0; b < size; b++) if (tokAt(x + a, y + b) || st.terrain[(x + a) + "," + (y + b)] === "wall") { free = false; break; }
+      if (free) spot = { x: side === "pc" ? x : st.cols - size - x, y: y };
+    }
+    pushUndo();
+    var id = "t" + Math.random().toString(36).slice(2, 7);
+    st.tokens.push({ id: id, name: name, side: side, size: size, x: spot ? spot.x : 0, y: spot ? spot.y : 0, down: false, speed: 30, moved: 0, dpar: 0, hid: side === "enemy" && fogCount() > 0 });
+    sel = id; $("newname").value = ""; commit();
+  });
+  $("roster").addEventListener("click", function (e) {
+    var li = e.target.closest("li[data-id]"); if (!li) return;
+    var id = li.dataset.id, act = e.target.dataset.act;
+    var t = st.tokens.filter(function (x) { return x.id === id; })[0];
+    if (act === "del") { pushUndo(); st.tokens = st.tokens.filter(function (x) { return x.id !== id; }); if (sel === id) sel = null; commit(); }
+    else if (act === "down") { pushUndo(); t.down = !t.down; commit(); }
+    else if (act === "turn") { pushUndo(); if (st.active === id) st.active = null; else { st.active = id; st.combat = true; t.moved = 0; t.dpar = 0; st.lastMove = null; } commit(); }
+    else if (act === "hid") { pushUndo(); t.hid = !t.hid; commit(); }
+    else if (act === "info") { sel = id; infoId = id; render(); renderInfo(); $("tinfo").hidden = false; }
+    else { sel = id; render(); }
+  });
+  $("tinfoclose").onclick = function () { $("tinfo").hidden = true; };
+  $("tinfo").addEventListener("click", function (e) { if (e.target === this) this.hidden = true; });
+  $("tinfobody").addEventListener("change", function (e) {
+    var t = st.tokens.filter(function (x) { return x.id === infoId; })[0]; if (!t) return;
+    var v = e.target.value === "" ? null : Math.max(0, +e.target.value || 0);
+    pushUndo();
+    if (e.target.id === "iac") t.ac = v; else if (e.target.id === "ihp") t.hp = v == null ? v : (t.maxhp ? Math.min(v, t.maxhp) : v);
+    else if (e.target.id === "imax") { t.maxhp = v; if (v != null && t.hp != null && t.hp > v) t.hp = v; } else if (e.target.id === "ithp") t.thp = v || 0;
+    commit(); renderInfo();
+  });
+  function bump(n) {
+    pushUndo(); st.round = Math.max(1, st.round + n);
+    if (n > 0 && st.effects && st.effects.length) st.effects = st.effects.filter(function (e) { if (e.rounds == null) return true; e.rounds -= n; return e.rounds > 0; });
+    commit();
+  }
+  $("endcombat").onclick = function () {
+    var b = this;
+    if (!inCombat()) {                                          // start: the table follows turns from now on
+      pushUndo(); st.combat = true; st.active = null; st.lastMove = null; st.round = 1;
+      st.tokens.forEach(function (t) { t.moved = 0; t.dpar = 0; });
+      commit(); toast("Combat started: round 1. Only the active character can move; press Turn on a token to give the first turn."); return;
+    }
+    if (!endT) {                                                // end takes two taps (a pop-up confirm is blocked inside artifact frames)
+      b.textContent = "Tap again to end combat"; b.classList.add("on"); b.setAttribute("aria-pressed", "true");
+      toast("Tap End combat again to confirm: clears the turn, resets the round to 1 and everyone's movement.");
+      endT = setTimeout(function () { endT = null; b.classList.remove("on"); b.removeAttribute("aria-pressed"); render(); }, 5000);
+      return;
+    }
+    clearTimeout(endT); endT = null; b.classList.remove("on"); b.removeAttribute("aria-pressed");
+    var was = (st.active ? "turn of " + ((activeTok() || {}).name || "?") + " cleared, " : "") + "round " + st.round + " reset to 1";
+    pushUndo(); st.active = null; st.combat = false; st.lastMove = null; st.round = 1;
+    st.tokens.forEach(function (t) { t.moved = 0; t.dpar = 0; });
+    commit(); toast("Combat ended: " + was + ". The party can move freely. (Undo brings it back.)");
+  };
+  $("rplus").onclick = function () { bump(1); };
+  $("rminus").onclick = function () { bump(-1); };
+  // Cards: drag a card by its heading to reorder, or down under the map; the layout is remembered on this device.
+  // Double-click a heading to reset.
+  (function () {
+    var side = document.querySelector(".side"), below = document.getElementById("below"); if (!side || !below) return;
+    var app = side.closest ? side.closest(".app") || document.body : document.body;
+    var cards = [].slice.call(side.querySelectorAll(":scope > .card")), KEY = "cp_cards2", boxes = [side, below];
+    cards.forEach(function (c, n) { c.dataset.k = String(n); });
+    function ids(b) { return [].slice.call(b.children).map(function (c) { return c.dataset.k; }); }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify({ side: ids(side), below: ids(below) })); } catch (err) {} }
+    function card(k) { return cards.filter(function (x) { return x.dataset.k === k; })[0]; }
+    try { var o = JSON.parse(localStorage.getItem(KEY) || "null"); if (o) { o.below.forEach(function (k) { var c = card(k); if (c) below.appendChild(c); }); o.side.forEach(function (k) { var c = card(k); if (c) side.appendChild(c); }); } } catch (err) {}
+    var cur = null, last = null, scrollT = null;
+    function auto() {                                             // scroll the page while a card is held near the top or bottom edge
+      if (!last) return;
+      var dy = last.clientY < 70 ? -18 : last.clientY > window.innerHeight - 70 ? 18 : 0;
+      if (dy) { window.scrollBy(0, dy); move(last); }
+    }
+    function hit(x, y) {
+      for (var n = 0; n < boxes.length; n++) { var r = boxes[n].getBoundingClientRect(); if (x >= r.left && x <= r.right && y >= r.top - 8 && y <= r.bottom + 8) return boxes[n]; }
+      return null;
+    }
+    function root(e) { return e.target.closest ? e.target.closest(".card > h2") : null; }
+    function down(e) {
+      var h = root(e); if (!h || e.button) return;
+      cur = h.parentNode; scrollT = setInterval(auto, 40); cur.classList.add("dragging");
+      window.addEventListener("pointermove", move); window.addEventListener("pointerup", end); window.addEventListener("pointercancel", end); app.classList.add("carddrag"); e.preventDefault();
+    }
+    function move(e) {
+      if (!cur) return;
+      last = { clientX: e.clientX, clientY: e.clientY };
+      var bars = ["dropbelow", "dropside"].map(function (id) { return document.getElementById(id); }), onBar = null;
+      bars.forEach(function (b, n) { var r = b.getBoundingClientRect(), inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; b.classList.toggle("on", inside); if (inside) onBar = n; });
+      if (onBar !== null) { var tgt = onBar === 0 ? below : side; if (cur.parentNode !== tgt) tgt.appendChild(cur); return; }
+      var stage = document.querySelector(".stage"), sr0 = stage && stage.getBoundingClientRect();
+      if (sr0 && e.clientX >= sr0.left && e.clientX <= sr0.right && e.clientY >= sr0.top && e.clientY <= sr0.bottom + 400) {
+        // anywhere over the map column (the empty space under the map included) drops the card under the map
+        if (cur.parentNode !== below) below.appendChild(cur);
+        var kids = [].slice.call(below.children).filter(function (c) { return c !== cur; });
+        var ov = kids.filter(function (c) { var r = c.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; })[0];
+        if (ov) { var rr = ov.getBoundingClientRect(); below.insertBefore(cur, e.clientX > rr.left + rr.width / 2 ? ov.nextSibling : ov); }
+        return;
+      }
+      var box = hit(e.clientX, e.clientY); if (!box) return;
+      var over = [].slice.call(box.children).filter(function (c) { if (c === cur) return false; var r = c.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; })[0];
+      if (!over) { if (!box.contains(cur) && !box.children.length) box.appendChild(cur); else if (!box.contains(cur)) { var last = box.lastElementChild; if (e.clientY > last.getBoundingClientRect().bottom) box.appendChild(cur); } return; }
+      var r = over.getBoundingClientRect(), after = box === below ? (e.clientX > r.left + r.width / 2 && e.clientY > r.top) : e.clientY > r.top + r.height / 2;
+      if (box === below && e.clientY > r.top + r.height / 2 && e.clientX <= r.left + r.width / 2 && over.nextSibling === null) after = false;
+      box.insertBefore(cur, after ? over.nextSibling : over);
+    }
+    function end() { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", end); window.removeEventListener("pointercancel", end); ["dropbelow", "dropside"].forEach(function (id) { document.getElementById(id).classList.remove("on"); }); clearInterval(scrollT); last = null; if (!cur) return; cur.classList.remove("dragging"); app.classList.remove("carddrag"); cur = null; save(); }
+    [side, below].forEach(function (b) {
+      b.addEventListener("pointerdown", down);
+      b.addEventListener("dblclick", function (e) { if (!root(e)) return; cards.forEach(function (c) { side.appendChild(c); }); save(); });
+    });
+  })();
+  function store(k, v) { try { localStorage.setItem(k, v); } catch (err) {} }
+  $("measure").onclick = function () { setMeasure(!measuring); if (measuring) toast("Tap two places on the map."); };
+  $("mbnew").onclick = function () { mpts = []; $("mbinfo").textContent = mText(); renderBoard(); };
+  $("mbdone").onclick = function () { setMeasure(false); };
+  $("zin").onclick = function () { zoomButton(1.5); };
+  $("zout").onclick = function () { zoomButton(1 / 1.5); };
+  $("zfollow").onclick = function () { followOn = !followOn; this.setAttribute("aria-pressed", String(followOn)); try { localStorage.setItem("cp_follow", followOn ? "1" : "0"); } catch (err) {} if (followOn) { lastActive = null; render(); } };
+  $("zfit").onclick = function () { view.z = 1; view.cx = null; view.cy = null; renderBoard(); };
+  $("boardbox").addEventListener("wheel", function (e) {            // wheel zooms around the pointer (Ctrl or a trackpad pinch zooms faster); Shift + wheel pans
+    e.preventDefault();
+    if (e.shiftKey && !(e.ctrlKey || e.metaKey)) { var upp = unitsPerPx(); view.cx += (e.deltaX || e.deltaY) * upp; renderBoard(); return; }
+    zoomAround(view.z * Math.exp(-e.deltaY * ((e.ctrlKey || e.metaKey) ? 0.01 : 0.0015)), e.clientX, e.clientY);
+  }, { passive: false });
+  document.addEventListener("keydown", function (e) { if (e.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { spaceDown = true; } });
+  document.addEventListener("keyup", function (e) { if (e.code === "Space") spaceDown = false; });
+  $("spells").onclick = function () { renderSheet(); $("sheet").hidden = false; };
+  $("sheetclose").onclick = function () { $("sheet").hidden = true; };
+  $("sheet").addEventListener("click", function (e) { if (e.target === $("sheet")) $("sheet").hidden = true; });
+  $("spelllist").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-p]"); if (!b) return;
+    var p = PRESETS[+b.dataset.p];
+    startPlacing({ name: p.name, shape: p.shape, size: p.size, width: p.width, rounds: p.rounds, conc: p.conc, follow: p.follow, kind: p.kind, note: p.note });
+  });
+  $("cfgo").onclick = function () {
+    var r = $("cfrounds").value;
+    startPlacing({ name: $("cfname").value.trim() || "Custom area", shape: $("cfshape").value, size: Math.max(5, Math.min(200, +$("cfsize").value || 10)), rounds: r === "" || +r === 0 ? null : +r, kind: "utility", note: "" });
+  };
+  $("fxlist").addEventListener("click", function (e) {
+    var li = e.target.closest("li[data-id]"), b = e.target.closest("[data-fx]"); if (!li || !b) return;
+    var id = li.dataset.id, ef = (st.effects || []).filter(function (x) { return x.id === id; })[0]; if (!ef) return;
+    var act = b.dataset.fx;
+    if (!isDM) { if (act === "rm") { sendEffectRequest({ type: "effect-remove", id: id }); $("sheet").hidden = true; } return; }
+    pushUndo();
+    if (act === "rm") st.effects = st.effects.filter(function (x) { return x.id !== id; });
+    else if (act === "hide") ef.hidden = !ef.hidden;
+    else if (act === "less") { ef.rounds = Math.max(1, (ef.rounds == null ? 1 : ef.rounds) - 1); }
+    else if (act === "more") { ef.rounds = (ef.rounds == null ? 1 : ef.rounds) + 1; }
+    commit(); renderSheet();
+  });
+  $("pbgo").onclick = goPlace;
+  $("pbcancel").onclick = finishPlacing;
+  $("pbsnap").onchange = function () { if (place && place.origin && !place.fromSelf) { var o = snapPoint(place.origin[0], place.origin[1]); place.origin = o; renderBoard(); } };
+  $("ovtoggle").onclick = function () { overlayOn = !overlayOn; store("cp_overlay", overlayOn ? "1" : "0"); render(); };
+  $("tablemode").onclick = function () { tableMode = !tableMode; preview = false; store("cp_table", tableMode ? "1" : "0"); render(); };
+  $("tbundo").onclick = function () {
+    if (isDM) { var r = undoLastMove(); toast(r.msg); }
+    else { var ta = activeTok(); sendRequest({ type: "undo" }, ta, ta ? ta.x : 0, ta ? ta.y : 0); }
+  };
+  (function () {                                // press and hold the title for 1.2 s to leave table mode
+    var timer = null, title = document.querySelector("h1");
+    title.addEventListener("pointerdown", function () { if (!tableMode) return; timer = setTimeout(function () { tableMode = false; store("cp_table", "0"); render(); }, 1200); });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(function (n) { title.addEventListener(n, function () { clearTimeout(timer); }); });
+    var taps = [];                                // or tap the title five times within three seconds
+    title.addEventListener("click", function () {
+      if (!tableMode) return;
+      var now = Date.now(); taps = taps.filter(function (t) { return now - t < 3000; }); taps.push(now);
+      if (taps.length >= 5) { taps = []; tableMode = false; store("cp_table", "0"); render(); }
+    });
+  })();
+  $("tokmeta").addEventListener("change", function (e) {
+    var t = st.tokens.filter(function (x) { return x.id === sel; })[0]; if (!t) return;
+    pushUndo();
+    if (e.target.id === "tspeed") t.speed = Math.max(0, +e.target.value || 0);
+    if (e.target.id === "tmoved") { t.moved = Math.max(0, +e.target.value || 0); if (!t.moved) t.dpar = 0; }
+    commit();
+  });
+  $("ovclear").onclick = function () {
+    overlay = null; render();
+    if (db) db.doc("dm/overlay").set({ layers: [], marks: [], label: "", rev: Date.now() }).catch(function () {});
+  };
+  $("preview").onclick = function () { preview = !preview; render(); };
+  function resize() {
+    pushUndo();
+    st.cols = Math.max(8, Math.min(60, +$("cols").value || st.cols));
+    st.rows = Math.max(6, Math.min(60, +$("rows").value || st.rows));
+    commit();
+  }
+  $("cols").onchange = resize; $("rows").onchange = resize;
+  $("groupmove").onchange = function () { pushUndo(); st.groupMove = this.checked; commit(); };
+  $("tbgroup").onclick = function () {
+    if (isDM) { pushUndo(); st.groupMove = !st.groupMove; commit(); toast(st.groupMove ? "Move together on: the whole party moves with whoever you drag." : "Move together off."); }
+    else sendRequest({ type: "set-group", value: !st.groupMove }, null, 0, 0);
+  };
+  $("tablemoves").onchange = function () { pushUndo(); st.tableMoves = this.checked; commit(); };
+  $("diagrule").onchange = function () { pushUndo(); st.diag = this.value; commit(); };
+  function fitImg() {
+    function num(id, d) { var v = parseFloat($(id).value); return isNaN(v) ? d : v; }
+    var m = shownMap(); if (!m) return;
+    pushUndo();
+    m.scale = Math.max(0.2, Math.min(4, num("mscale", 1))); m.ox = num("mox", 0); m.oy = num("moy", 0);
+    commit();
+  }
+  $("mscale").onchange = fitImg; $("mox").onchange = fitImg; $("moy").onchange = fitImg;
+  $("gridtoggle").onclick = function () { pushUndo(); st.grid = !st.grid; commit(); };
+  $("hideall").onclick = function () { pushUndo(); for (var x = 0; x < st.cols; x++) for (var y = 0; y < st.rows; y++) st.fog[x + "," + y] = 1; commit(); };
+  $("revealall").onclick = function () { pushUndo(); st.fog = {}; commit(); };
+  $("removemap").onclick = function () { pushUndo(); st[shownKey()] = null; commit(); };
+  $("mapview").onclick = function () { mapView = shownKey() === "dmImg" ? "party" : "dm"; render(); };
+  /* ---------- grid detection ---------- */
+  function lagOf(p) {                      // repeat distance of a 1-D edge profile, in pixels
+    var n = p.length, mean = 0, i, lag;
+    for (i = 0; i < n; i++) mean += p[i]; mean /= n;
+    var v = new Float32Array(n), e = 0;
+    for (i = 0; i < n; i++) { v[i] = p[i] - mean; e += v[i] * v[i]; }
+    if (!e) return null;
+    var minL = 8, maxL = Math.min(Math.floor(n / 3), 160), r = [], best = 0;
+    for (lag = minL - 1; lag <= maxL + 1; lag++) {
+      var s = 0; for (i = 0; i < n - lag; i++) s += v[i] * v[i + lag];
+      r[lag] = (s / e) * (n / (n - lag));
+      if (lag >= minL && lag <= maxL && r[lag] > best) best = r[lag];
+    }
+    if (best <= 0) return null;
+    for (lag = minL; lag <= maxL; lag++) {
+      if (r[lag] >= 0.8 * best && r[lag] >= r[lag - 1] && r[lag] >= r[lag + 1]) {
+        var d = r[lag - 1] - 2 * r[lag] + r[lag + 1], off = d ? 0.5 * (r[lag - 1] - r[lag + 1]) / d : 0;
+        return { per: lag + Math.max(-1, Math.min(1, off)), score: r[lag] };
+      }
+    }
+    return null;
+  }
+  function phaseOf(p, per) {               // where along one period the grid lines sit
+    var n = p.length, best = -1, bp = 0;
+    for (var ph = 0; ph < per; ph += 0.5) {
+      var s = 0, c = 0;
+      for (var x = ph; x < n - 0.5; x += per) { s += p[Math.round(x)]; c++; }
+      s /= c || 1; if (s > best) { best = s; bp = ph; }
+    }
+    return bp;
+  }
+  function detectGrid(im) {
+    var f = Math.min(1, 1000 / Math.max(im.naturalWidth, im.naturalHeight));
+    var W = Math.round(im.naturalWidth * f), H = Math.round(im.naturalHeight * f);
+    var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    var cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(im, 0, 0, W, H);
+    var d = cx.getImageData(0, 0, W, H).data, g = new Float32Array(W * H), i, x, y;
+    for (i = 0; i < W * H; i++) g[i] = 0.299 * d[4 * i] + 0.587 * d[4 * i + 1] + 0.114 * d[4 * i + 2];
+    var cp = new Float32Array(W), rp = new Float32Array(H);
+    for (y = 1; y < H - 1; y++) for (x = 1; x < W - 1; x++) {
+      cp[x] += Math.abs(g[y * W + x + 1] - g[y * W + x - 1]);
+      rp[y] += Math.abs(g[(y + 1) * W + x] - g[(y - 1) * W + x]);
+    }
+    var a = lagOf(cp), b = lagOf(rp), per, top = Math.max(a ? a.score : 0, b ? b.score : 0);
+    if (!a && !b || top < 0.15) return null;
+    if (a && b && Math.abs(a.per - b.per) / a.per < 0.06) per = (a.per + b.per) / 2;
+    else per = (!b || (a && a.score >= b.score)) ? a.per : b.per;
+    return { per: per / f, phx: phaseOf(cp, per) / f, phy: phaseOf(rp, per) / f };
+  }
+  function alignMsg(t) { $("alignmsg").textContent = t; }
+  function autoAlign(im, key) {            // sets scale and shift (and the grid size when no other map has) from the printed grid
+    key = key || "img"; var m = st[key], other = st[key === "img" ? "dmImg" : "img"], g;
+    try { g = detectGrid(im); } catch (err) { alignMsg("Could not read the image pixels. Set Columns and Scale by hand."); return false; }
+    if (!g) { alignMsg("No clear grid lines found. Set Columns by hand until the squares match."); return false; }
+    var sqx = im.naturalWidth / g.per, sqy = im.naturalHeight / g.per;
+    if (!other) { st.cols = Math.max(8, Math.min(60, Math.round(sqx))); st.rows = Math.max(6, Math.min(60, Math.round(sqy))); }
+    function off(ph) { var fr = (ph / g.per) % 1; return fr > 0.5 ? 1 - fr : -fr; }
+    m.scale = Math.round(sqx / st.cols * 10000) / 10000;
+    m.ox = Math.round(off(g.phx) * 1000) / 1000; m.oy = Math.round(off(g.phy) * 1000) / 1000;
+    alignMsg("Grid found: squares are about " + Math.round(g.per) + " px, " + st.cols + " × " + st.rows + " on this map. Nudge Scale or Shift if a line looks off.");
+    return true;
+  }
+  function alignAndCommit(key) {
+    var m = st[key]; if (!m) return;
+    var im = new Image();
+    im.onload = function () { pushUndo(); delete m.autoalign; autoAlign(im, key); commit(); };
+    im.onerror = function () { delete m.autoalign; alignMsg("Could not load the map image."); commit(); };
+    im.src = "/_blob/" + m.id;
+  }
+  function processPending() {              // an agent can ask for a grid detection by flagging a map with autoalign
+    ["img", "dmImg"].forEach(function (k) { if (st[k] && st[k].autoalign) alignAndCommit(k); });
+  }
+  $("autoalign").onclick = function () { alignMsg("Looking for the grid…"); alignAndCommit(shownKey()); };
+  $("loadmap").onclick = function () { uploadFor = "img"; $("mapfile").click(); };
+  $("loaddm").onclick = function () { uploadFor = "dmImg"; $("mapfile").click(); };
+  $("mapfile").onchange = function () {
+    var f = this.files && this.files[0]; this.value = "";
+    if (!f || !assets) return;
+    var chip = $("status"); chip.className = "chip"; chip.textContent = "Uploading map…";
+    var url = URL.createObjectURL(f), im = new Image();
+    im.onload = function () {
+      assets.upload(f).then(function (r) {
+        pushUndo();
+        var key = uploadFor, other = st[key === "img" ? "dmImg" : "img"];
+        st[key] = { id: r.id, iw: im.naturalWidth, ih: im.naturalHeight, scale: 1, ox: 0, oy: 0 };
+        if (!other) st.rows = Math.max(6, Math.min(60, Math.round(st.cols * im.naturalHeight / im.naturalWidth)));
+        if (key === "dmImg") mapView = "dm"; else if (!st.dmImg) mapView = "party";
+        st.example = false; alignMsg("Looking for the grid…");
+        autoAlign(im, key);
+        commit(); URL.revokeObjectURL(url);
+      }, function (err) { chip.className = "chip warn"; chip.textContent = "Upload failed" + (err && err.code ? " (" + err.code + ")" : ""); URL.revokeObjectURL(url); });
+    };
+    im.onerror = function () { chip.className = "chip warn"; chip.textContent = "Could not read that image"; };
+    im.src = url;
+  };
+  $("undo").onclick = function () {
+    if (!undo.length) return;
+    var p = JSON.parse(undo.pop());
+    st.combat = !!p.combat; st.cols = p.cols; st.rows = p.rows; st.round = p.round; st.tokens = p.tokens; st.terrain = p.terrain; st.fog = p.fog || {}; st.img = p.img || null; st.dmImg = p.dmImg || null; st.diag = p.diag || "alt"; st.effects = p.effects || []; st.active = p.active || null; st.lastMove = p.lastMove || null; st.grid = p.grid !== false;
+    if (!st.tokens.some(function (t) { return t.id === sel; })) sel = null;
+    commit();
+  };
+  function twoStep(btn, label, fn) {
+    var armed = false, timer;
+    btn.onclick = function () {
+      if (!armed) { armed = true; btn.textContent = "Confirm?"; btn.className = "primary"; timer = setTimeout(reset, 3000); return; }
+      reset(); fn();
+    };
+    function reset() { clearTimeout(timer); armed = false; btn.textContent = label; btn.className = ""; }
+  }
+  twoStep($("clearterrain"), "Clear terrain", function () { pushUndo(); st.terrain = {}; commit(); });
+  twoStep($("clearall"), "Clear board", function () { pushUndo(); st.terrain = {}; st.fog = {}; st.tokens = []; st.round = 1; sel = null; commit(); });
+  $("copy").onclick = function () {
+    var ta = $("snap"), msg = $("copied");
+    function done(ok) { msg.textContent = ok ? "Copied" : "Select the text and copy it"; setTimeout(function () { msg.textContent = ""; }, 2000); }
+    try { navigator.clipboard.writeText(ta.value).then(function () { done(true); }, function () { ta.select(); done(false); }); }
+    catch (err) { ta.select(); done(false); }
+  };
+
+  renderTools(); render(); init();
+})();
+</script>

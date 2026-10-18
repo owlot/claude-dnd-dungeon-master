@@ -1,0 +1,85 @@
+@col 4131 575 29
+N1|Guard Barracks|city building, C, 3
+N2|Brossfeather Villa|noble villa, A, 2s & 3s
+N3|Anteos Villa|noble villa, A, 1s & 2s
+N4|Phull Villa|noble villa, A, 1s & 3s
+N5|Snome Villa|noble villa, A, 2s
+N6|Crommor Villa|noble villa, A, 2s
+N7|Piiradost Villa|noble villa, A, 1s & 2s
+N8|Thunderstaff Villa|noble villa, A, 2s & 4s
+N9|Talmost Villa|noble villa, A, 2s & 3s
+N10|Thann Villa|noble villa, A, 3s
+N11|Hawkwinter Villa|noble villa, A, 3s & 4s
+N12|Sultlue Villa|noble villa, A, 2s
+N13|Cragsmere Villa|noble villa, A, 2s & 3s
+N14|Massalan Villa|noble villa, A, 1s & 2s
+N15|Kothont Villa|noble villa, A, 1s & 2s
+N16|Holyhands House|inn/temple of many faiths/ former noble villa, A, 3s & 4s ##2
+N17|Lanngolyn Villa|noble villa, A, 1s & 3s
+N18|Ulbrinter Villa|noble villa, A, 2s & 3s
+N19|Jardeth Villa|noble villa, A, 2s
+N20|Gralhund Villa|noble villa, A, 3s
+N21|The Raging Lion|inn, B, 3
+N22|Maerklos Villa|noble villa, A, 1s, 2s, & 4s
+N23|Nandar Villa|noble villa, A, 2s & 3s
+N24|Stormweather Villa|noble villa, A, 2s & 5s
+N25|A Maiden's Tears|tavern, B, 1
+N26|Twilight Hunters|tavern, C, 2
+N27|The Gentle Mermaid|festhall, B, 4
+N28|Durinbold Villa|noble villa, A, 3s & 4s
+N29|Estelmer Villa|noble villa, A, 2s & 3s
+N30|Tarm Villa|noble villa, A, 3s
+@col 4741 575 29
+N31|Majarra Villa|noble villa, A, 3s & 4s
+N32|The Misty Beard|tavern, C, 4
+N33|Agundar Villa|noble villa, A, 1s & 3s
+N34|Amcathra Villa|noble villa, A, 2s & 4s
+N35|Hunabar Villa|noble villa, A, 2s
+N36|Thorp Villa|noble villa, A, 3s
+N37|Lathkule Villa|noble villa, A, 3s
+N38|Kormallis Villa|noble villa, A, 1s & 2s
+N39|Adarbrent Villa|noble villa, A, 3s & 4s
+N40|Phylund Villa|noble villa, A, 2s & 3s
+N41|Margaster Villa|noble villa, A, 2s
+N42|Roaringhorn Villa, "The High House of Roaririghorn"|noble villa, C, 4 [formerly A, 4] ##2
+N43|Ragathan Furriers|business, C, 2
+N44|Zun Villa|noble villa, A, 2s & 4s
+N45|House of Crystal Storage|warehouse, C, 4
+N46|The House of Crystal|guildhall, B, 2
+N47|The Galloping Minotaur|inn, B, 2s & 3s
+N48|Meraedos Fine Furs|business, C, 2
+N49|Sulmest's Splendid Shoes & Boots|business, C, 1 ##2
+N50|Aurora's Realms Shop, High Road Catalogue Counter|business, C, 1 ##2
+N51|The House of Healing|guildhall, C, 3
+N52|Hothemer Villa|noble villa, A, 3s
+N53|Ilvastarr Villa|noble villa, A, 2s & 3s
+N54|Fallen Stars Fish|business, C, 1
+N55|Wands Villa|noble villa, A, 3s & 5s
+N56|The Grinning Lion|tavern, C, 1
+N57|Gost Villa|noble villa, A, 3s & 4s
+@col 5349 575 29
+N58|Helmfast Villa|noble villa, A, 3s
+N59|Orlpar Husteem's residence|row house, B, 3
+N60|Downybeard Tobacconist|business, B, 2
+N61|Hriiat Fine Pastries|business, C, 2
+N62|Irbryth Authamaun's residence|business/row house, B, 2 ##2
+N63|Danilo Thann's residence|row house, A, 3
+N64|Maerik Thaelcloak's residence|row house, A, 2
+N65|Silent Shield|inn/storage, B, 4
+N66|Taurntyrith Adornments|business, A, 2
+N67|Bhephel's Bottles/ Exotic Wines and Cordials|business, A, 2 ##2
+N68|Sarsantyr's Tapestries & Draperies|business, B, 2 ##2
+N69|Tirelessly Turning Wheel/Caravan Curios From All Far Faerûn|business, B, 3 ##2
+N70|Millomyr Harps|business, A, 2
+N71|Greenglade Tower|rooming house, A, 5
+N72|Obelos "The Only" Braeril's residence|business/row house, A, 3 ##2
+N73|Hospice of St. Laupsenn|temple, A, 3
+N74|Simon Ilzimmer's residence|row house, A, 4
+N75|Brianne's Tower|residence, A, 6
+N76|Firesong Villa|villa, A, 4
+N77|The Bent Nail|business, B, 3
+N78|Northgate|city building, A, 4
+N79|Farwatch Tower|city building, A, 5
+N80|Endcliff Tower|city building, A, 3
+N81|Cliffwatch Ruins|ruined inn, n/a
+N82|Upper Towers|city building, A, 4

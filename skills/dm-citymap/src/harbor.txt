@@ -1,0 +1,9 @@
+@col 2483 4979 29
+H1|Harborwatch Tower|city building, A, 4
+H2|Smugglers' Bane Tower|city building, A, 4
+H3|Outer Fort|city building A, 3
+H4|Inner Fort|city building, A, 3
+@col 3046 4979 29
+H5|The Queenspire|temple, A, 6
+H6|Sea Elf Trading Outpost|business, D, 1
+H7|Deepwater Beacon|city building, A, 3

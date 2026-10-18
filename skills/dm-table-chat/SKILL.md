@@ -9,6 +9,8 @@ The table chat (`.claude/tools/table-chat/`, README there) is a server that take
 
 **Tools or command line.** If the `table-chat` MCP server is connected (tools named `table_chat_*`, registered in `.mcp.json`), call those tools; every command below has a tool of the same name (`approve` is `table_chat_approve`, `room add` is `table_chat_room` with `action: add`, and so on) and returns the same text. If the tools are not available, use the command line as written. The event watcher is always `table_chat.py watch` through the Monitor tool, because tools cannot push events.
 
+**Maps.** The battle map and city map are served by the same server (`/map/`) and have their own MCP tools: `map_links` (DM and tablet links), `map_get`, `map_set`, `map_merge`, `map_delete`, `map_collection`, `map_docs`, `map_asset`, `map_assets`. See the `dm-battlemap` and `dm-citymap` skills; the `combat-tracker` agent has `map_get` and `map_set`.
+
 ## Before the first conversation
 
 1. The server must be running on the DM's machine (`.claude/tools/table-chat/run.sh`). Check with `python .claude/tools/table-chat/table_chat.py status`. If it cannot be reached, tell the DM to start it and stop here. Set `TABLE_CHAT_PORT` if the DM runs it on another port.

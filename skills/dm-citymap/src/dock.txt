@@ -1,0 +1,77 @@
+@col 101 3404 29
+D1|The Gray Griffon|tavern, C, 3
+D2|Turnstone Plumbing and Pipefitting|business, C, 2 ##2
+D3|The Metal House of Wonders|guildhall, C, 2
+D4|Dhaermos Storage|warehouse, D, 5
+D5|Whistling Blades|business, D, 1
+D6|Selûne's Smile|tavern, C, 2
+D7|The Rearing Hippocampus|inn, C, 2
+D8|The Splintered Stair|inn, C, 3
+D9|The Blackstar Inn|inn, C, 3
+D10|Serpentil Books & Folios|business, D, 3
+D11|The Ship's Prow|inn, C, 4
+D12|The Thirsty Sailor|tavern, D, 3
+D13|The Thirsty Throat|tavern, D, 2
+D14|Helmstar Warehouse|warehouse, C, 2
+D15|Warm Beds|inn, C, 3
+D16|Lanternmaker Zorth Ulmaril|business, D, 2
+D17|The Bloody Fist|tavern, D, 1
+D18|Three Pearls Nightclub|festhall, D, 1
+D19|Shipwrights' House|guildhall, B, 2
+D20|Red Sails|warehouse, C, 2
+D21|Muleskull Tavern|tavern/guild, D, 2
+D22|The Hanging Lantern|festhall, C, 6
+D23|The Sleeping Wench|tavern, D, 3
+D24|Aurora's Realms Shop, Slut Street Catalogue Counter|business, C, 3 ##2
+@col 709 3404 29
+D25|The Purple Palace|festhall, C, 4
+D26|The Mermaid's Arms|festhall, C, 3
+D27|The Blue Mermaid|tavern, D, 2
+D28|Shippers' Hall|guildhall, C, 2
+D29|Shippers' Storage|warehouse, D, 3
+D30|The House of Tarmagus|warehouse, D, 4
+D31|Coopers' Rest|guildhall, C, 2
+D32|The Hanged Man|tavern, D, 1
+D33|House of Pride Perfumes|business, C, 1
+D34|Arnagu's the Shipwright's residence|row house, B, 3 ##2
+D35|Full Sails|tavern/guildhall, C, 3
+D36|The Blushing Mermaid|festhall, C, 2s & 3s
+D37|Felhaur's Fine Fish|business, D, 1
+D38|Khostal Hannass, Fine Nuts|business, D, 1
+D39|Seaswealth Hall|guildhall, C, 2
+D40|Nestaur the Ropemaker|business, C, 2
+D41|The Sleeping Snake|tavern, D, 1
+D42|Shipmasters' Hall|inn, C, 3
+D43|Watermens' Hall|guildhall, C, 3
+D44|Mariners' Hall|guildhall, B, 3
+D45|Torpus the Tanner|business, C, 2
+D46|League Hall|guildhall, C, 2
+D47|The Butchers' Guildhall|guildhall, C, 2
+D48|Melgard's Fine Leathers|business, C, 1
+D49|Thomm Storage|warehouse, C, 4
+@col 1318 3404 29
+D50|Telethar Leatherworks|business, D, 2
+D51|Fellowship Storage|warehouse, C, 4
+D52|Smokehouse|business, D, 2
+D53|Jemuril the Dwar?s residence|rowhouse, C, 2
+D54|The Copper Cup|festhall, C, 4s & 5s
+D55|Gelfuril the Trader|business, C, 1
+D56|Guard Barracks|city building, C, 3
+D57|Cookhouse Hall|city building, C, 2
+D58|The Pickled Fisherman|tavern, D, 2
+D59|The Soaring Pegasus|tavern, C, 2
+D60|The Fishscale Smithy|business, C, 2
+D61|Jester's Clubhouse|guildhall, D, 1
+D62|Horizon's Sails|business, B, 2
+D63|Mother Jatha's|business, D, 1
+D64|Talnu's Ropeworks|business, D, 2
+D65|Merlook Nets & Knotware|business, D, 1
+D66|Ralagut's Wheelhouse|business, D, 1
+D67|The Angry Coxswain|tavern, D, 1
+D68|Gathgaer Milomynt's residence|row house, D, 2 ##2
+D69|Maernath Storage|warehouse, D, 2
+D70|Alex Lenter's Storage|warehouse, D, 2
+D71|Old Xoblob Shop|business, B, 3
+D72|The Pavilion of Paving Stones|guildhall, C, 3
+D73|Sailor's Corner|inn, D, 2
+D74|Darth's Dolphyntyde|tavern, D, 1
