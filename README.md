@@ -171,6 +171,7 @@ website/
 ### Requirements
 - [Claude Code](https://claude.ai/code)
 - A campaign source file (adventure PDF converted to markdown, or your own notes)
+- (Optional) a tablet, a language model and speech services for the table chat; see *Table Chat and Maps* below
 
 ### Setup
 
@@ -383,6 +384,42 @@ Audio buttons are only shown when `audioEnabled` is set to `true` in `website/[c
 ```
 
 Leave it `false` (the default for new campaigns) if you have not generated audio, so no broken play buttons appear.
+
+---
+
+## Table Chat and Maps (Optional)
+
+The table chat lets the players talk to an NPC from a tablet at the table: they hold a button and speak, a model drafts the NPC's answer from its file and memory, the DM approves it, and it is spoken in the NPC's voice. The same server shows the battle map and the city map next to the chat. Everything it writes (NPC logs, NPC memory, map data) lives in the campaign folder.
+
+### What you need
+
+- The DM's machine (a laptop) running the server: Python 3.14 and [uv](https://docs.astral.sh/uv/)
+- A language model with an OpenAI-compatible endpoint: the local llama-server started by `.claude/tools/table-chat/run-local-llm.sh`, or any remote server
+- A Whisper speech-to-text server and a [tts-serve](tools/backends/tts-serve/README.md) voice server (they can run on another machine with a GPU)
+- A tablet with a browser. A browser only allows the microphone on an HTTPS page, so the tablet reaches the server through Tailscale or through a web host you control (both in the table chat README)
+- Locked NPC voices, made as in the voice section above; an NPC without a voice gets text only
+
+### Setup
+
+```bash
+cd .claude/tools/table-chat
+uv venv .venv --python 3.14 && uv pip install --python .venv/bin/python -r requirements.txt
+./run.sh        # first run: creates settings.yaml from settings.example.yaml, edit the llm, stt and tts addresses in it, then run it again
+```
+
+`run.sh` prints two links: the **DM link** (with a key, for the laptop) and the **tablet link** (with its own key). To let Claude drive the server, add this to `.mcp.json` in your project folder (next to `.claude/`) and approve it when Claude Code asks:
+
+```json
+{ "mcpServers": { "table-chat": { "command": "python3", "args": [".claude/tools/table-chat/mcp_server.py"] } } }
+```
+
+### Using it
+
+- **NPC conversations:** `/dm-table-chat [campaign] [npc]`. Claude starts the conversation from a prefill you confirm, relays each party line with the drafted reply for your approval, narrates, and ends it by saving the log and each NPC's memory. The DM page offers the same buttons if you prefer to click.
+- **Maps:** `/dm-battlemap` loads an encounter's maps and keeps token positions in sync for combat; `/dm-citymap` is the Waterdeep city map with pins, saved routes and automatic walking routes. `table_chat.py map-links` prints their links, the tablet's chat page has a **Map** button, and the data is in `campaigns/[name]/party/maps/`.
+- **Travel times:** when the party asks how long a walk takes, Claude runs `map-route "<from>" "<to>"` and answers from the saved and computed routes.
+
+The full guide, with the web route, Tailscale, several NPCs in a room, the narrator, replay and the MCP tools, is in [`tools/table-chat/README.md`](tools/table-chat/README.md).
 
 ---
 
