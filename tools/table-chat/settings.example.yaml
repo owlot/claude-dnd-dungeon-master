@@ -1,0 +1,38 @@
+# Table chat settings. Copy this file to settings.yaml (run.sh does it the first time) and edit your copy:
+# settings.yaml is yours and is ignored by git. Restart the server after editing it (touching server.py makes the hot reload do it).
+#
+# llm: the model that drafts NPC replies. Any OpenAI-compatible chat endpoint. The default is a local llama-server
+#      (.claude/tools/table-chat/run-local-llm.sh, port 8081).
+llm:
+  base_url: http://127.0.0.1:8081
+  model: "local-npc"
+  max_tokens: 300
+  temperature: 0.8
+  # Thinking would use up max_tokens and leave the reply empty.
+  extra_body:
+    chat_template_kwargs:
+      enable_thinking: false
+  # A remote server instead (when it needs a key: put it in llm_api_key next to this file, or in TABLE_CHAT_LLM_KEY):
+  #   base_url: http://my-llm-box:8080
+  #   model: "your-model-name"
+
+# tts: the voices. kind is tts-serve (VoxCPM, Qwen3, ... behind a tts-serve server) or breeze.
+# Replace the address with the machine that runs it (it can be this laptop).
+tts:
+  enabled: true
+  kind: tts-serve
+  base_url: http://localhost:7500
+  timeout: 60
+  streaming: false
+  parameters: {}
+
+# stt: speech to text for the tablet's microphone (a Whisper server).
+stt:
+  enabled: true
+  base_url: http://localhost:8181
+  timeout: 30
+
+# public: where the tablet reaches the chat from outside (a web host that proxies /<campaign>/chat/ through a reverse tunnel).
+# Only used for the link the server prints; leave it out when you use Tailscale or the local network.
+# public:
+#   base_url: https://www.example.org

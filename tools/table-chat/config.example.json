@@ -1,0 +1,8 @@
+{
+  "campaign": "waterdeep-dragon-heist",
+  "llm": {"base_url": null, "model": null, "max_tokens": 300, "temperature": 0.8, "extra_body": {}},
+  "stt": {"base_url": "http://localhost:8181"},
+  "tts": {"kind": "tts-serve", "url": "http://localhost:7500"},
+  "lead_in_s": 0.5,
+  "history_turns": 12
+}

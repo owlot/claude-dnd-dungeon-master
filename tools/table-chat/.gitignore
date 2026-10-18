@@ -1,0 +1,18 @@
+# Runtime and secrets: never commit these
+.venv/
+.dm-token
+.audio/
+.state.json
+llm_api_key
+config.json
+.logs/
+.table-token
+.audio*/
+.state*.json
+.transcripts/
+
+# Local helper for the SSH tunnel to the web host (host name, key setup): kept on the DM laptop, not in the repo
+run-tunnel.sh
+
+# Your own settings (addresses of your LLM, Whisper and voices); settings.example.yaml is the template
+settings.yaml

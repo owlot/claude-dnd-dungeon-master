@@ -8,7 +8,7 @@ Python 3 scripts for the Claude Dungeon Master system. All scripts use stdlib on
 
 Manages and displays the current combat state as a fixed-width box. Called by Claude during combat to produce output that always looks identical.
 
-**Inputs:** `campaigns/<campaign>/combat_state.json` (created by `--init`)
+**Inputs:** `campaigns/<campaign>/party/combat_state.json` (created by `--init`; the old `campaigns/<campaign>/combat_state.json` is only a fallback), written by the combat-tracker with `side: party|enemy` per combatant. Paths come from `campaign_paths.py`.
 
 ### Usage
 
@@ -17,7 +17,7 @@ Manages and displays the current combat state as a fixed-width box. Called by Cl
 python scripts/combat_status.py <campaign> --init <encounter_name>
 
 # Display current combat state
-python scripts/combat_status.py <campaign> <encounter_name>
+python scripts/combat_status.py <campaign>
 
 # Apply a JSON patch and display updated state
 python scripts/combat_status.py <campaign> --update '<json_patch>'
@@ -88,7 +88,7 @@ Created fresh at the start of each combat. Hand-edit or patch via `--update`.
 
 Reads an encounter markdown file and prints a clean, structured DM reference. Use at the start of any encounter to get a quick overview without scrolling through raw markdown.
 
-**Inputs:** `campaigns/<campaign>/encounters/<encounter_name>.md`
+**Inputs:** `campaigns/<campaign>/info/encounters/<encounter_name>.md` (the old `campaigns/<campaign>/encounters/` is a fallback)
 
 ### Usage
 
@@ -380,4 +380,36 @@ Cache-busts the site: every `<script src>` / `<link href>` pointing at `js/NAME.
 
 ```
 python scripts/bump_asset_versions.py [--check]
+```
+
+---
+
+## campaign_paths.py
+
+Shared path helpers (imported by `combat_status.py`, `checkpoint.py` and `load_encounter.py`, not run directly): the campaign folder, the combat state file (`party/combat_state.json`, the campaign-root file only as a legacy fallback; set `COMBAT_STATE_FILE` to test against another file) and the encounter file (`info/encounters/<slug>.md`, legacy `encounters/`).
+
+---
+
+## battlemap.py
+
+Helper for the Combat Positions battle map (`.claude/skills/dm-battlemap/SKILL.md`). Reads the local copy of the board at `campaigns/<campaign>/party/battlefield/dm/state.json`, which is refreshed from the map database with `python .claude/tools/table-chat/table_chat.py map-get dm/state --out <that file>` (the map is served by the table chat, no artifact; see `.claude/tools/table-chat/README.md`). Changes are written back with `map-set dm/state @<battlefield/dm/push.json>`, which the script prints after `move`, `turn`, `effect` and `init`.
+
+```
+python .claude/scripts/battlemap.py maps <campaign> [words...]    # map images in sources/: dm / player / shared, squares from the file name
+python .claude/scripts/battlemap.py size <image>                  # pixel size of a jpg/png/webp
+python .claude/scripts/battlemap.py init <campaign> <spec.json>   # build a whole board (terrain, fog, tokens, maps)
+python .claude/scripts/battlemap.py summary <campaign>            # positions, distances, melee reach, terrain
+python .claude/scripts/battlemap.py dist <campaign> <A> <B>       # feet between two tokens
+python .claude/scripts/battlemap.py move <campaign> "Groz=N8" ... # move tokens, write battlefield/dm/push.json
+python .claude/scripts/battlemap.py area <campaign> sphere N7 20  # who is in an area: sphere | cone | line | cube
+python .claude/scripts/battlemap.py path <campaign> Caelith L22 30   # route, cost, opportunity attacks provoked
+python .claude/scripts/battlemap.py reach <campaign> Caelith 30 --map # which enemies a token can reach in melee this turn
+python .claude/scripts/battlemap.py roster <campaign>               # party speed (from sheets) and website portrait files
+python .claude/scripts/battlemap.py apply-roster <campaign> <assets.json> # put speed + uploaded portraits on existing tokens
+python .claude/scripts/battlemap.py turn <campaign> Caelith --speed 30 # make a token the active turn (resets its movement)
+python .claude/scripts/battlemap.py lastmove <campaign>            # what was moved on the table, opportunity attacks it provoked
+python .claude/scripts/battlemap.py effects <campaign>                 # spell areas on the board and who is inside
+python .claude/scripts/battlemap.py where <campaign> Corrin            # effects a token is standing in (start of its turn)
+python .claude/scripts/battlemap.py effect <campaign> add --preset moonbeam --origin K27.br --caster Lylnyler
+# add --overlay to area, path or reach to also write battlefield/dm/overlay.json (highlights for the DM's board)
 ```

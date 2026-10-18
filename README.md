@@ -27,6 +27,16 @@ This is not a chatbot. It's a persistent campaign system that runs inside Claude
 - Logs every exchange to a dedicated NPC conversation file
 - Appends a clean summary to the session conversation log
 
+### Table chat (optional)
+- Players speak to an NPC from a tablet at the table (microphone in, voice out); a local model drafts each reply from the NPC's file and memory, and the DM approves every line before it is spoken
+- Logs the conversation and updates each NPC's memory file, same formats as the NPC agents; Claude can conduct it through a command line and MCP tools (`/dm-table-chat`)
+- Details: [`tools/table-chat/README.md`](tools/table-chat/README.md)
+
+### Maps (battle map and city map)
+- The table chat serves both maps (`/map/`): a DM view with grid, walls, fog and tokens, and a filtered players' view on the tablet, next to the chat
+- City map: pins with descriptions and pictures drawn from the website's world data, saved routes, automatic walking routes, and travel times Claude can answer from (`map-route`)
+- No Claude artifact needed; Claude reads and writes the maps through MCP tools
+
 ### Character tracking
 - Maintains HP, spell slots, conditions, resources, and gold per character
 - Handles short and long rests, level-ups, loot distribution
@@ -42,7 +52,7 @@ This is not a chatbot. It's a persistent campaign system that runs inside Claude
 - Memoir files are password-protected per character
 
 ### Audio tools (optional, in `.claude/tools/`)
-- Audition and lock voices per character and NPC using Qwen3-TTS or MOSS-TTS
+- Audition and lock voices per character and NPC using Qwen3-TTS, MOSS-TTS or a tts-serve server
 - Generate per-chapter session audio with character-specific voices
 - Generate per-anchor memoir audio split into public and private files, unlockable per player
 
@@ -54,7 +64,7 @@ The system runs inside **Claude Code** using three layers:
 
 **CLAUDE.md** — The core instruction file. Defines the DM's role, combat flow, NPC voicing rules, narration format, command reference, and which sub-agents handle which tasks.
 
-**`.claude/agents/`** — Twelve specialized sub-agents, each with a defined scope:
+**`.claude/agents/`** — Specialized sub-agents (fourteen files, one of them retired), each with a defined scope:
 
 | Agent | Responsibility |
 |-------|---------------|
@@ -95,6 +105,9 @@ The system runs inside **Claude Code** using three layers:
 | `/dm-generate-campaign [name]` | Walk through new campaign generation |
 | `/dm-generate-audio [campaign] [session]` | Generate scene and memoir MP3s for a session |
 | `/dm-generate-scene-images [campaign] [session]` | Pick and generate scene images, wire into session HTML |
+| `/dm-battlemap [campaign] [setup \| load <encounter> \| sync \| move ...]` | Run the battle map: load an encounter's maps, sync and move tokens |
+| `/dm-citymap` | Show or update the Waterdeep city map (pins, fog, routes) |
+| `/dm-table-chat [campaign] [npc]` | Run an NPC conversation through the table chat, with Claude as the DM's conductor |
 | `/dm-undo [campaign]` | Restore from last checkpoint |
 | `/dm-recover-session-log [campaign]` | Rebuild log from raw transcript (recovery only) |
 
@@ -115,6 +128,11 @@ campaigns/[name]/
     session-log.md      — one entry per session
     relationships.md    — NPC relationship tracker
     combat_state.json   — live combat state (written during combat)
+    npc-memory/         — one file per NPC: what it knows from conversations with the party
+    objects/            — ledger per tracked object (party view and DM-only actual)
+    locations/          — ledger per tracked location (same two views)
+    maps/               — table maps: db.json (board, pins, routes), assets.json (images by path)
+    battlefield/        — local copy of the battle board for scripts (refreshed from maps/)
     voice-overrides.json — TTS voice slot assignments for minor characters
     phonetic-substitutions.json — TTS pronunciation overrides
     characters/         — one file per PC
@@ -226,10 +244,11 @@ Additional house rules and format guides live in `.claude/rules/`:
 
 ## Voice Generation Setup (Optional)
 
-The audio system generates spoken narration and character dialogue for each session using a local open-source TTS model. Two backends are supported:
+The audio system generates spoken narration and character dialogue for each session using a local open-source TTS model. Three backends are supported:
 
 - **Qwen3-TTS** — used for voice auditioning (natural breathing and pacing)
 - **MOSS-TTS** — used for final locked-voice generation (faster, more consistent output)
+- **tts-serve** — talks to a tts-serve server over HTTP (VoxCPM2 and others), so the GPU can be another machine; this is also what the table chat speaks with. Setup in `.claude/tools/backends/tts-serve/README.md`
 
 Each character gets a locked voice derived from a short self-introduction clip. Minor characters without a dedicated voice can be assigned a generic voice slot (e.g. `male-weathered-2`) via `party/voice-overrides.json`.
 
@@ -300,7 +319,7 @@ The narrator voice (shared across all campaigns) lives at `website/audio/voices/
 
 ### Selecting a TTS backend
 
-The backend is set per campaign in `campaigns/[name]/party/tts-backend`. Valid values are `qwen3` and `moss`. If the file is absent, `qwen3` is used by default.
+The backend is set per campaign in `campaigns/[name]/party/tts-backend`. Valid values are `qwen3`, `moss` and `tts-serve` (the site-wide default can also be set as `ttsBackend` in `website/assets/config.json`). If the file is absent, `qwen3` is used by default.
 
 You can also override the backend per-run with a flag:
 
@@ -331,7 +350,7 @@ Scene audio uses the narrator voice for prose and character voices for tagged di
 - `--scenes-only` — skip memoir generation
 - `--memoirs-only` — skip scene generation
 - `--scene [N]` — regenerate only scene N
-- `--backend [qwen3|moss]` — override the campaign's backend setting
+- `--backend [qwen3|moss|tts-serve]` — override the campaign's backend setting
 - `--offline` — use local HuggingFace cache only (note: Qwen3-TTS requires a brief network check on load regardless)
 
 Run sessions one at a time — running multiple TTS sessions in parallel can crash the GPU.
