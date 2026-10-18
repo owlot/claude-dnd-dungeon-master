@@ -1,0 +1,3165 @@
+{
+"castle:C1": {
+"conf": "high",
+"pos": [
+2389,
+1789
+]
+},
+"castle:C10": {
+"conf": "high",
+"pos": [
+2708,
+2157
+]
+},
+"castle:C11": {
+"conf": "high",
+"pos": [
+3105,
+2333
+]
+},
+"castle:C12": {
+"conf": "high",
+"pos": [
+2769,
+2398
+]
+},
+"castle:C13": {
+"conf": "high",
+"pos": [
+2928,
+2452
+]
+},
+"castle:C14": {
+"conf": "high",
+"pos": [
+3020,
+2462
+]
+},
+"castle:C15": {
+"conf": "high",
+"pos": [
+3064,
+2427
+]
+},
+"castle:C16": {
+"conf": "high",
+"pos": [
+2551,
+2588
+]
+},
+"castle:C17": {
+"conf": "high",
+"pos": [
+2556,
+2616
+]
+},
+"castle:C18": {
+"conf": "high",
+"pos": [
+2584,
+2588
+]
+},
+"castle:C19": {
+"also": [
+[
+2583,
+2617
+],
+[
+2641,
+2750
+],
+[
+3100,
+2892
+],
+[
+3124,
+2893
+],
+[
+3150,
+2896
+],
+[
+3097,
+2914
+],
+[
+3132,
+2924
+],
+[
+3154,
+2942
+],
+[
+3144,
+2964
+]
+],
+"conf": "medium",
+"pos": [
+2586,
+2556
+]
+},
+"castle:C2": {
+"conf": "high",
+"pos": [
+2239,
+1890
+]
+},
+"castle:C20": {
+"conf": "high",
+"pos": [
+2960,
+2579
+]
+},
+"castle:C21": {
+"conf": "high",
+"pos": [
+3163,
+2541
+]
+},
+"castle:C22": {
+"conf": "high",
+"pos": [
+3048,
+2606
+]
+},
+"castle:C23": {
+"conf": "high",
+"pos": [
+3073,
+2596
+]
+},
+"castle:C24": {
+"conf": "high",
+"pos": [
+2708,
+2715
+]
+},
+"castle:C25": {
+"conf": "high",
+"pos": [
+3035,
+2637
+]
+},
+"castle:C26": {
+"conf": "high",
+"pos": [
+2925,
+2687
+]
+},
+"castle:C27": {
+"conf": "high",
+"pos": [
+3005,
+2697
+]
+},
+"castle:C28": {
+"conf": "high",
+"pos": [
+3081,
+2670
+]
+},
+"castle:C29": {
+"conf": "high",
+"pos": [
+3173,
+2675
+]
+},
+"castle:C3": {
+"conf": "high",
+"pos": [
+2286,
+1906
+]
+},
+"castle:C30": {
+"conf": "high",
+"pos": [
+2652,
+2791
+]
+},
+"castle:C31": {
+"conf": "high",
+"pos": [
+3008,
+2748
+]
+},
+"castle:C32": {
+"conf": "high",
+"pos": [
+3046,
+2710
+]
+},
+"castle:C33": {
+"conf": "high",
+"pos": [
+3125,
+2725
+]
+},
+"castle:C34": {
+"conf": "high",
+"pos": [
+3180,
+2718
+]
+},
+"castle:C35": {
+"conf": "high",
+"pos": [
+3179,
+2738
+]
+},
+"castle:C36": {
+"conf": "high",
+"pos": [
+3129,
+2743
+]
+},
+"castle:C37": {
+"conf": "high",
+"pos": [
+3155,
+2754
+]
+},
+"castle:C39": {
+"conf": "high",
+"pos": [
+2944,
+2802
+]
+},
+"castle:C4": {
+"conf": "high",
+"pos": [
+2548,
+2011
+]
+},
+"castle:C40": {
+"conf": "high",
+"pos": [
+2972,
+2802
+]
+},
+"castle:C41": {
+"conf": "high",
+"pos": [
+3002,
+2798
+]
+},
+"castle:C42": {
+"conf": "high",
+"pos": [
+3027,
+2801
+]
+},
+"castle:C43": {
+"conf": "high",
+"pos": [
+2968,
+2834
+]
+},
+"castle:C44": {
+"conf": "high",
+"pos": [
+3002,
+2822
+]
+},
+"castle:C45": {
+"conf": "high",
+"pos": [
+3010,
+2844
+]
+},
+"castle:C46": {
+"conf": "high",
+"pos": [
+3091,
+2934
+]
+},
+"castle:C47": {
+"conf": "high",
+"pos": [
+3200,
+2946
+]
+},
+"castle:C48": {
+"conf": "high",
+"pos": [
+3152,
+3038
+]
+},
+"castle:C49": {
+"conf": "high",
+"pos": [
+3211,
+3056
+]
+},
+"castle:C5": {
+"conf": "high",
+"pos": [
+2614,
+2002
+]
+},
+"castle:C50": {
+"conf": "high",
+"pos": [
+3227,
+3144
+]
+},
+"castle:C51": {
+"conf": "high",
+"pos": [
+2663,
+3119
+]
+},
+"castle:C52": {
+"conf": "high",
+"pos": [
+2367,
+3176
+]
+},
+"castle:C53": {
+"conf": "high",
+"pos": [
+2663,
+3156
+]
+},
+"castle:C54": {
+"conf": "high",
+"pos": [
+2653,
+3272
+]
+},
+"castle:C55": {
+"conf": "high",
+"pos": [
+2890,
+1931
+]
+},
+"castle:C56": {
+"conf": "high",
+"pos": [
+3040,
+2102
+]
+},
+"castle:C57": {
+"conf": "high",
+"pos": [
+2945,
+2210
+]
+},
+"castle:C58": {
+"conf": "high",
+"pos": [
+2513,
+2096
+]
+},
+"castle:C59": {
+"conf": "high",
+"pos": [
+2543,
+2068
+]
+},
+"castle:C6": {
+"conf": "high",
+"pos": [
+2496,
+2069
+]
+},
+"castle:C60": {
+"conf": "high",
+"pos": [
+2540,
+2051
+]
+},
+"castle:C61": {
+"conf": "high",
+"pos": [
+2516,
+2050
+]
+},
+"castle:C62": {
+"conf": "high",
+"pos": [
+2524,
+2029
+]
+},
+"castle:C63": {
+"conf": "high",
+"pos": [
+2567,
+2148
+]
+},
+"castle:C64": {
+"conf": "high",
+"pos": [
+3011,
+2414
+]
+},
+"castle:C65": {
+"conf": "high",
+"pos": [
+2916,
+1934
+]
+},
+"castle:C66": {
+"conf": "high",
+"pos": [
+2953,
+2474
+]
+},
+"castle:C67": {
+"conf": "high",
+"pos": [
+2466,
+2750
+]
+},
+"castle:C68": {
+"conf": "high",
+"pos": [
+2522,
+2635
+]
+},
+"castle:C69": {
+"conf": "high",
+"pos": [
+2176,
+3301
+]
+},
+"castle:C7": {
+"conf": "high",
+"pos": [
+2726,
+1957
+]
+},
+"castle:C70": {
+"conf": "high",
+"pos": [
+2735,
+1878
+]
+},
+"castle:C71": {
+"conf": "high",
+"pos": [
+2645,
+2566
+]
+},
+"castle:C72": {
+"conf": "high",
+"pos": [
+2334,
+1990
+]
+},
+"castle:C73": {
+"conf": "high",
+"pos": [
+3120,
+3008
+]
+},
+"castle:C74": {
+"conf": "high",
+"pos": [
+2268,
+3188
+]
+},
+"castle:C75": {
+"conf": "high",
+"pos": [
+2600,
+2703
+]
+},
+"castle:C76": {
+"conf": "high",
+"pos": [
+2954,
+2899
+]
+},
+"castle:C77": {
+"conf": "high",
+"pos": [
+2766,
+2619
+]
+},
+"castle:C78": {
+"conf": "high",
+"pos": [
+3160,
+2475
+]
+},
+"castle:C79": {
+"conf": "high",
+"pos": [
+2660,
+2720
+]
+},
+"castle:C8": {
+"conf": "high",
+"pos": [
+2995,
+1928
+]
+},
+"castle:C81": {
+"conf": "high",
+"pos": [
+3083,
+3037
+]
+},
+"castle:C82": {
+"conf": "high",
+"pos": [
+3130,
+2610
+]
+},
+"castle:C83": {
+"conf": "high",
+"pos": [
+2606,
+2252
+]
+},
+"castle:C85": {
+"conf": "high",
+"pos": [
+2713,
+2403
+]
+},
+"castle:C86": {
+"conf": "high",
+"pos": [
+2826,
+1889
+]
+},
+"castle:C9": {
+"conf": "high",
+"pos": [
+3051,
+2030
+]
+},
+"dead:CD1": {
+"conf": "high",
+"pos": [
+3583,
+2338
+]
+},
+"dead:CD10": {
+"conf": "high",
+"pos": [
+3498,
+2206
+]
+},
+"dead:CD11": {
+"conf": "high",
+"pos": [
+3699,
+2209
+]
+},
+"dead:CD12": {
+"conf": "high",
+"pos": [
+3608,
+2763
+]
+},
+"dead:CD13": {
+"conf": "high",
+"pos": [
+3584,
+2118
+]
+},
+"dead:CD14": {
+"conf": "high",
+"pos": [
+3421,
+2332
+]
+},
+"dead:CD2": {
+"conf": "high",
+"pos": [
+3390,
+2428
+]
+},
+"dead:CD3": {
+"conf": "high",
+"pos": [
+3452,
+2397
+]
+},
+"dead:CD4": {
+"conf": "high",
+"pos": [
+3443,
+2457
+]
+},
+"dead:CD5": {
+"conf": "high",
+"pos": [
+3508,
+2479
+]
+},
+"dead:CD6": {
+"conf": "high",
+"pos": [
+3550,
+2591
+]
+},
+"dead:CD7": {
+"conf": "high",
+"pos": [
+3482,
+2627
+]
+},
+"dead:CD8": {
+"conf": "high",
+"pos": [
+3545,
+2678
+]
+},
+"dead:CD9": {
+"conf": "high",
+"pos": [
+3592,
+2738
+]
+},
+"dock:D1": {
+"conf": "high",
+"pos": [
+2870,
+3106
+]
+},
+"dock:D10": {
+"conf": "high",
+"pos": [
+3341,
+3256
+]
+},
+"dock:D11": {
+"conf": "high",
+"pos": [
+3081,
+3440
+]
+},
+"dock:D12": {
+"conf": "high",
+"pos": [
+3110,
+3454
+]
+},
+"dock:D13": {
+"conf": "high",
+"pos": [
+3406,
+3369
+]
+},
+"dock:D14": {
+"conf": "high",
+"pos": [
+3023,
+3532
+]
+},
+"dock:D15": {
+"conf": "high",
+"pos": [
+3152,
+3522
+]
+},
+"dock:D16": {
+"conf": "high",
+"pos": [
+3193,
+3492
+]
+},
+"dock:D17": {
+"conf": "high",
+"pos": [
+3268,
+3473
+]
+},
+"dock:D18": {
+"conf": "high",
+"pos": [
+3316,
+3446
+]
+},
+"dock:D19": {
+"conf": "high",
+"pos": [
+3037,
+3597
+]
+},
+"dock:D2": {
+"conf": "high",
+"pos": [
+3039,
+3144
+]
+},
+"dock:D20": {
+"conf": "high",
+"pos": [
+3158,
+3617
+]
+},
+"dock:D21": {
+"conf": "high",
+"pos": [
+3212,
+3637
+]
+},
+"dock:D22": {
+"conf": "high",
+"pos": [
+3252,
+3611
+]
+},
+"dock:D23": {
+"conf": "high",
+"pos": [
+3296,
+3622
+]
+},
+"dock:D24": {
+"conf": "high",
+"pos": [
+3368,
+3546
+]
+},
+"dock:D25": {
+"conf": "high",
+"pos": [
+3364,
+3571
+]
+},
+"dock:D26": {
+"conf": "high",
+"pos": [
+3147,
+3668
+]
+},
+"dock:D27": {
+"conf": "high",
+"pos": [
+3215,
+3661
+]
+},
+"dock:D28": {
+"conf": "high",
+"pos": [
+3255,
+3643
+]
+},
+"dock:D29": {
+"conf": "high",
+"pos": [
+3240,
+3676
+]
+},
+"dock:D3": {
+"conf": "high",
+"pos": [
+3162,
+3115
+]
+},
+"dock:D30": {
+"conf": "high",
+"pos": [
+3264,
+3690
+]
+},
+"dock:D31": {
+"conf": "high",
+"pos": [
+3290,
+3661
+]
+},
+"dock:D32": {
+"conf": "high",
+"pos": [
+3326,
+3674
+]
+},
+"dock:D33": {
+"conf": "high",
+"pos": [
+3414,
+3632
+]
+},
+"dock:D34": {
+"conf": "high",
+"pos": [
+3176,
+3716
+]
+},
+"dock:D35": {
+"conf": "high",
+"pos": [
+3214,
+3757
+]
+},
+"dock:D36": {
+"conf": "high",
+"pos": [
+3318,
+3724
+]
+},
+"dock:D37": {
+"conf": "high",
+"pos": [
+3387,
+3717
+]
+},
+"dock:D38": {
+"conf": "high",
+"pos": [
+3417,
+3706
+]
+},
+"dock:D39": {
+"conf": "high",
+"pos": [
+3276,
+3781
+]
+},
+"dock:D4": {
+"conf": "high",
+"pos": [
+2832,
+3193
+]
+},
+"dock:D40": {
+"conf": "high",
+"pos": [
+3435,
+3838
+]
+},
+"dock:D41": {
+"conf": "high",
+"pos": [
+3402,
+3787
+]
+},
+"dock:D42": {
+"conf": "high",
+"pos": [
+3474,
+3808
+]
+},
+"dock:D43": {
+"conf": "high",
+"pos": [
+3418,
+3820
+]
+},
+"dock:D44": {
+"conf": "high",
+"pos": [
+3504,
+3844
+]
+},
+"dock:D45": {
+"conf": "high",
+"pos": [
+3536,
+3885
+]
+},
+"dock:D46": {
+"conf": "high",
+"pos": [
+3562,
+3861
+]
+},
+"dock:D47": {
+"conf": "high",
+"pos": [
+3630,
+3886
+]
+},
+"dock:D48": {
+"conf": "high",
+"pos": [
+3680,
+3886
+]
+},
+"dock:D49": {
+"conf": "high",
+"pos": [
+3657,
+3900
+]
+},
+"dock:D5": {
+"conf": "high",
+"pos": [
+3207,
+3202
+]
+},
+"dock:D50": {
+"conf": "high",
+"pos": [
+3565,
+3934
+]
+},
+"dock:D51": {
+"conf": "high",
+"pos": [
+3591,
+3956
+]
+},
+"dock:D52": {
+"conf": "high",
+"pos": [
+3622,
+3970
+]
+},
+"dock:D53": {
+"conf": "high",
+"pos": [
+3638,
+3953
+]
+},
+"dock:D54": {
+"conf": "high",
+"pos": [
+3703,
+3938
+]
+},
+"dock:D55": {
+"conf": "high",
+"pos": [
+3666,
+3972
+]
+},
+"dock:D56": {
+"conf": "high",
+"pos": [
+3577,
+4015
+]
+},
+"dock:D58": {
+"conf": "high",
+"pos": [
+2807,
+3262
+]
+},
+"dock:D59": {
+"conf": "high",
+"pos": [
+2860,
+3282
+]
+},
+"dock:D6": {
+"conf": "high",
+"pos": [
+2940,
+3315
+]
+},
+"dock:D60": {
+"conf": "high",
+"pos": [
+3093,
+3370
+]
+},
+"dock:D61": {
+"conf": "high",
+"pos": [
+3256,
+3568
+]
+},
+"dock:D62": {
+"conf": "high",
+"pos": [
+3145,
+3468
+]
+},
+"dock:D63": {
+"conf": "high",
+"pos": [
+3203,
+3398
+]
+},
+"dock:D64": {
+"conf": "high",
+"pos": [
+3030,
+3330
+]
+},
+"dock:D65": {
+"conf": "high",
+"pos": [
+3417,
+3670
+]
+},
+"dock:D66": {
+"conf": "high",
+"pos": [
+3225,
+3186
+]
+},
+"dock:D67": {
+"conf": "high",
+"pos": [
+3010,
+3472
+]
+},
+"dock:D68": {
+"conf": "high",
+"pos": [
+3125,
+3253
+]
+},
+"dock:D69": {
+"conf": "high",
+"pos": [
+3376,
+3359
+]
+},
+"dock:D7": {
+"conf": "high",
+"pos": [
+3023,
+3302
+]
+},
+"dock:D70": {
+"also": [
+[
+3397,
+3392
+]
+],
+"conf": "medium",
+"pos": [
+2835,
+3136
+]
+},
+"dock:D71": {
+"conf": "high",
+"pos": [
+3372,
+3595
+]
+},
+"dock:D73": {
+"conf": "high",
+"pos": [
+2934,
+3374
+]
+},
+"dock:D74": {
+"conf": "high",
+"pos": [
+3036,
+3214
+]
+},
+"dock:D8": {
+"conf": "high",
+"pos": [
+3108,
+3339
+]
+},
+"dock:D9": {
+"conf": "high",
+"pos": [
+3190,
+3269
+]
+},
+"harbor:H1": {
+"conf": "high",
+"pos": [
+2226,
+3462
+]
+},
+"harbor:H2": {
+"conf": "high",
+"pos": [
+2126,
+3843
+]
+},
+"harbor:H3": {
+"conf": "high",
+"pos": [
+2378,
+4124
+]
+},
+"harbor:H4": {
+"conf": "high",
+"pos": [
+3323,
+4246
+]
+},
+"harbor:H5": {
+"conf": "high",
+"pos": [
+3784,
+4274
+]
+},
+"harbor:H6": {
+"conf": "high",
+"pos": [
+3972,
+4246
+]
+},
+"north:N1": {
+"conf": "high",
+"pos": [
+3167,
+962
+]
+},
+"north:N10": {
+"conf": "high",
+"pos": [
+3350,
+1184
+]
+},
+"north:N11": {
+"conf": "high",
+"pos": [
+3445,
+1216
+]
+},
+"north:N12": {
+"conf": "high",
+"pos": [
+3015,
+1293
+]
+},
+"north:N13": {
+"conf": "high",
+"pos": [
+3078,
+1280
+]
+},
+"north:N14": {
+"conf": "high",
+"pos": [
+3185,
+1316
+]
+},
+"north:N15": {
+"conf": "high",
+"pos": [
+3029,
+1406
+]
+},
+"north:N16": {
+"conf": "high",
+"pos": [
+3084,
+1413
+]
+},
+"north:N17": {
+"conf": "high",
+"pos": [
+3185,
+1392
+]
+},
+"north:N18": {
+"conf": "high",
+"pos": [
+3317,
+1394
+]
+},
+"north:N19": {
+"conf": "high",
+"pos": [
+3454,
+1382
+]
+},
+"north:N2": {
+"conf": "high",
+"pos": [
+3244,
+1031
+]
+},
+"north:N20": {
+"conf": "high",
+"pos": [
+3526,
+1352
+]
+},
+"north:N21": {
+"conf": "high",
+"pos": [
+3631,
+1382
+]
+},
+"north:N22": {
+"conf": "high",
+"pos": [
+3318,
+1496
+]
+},
+"north:N23": {
+"conf": "high",
+"pos": [
+3389,
+1454
+]
+},
+"north:N24": {
+"conf": "high",
+"pos": [
+3471,
+1457
+]
+},
+"north:N25": {
+"conf": "high",
+"pos": [
+3603,
+1419
+]
+},
+"north:N26": {
+"conf": "high",
+"pos": [
+3582,
+1494
+]
+},
+"north:N27": {
+"conf": "high",
+"pos": [
+3100,
+1586
+]
+},
+"north:N28": {
+"conf": "high",
+"pos": [
+3255,
+1560
+]
+},
+"north:N29": {
+"conf": "high",
+"pos": [
+3325,
+1600
+]
+},
+"north:N3": {
+"conf": "high",
+"pos": [
+3339,
+1032
+]
+},
+"north:N30": {
+"conf": "high",
+"pos": [
+3464,
+1570
+]
+},
+"north:N31": {
+"conf": "high",
+"pos": [
+3538,
+1562
+]
+},
+"north:N32": {
+"also": [
+[
+3612,
+1666
+]
+],
+"conf": "medium",
+"pos": [
+3660,
+1570
+]
+},
+"north:N33": {
+"conf": "high",
+"pos": [
+3025,
+1644
+]
+},
+"north:N34": {
+"conf": "high",
+"pos": [
+3185,
+1703
+]
+},
+"north:N35": {
+"conf": "high",
+"pos": [
+3268,
+1642
+]
+},
+"north:N36": {
+"conf": "high",
+"pos": [
+3332,
+1686
+]
+},
+"north:N37": {
+"conf": "high",
+"pos": [
+3398,
+1645
+]
+},
+"north:N38": {
+"conf": "high",
+"pos": [
+3548,
+1652
+]
+},
+"north:N39": {
+"conf": "high",
+"pos": [
+3006,
+1795
+]
+},
+"north:N4": {
+"conf": "high",
+"pos": [
+3394,
+1062
+]
+},
+"north:N40": {
+"conf": "high",
+"pos": [
+3084,
+1789
+]
+},
+"north:N41": {
+"conf": "high",
+"pos": [
+3354,
+1746
+]
+},
+"north:N42": {
+"conf": "high",
+"pos": [
+3540,
+1760
+]
+},
+"north:N43": {
+"conf": "high",
+"pos": [
+3626,
+1736
+]
+},
+"north:N44": {
+"conf": "high",
+"pos": [
+3676,
+1722
+]
+},
+"north:N45": {
+"conf": "high",
+"pos": [
+3011,
+1831
+]
+},
+"north:N46": {
+"conf": "high",
+"pos": [
+3042,
+1862
+]
+},
+"north:N47": {
+"conf": "high",
+"pos": [
+3086,
+1849
+]
+},
+"north:N48": {
+"conf": "high",
+"pos": [
+3127,
+1836
+]
+},
+"north:N49": {
+"conf": "high",
+"pos": [
+3127,
+1876
+]
+},
+"north:N5": {
+"conf": "high",
+"pos": [
+3451,
+1074
+]
+},
+"north:N50": {
+"conf": "high",
+"pos": [
+3180,
+1871
+]
+},
+"north:N51": {
+"conf": "high",
+"pos": [
+3184,
+1898
+]
+},
+"north:N52": {
+"conf": "high",
+"pos": [
+3346,
+1885
+]
+},
+"north:N53": {
+"conf": "high",
+"pos": [
+3636,
+1847
+]
+},
+"north:N54": {
+"conf": "high",
+"pos": [
+3204,
+1946
+]
+},
+"north:N55": {
+"conf": "high",
+"pos": [
+3305,
+1949
+]
+},
+"north:N56": {
+"conf": "high",
+"pos": [
+3387,
+1940
+]
+},
+"north:N57": {
+"conf": "high",
+"pos": [
+3422,
+1931
+]
+},
+"north:N58": {
+"conf": "high",
+"pos": [
+3518,
+1920
+]
+},
+"north:N59": {
+"conf": "high",
+"pos": [
+3618,
+1972
+]
+},
+"north:N6": {
+"conf": "high",
+"pos": [
+3190,
+1144
+]
+},
+"north:N60": {
+"conf": "high",
+"pos": [
+3338,
+2064
+]
+},
+"north:N61": {
+"conf": "high",
+"pos": [
+3399,
+2130
+]
+},
+"north:N62": {
+"conf": "high",
+"pos": [
+3327,
+1129
+]
+},
+"north:N63": {
+"conf": "high",
+"pos": [
+3385,
+1815
+]
+},
+"north:N64": {
+"conf": "high",
+"pos": [
+3475,
+1240
+]
+},
+"north:N65": {
+"conf": "high",
+"pos": [
+3379,
+1270
+]
+},
+"north:N66": {
+"conf": "high",
+"pos": [
+3082,
+1510
+]
+},
+"north:N67": {
+"conf": "high",
+"pos": [
+3114,
+1553
+]
+},
+"north:N68": {
+"conf": "high",
+"pos": [
+3115,
+1266
+]
+},
+"north:N69": {
+"conf": "high",
+"pos": [
+3109,
+1767
+]
+},
+"north:N7": {
+"conf": "high",
+"pos": [
+3226,
+1160
+]
+},
+"north:N70": {
+"conf": "high",
+"pos": [
+3376,
+2022
+]
+},
+"north:N71": {
+"conf": "high",
+"pos": [
+3230,
+1970
+]
+},
+"north:N72": {
+"conf": "high",
+"pos": [
+3008,
+1440
+]
+},
+"north:N73": {
+"conf": "high",
+"pos": [
+3304,
+2083
+]
+},
+"north:N74": {
+"conf": "high",
+"pos": [
+3352,
+2096
+]
+},
+"north:N75": {
+"conf": "high",
+"pos": [
+3540,
+1820
+]
+},
+"north:N76": {
+"conf": "high",
+"pos": [
+3251,
+1448
+]
+},
+"north:N77": {
+"conf": "high",
+"pos": [
+3376,
+1338
+]
+},
+"north:N78": {
+"conf": "high",
+"pos": [
+3188,
+730
+]
+},
+"north:N79": {
+"conf": "high",
+"pos": [
+3548,
+1081
+]
+},
+"north:N8": {
+"conf": "high",
+"pos": [
+3289,
+1113
+]
+},
+"north:N80": {
+"conf": "high",
+"pos": [
+3691,
+1678
+]
+},
+"north:N81": {
+"conf": "high",
+"pos": [
+3645,
+1670
+]
+},
+"north:N82": {
+"conf": "high",
+"pos": [
+3165,
+925
+]
+},
+"north:N9": {
+"conf": "high",
+"pos": [
+3169,
+1220
+]
+},
+"sea:S1": {
+"conf": "high",
+"pos": [
+2524,
+672
+]
+},
+"sea:S10": {
+"conf": "high",
+"pos": [
+2613,
+1067
+]
+},
+"sea:S11": {
+"conf": "high",
+"pos": [
+2726,
+1071
+]
+},
+"sea:S12": {
+"conf": "high",
+"pos": [
+2836,
+1131
+]
+},
+"sea:S13": {
+"conf": "high",
+"pos": [
+3016,
+1048
+]
+},
+"sea:S14": {
+"conf": "high",
+"pos": [
+3098,
+1060
+]
+},
+"sea:S15": {
+"conf": "high",
+"pos": [
+2306,
+1214
+]
+},
+"sea:S16": {
+"conf": "high",
+"pos": [
+2340,
+1167
+]
+},
+"sea:S17": {
+"conf": "high",
+"pos": [
+2364,
+1140
+]
+},
+"sea:S18": {
+"conf": "high",
+"pos": [
+2408,
+1226
+]
+},
+"sea:S19": {
+"conf": "high",
+"pos": [
+2456,
+1196
+]
+},
+"sea:S2": {
+"conf": "high",
+"pos": [
+2406,
+832
+]
+},
+"sea:S20": {
+"conf": "high",
+"pos": [
+2534,
+1161
+]
+},
+"sea:S21": {
+"conf": "high",
+"pos": [
+2598,
+1220
+]
+},
+"sea:S22": {
+"conf": "high",
+"pos": [
+2628,
+1123
+]
+},
+"sea:S23": {
+"conf": "high",
+"pos": [
+2728,
+1161
+]
+},
+"sea:S24": {
+"conf": "high",
+"pos": [
+2788,
+1226
+]
+},
+"sea:S25": {
+"conf": "high",
+"pos": [
+2842,
+1172
+]
+},
+"sea:S26": {
+"conf": "high",
+"pos": [
+2907,
+1229
+]
+},
+"sea:S27": {
+"conf": "high",
+"pos": [
+3018,
+1202
+]
+},
+"sea:S28": {
+"conf": "high",
+"pos": [
+3105,
+1180
+]
+},
+"sea:S29": {
+"conf": "high",
+"pos": [
+2336,
+1277
+]
+},
+"sea:S3": {
+"conf": "high",
+"pos": [
+2654,
+973
+]
+},
+"sea:S30": {
+"conf": "high",
+"pos": [
+2409,
+1282
+]
+},
+"sea:S31": {
+"conf": "high",
+"pos": [
+2467,
+1274
+]
+},
+"sea:S32": {
+"conf": "high",
+"pos": [
+2596,
+1282
+]
+},
+"sea:S33": {
+"also": [
+[
+2908,
+1618
+]
+],
+"conf": "medium",
+"pos": [
+2676,
+1269
+]
+},
+"sea:S34": {
+"conf": "high",
+"pos": [
+2698,
+1356
+]
+},
+"sea:S35": {
+"conf": "high",
+"pos": [
+2818,
+1353
+]
+},
+"sea:S36": {
+"conf": "high",
+"pos": [
+2937,
+1329
+]
+},
+"sea:S37": {
+"conf": "high",
+"pos": [
+2288,
+1346
+]
+},
+"sea:S38": {
+"conf": "high",
+"pos": [
+2322,
+1345
+]
+},
+"sea:S39": {
+"conf": "high",
+"pos": [
+2316,
+1376
+]
+},
+"sea:S4": {
+"conf": "high",
+"pos": [
+3092,
+986
+]
+},
+"sea:S40": {
+"conf": "high",
+"pos": [
+2431,
+1327
+]
+},
+"sea:S41": {
+"conf": "high",
+"pos": [
+2235,
+1448
+]
+},
+"sea:S42": {
+"conf": "high",
+"pos": [
+2279,
+1440
+]
+},
+"sea:S43": {
+"conf": "high",
+"pos": [
+2305,
+1432
+]
+},
+"sea:S44": {
+"conf": "high",
+"pos": [
+2330,
+1404
+]
+},
+"sea:S45": {
+"conf": "high",
+"pos": [
+2374,
+1410
+]
+},
+"sea:S46": {
+"conf": "high",
+"pos": [
+2451,
+1406
+]
+},
+"sea:S47": {
+"conf": "high",
+"pos": [
+2526,
+1397
+]
+},
+"sea:S48": {
+"conf": "high",
+"pos": [
+2579,
+1359
+]
+},
+"sea:S49": {
+"conf": "high",
+"pos": [
+2595,
+1453
+]
+},
+"sea:S5": {
+"conf": "high",
+"pos": [
+2320,
+1074
+]
+},
+"sea:S50": {
+"conf": "high",
+"pos": [
+2633,
+1486
+]
+},
+"sea:S51": {
+"conf": "high",
+"pos": [
+2686,
+1400
+]
+},
+"sea:S52": {
+"conf": "high",
+"pos": [
+2788,
+1455
+]
+},
+"sea:S53": {
+"conf": "high",
+"pos": [
+2889,
+1487
+]
+},
+"sea:S54": {
+"conf": "high",
+"pos": [
+2315,
+1490
+]
+},
+"sea:S55": {
+"conf": "high",
+"pos": [
+2332,
+1456
+]
+},
+"sea:S56": {
+"conf": "high",
+"pos": [
+2376,
+1494
+]
+},
+"sea:S57": {
+"conf": "high",
+"pos": [
+2459,
+1492
+]
+},
+"sea:S58": {
+"conf": "high",
+"pos": [
+2268,
+1625
+]
+},
+"sea:S59": {
+"conf": "high",
+"pos": [
+2566,
+1603
+]
+},
+"sea:S6": {
+"conf": "high",
+"pos": [
+2363,
+1071
+]
+},
+"sea:S60": {
+"conf": "high",
+"pos": [
+2948,
+1717
+]
+},
+"sea:S61": {
+"conf": "high",
+"pos": [
+2338,
+1220
+]
+},
+"sea:S62": {
+"conf": "high",
+"pos": [
+2425,
+698
+]
+},
+"sea:S63": {
+"conf": "high",
+"pos": [
+2396,
+1200
+]
+},
+"sea:S64": {
+"conf": "high",
+"pos": [
+2247,
+1227
+]
+},
+"sea:S65": {
+"conf": "high",
+"pos": [
+2782,
+1353
+]
+},
+"sea:S66": {
+"conf": "high",
+"pos": [
+2462,
+912
+]
+},
+"sea:S67": {
+"conf": "high",
+"pos": [
+2462,
+1005
+]
+},
+"sea:S68": {
+"conf": "high",
+"pos": [
+2702,
+1229
+]
+},
+"sea:S69": {
+"conf": "high",
+"pos": [
+2554,
+1043
+]
+},
+"sea:S7": {
+"conf": "high",
+"pos": [
+2467,
+1124
+]
+},
+"sea:S70": {
+"conf": "high",
+"pos": [
+2750,
+898
+]
+},
+"sea:S71": {
+"conf": "high",
+"pos": [
+2106,
+1683
+]
+},
+"sea:S72": {
+"conf": "high",
+"pos": [
+2157,
+1437
+]
+},
+"sea:S73": {
+"conf": "high",
+"pos": [
+2224,
+1245
+]
+},
+"sea:S74": {
+"conf": "high",
+"pos": [
+2496,
+615
+]
+},
+"sea:S75": {
+"conf": "high",
+"pos": [
+2575,
+691
+]
+},
+"sea:S76": {
+"conf": "high",
+"pos": [
+3118,
+1063
+]
+},
+"sea:S77": {
+"conf": "high",
+"pos": [
+2272,
+1710
+]
+},
+"sea:S78": {
+"conf": "high",
+"pos": [
+2585,
+1144
+]
+},
+"sea:S79": {
+"conf": "high",
+"pos": [
+2366,
+520
+]
+},
+"sea:S8": {
+"conf": "high",
+"pos": [
+2500,
+1127
+]
+},
+"sea:S9": {
+"conf": "high",
+"pos": [
+2592,
+1094
+]
+},
+"south:S1": {
+"conf": "high",
+"pos": [
+3545,
+3179
+]
+},
+"south:S10": {
+"conf": "high",
+"pos": [
+3649,
+3476
+]
+},
+"south:S11": {
+"conf": "high",
+"pos": [
+3712,
+3612
+]
+},
+"south:S12": {
+"conf": "high",
+"pos": [
+3747,
+3612
+]
+},
+"south:S13": {
+"conf": "high",
+"pos": [
+3696,
+3650
+]
+},
+"south:S14": {
+"conf": "high",
+"pos": [
+3720,
+3636
+]
+},
+"south:S15": {
+"conf": "high",
+"pos": [
+3598,
+3719
+]
+},
+"south:S16": {
+"conf": "high",
+"pos": [
+3668,
+3712
+]
+},
+"south:S17": {
+"conf": "high",
+"pos": [
+3740,
+3692
+]
+},
+"south:S18": {
+"conf": "high",
+"pos": [
+3506,
+3764
+]
+},
+"south:S19": {
+"conf": "high",
+"pos": [
+3548,
+3756
+]
+},
+"south:S2": {
+"conf": "high",
+"pos": [
+3500,
+3214
+]
+},
+"south:S20": {
+"conf": "high",
+"pos": [
+3688,
+3767
+]
+},
+"south:S21": {
+"conf": "high",
+"pos": [
+3552,
+3790
+]
+},
+"south:S22": {
+"conf": "high",
+"pos": [
+3578,
+3806
+]
+},
+"south:S23": {
+"conf": "high",
+"pos": [
+3646,
+3840
+]
+},
+"south:S24": {
+"conf": "high",
+"pos": [
+3672,
+3803
+]
+},
+"south:S25": {
+"conf": "high",
+"pos": [
+3708,
+3818
+]
+},
+"south:S26": {
+"conf": "high",
+"pos": [
+3710,
+3844
+]
+},
+"south:S27": {
+"conf": "high",
+"pos": [
+3767,
+3851
+]
+},
+"south:S28": {
+"conf": "medium",
+"pos": [
+3831,
+3258
+]
+},
+"south:S29": {
+"conf": "medium",
+"pos": [
+3890,
+3250
+]
+},
+"south:S3": {
+"conf": "high",
+"pos": [
+3620,
+3239
+]
+},
+"south:S30": {
+"conf": "medium",
+"pos": [
+3928,
+3250
+]
+},
+"south:S31": {
+"conf": "medium",
+"pos": [
+3954,
+3261
+]
+},
+"south:S32": {
+"conf": "medium",
+"pos": [
+3964,
+3284
+]
+},
+"south:S33": {
+"conf": "medium",
+"pos": [
+3805,
+3274
+]
+},
+"south:S34": {
+"conf": "medium",
+"pos": [
+3986,
+3310
+]
+},
+"south:S35": {
+"conf": "medium",
+"pos": [
+3991,
+3355
+]
+},
+"south:S36": {
+"conf": "medium",
+"pos": [
+3800,
+3296
+]
+},
+"south:S37": {
+"conf": "medium",
+"pos": [
+3797,
+3316
+]
+},
+"south:S38": {
+"conf": "medium",
+"pos": [
+3798,
+3344
+]
+},
+"south:S39": {
+"conf": "medium",
+"pos": [
+3798,
+3368
+]
+},
+"south:S4": {
+"conf": "high",
+"pos": [
+3711,
+3242
+]
+},
+"south:S40": {
+"conf": "medium",
+"pos": [
+3924,
+3465
+]
+},
+"south:S41": {
+"conf": "medium",
+"pos": [
+3992,
+3418
+]
+},
+"south:S42": {
+"conf": "medium",
+"pos": [
+3963,
+3457
+]
+},
+"south:S43": {
+"conf": "medium",
+"pos": [
+3946,
+3472
+]
+},
+"south:S44": {
+"conf": "medium",
+"pos": [
+3895,
+3465
+]
+},
+"south:S45": {
+"conf": "medium",
+"pos": [
+3862,
+3476
+]
+},
+"south:S46": {
+"conf": "medium",
+"pos": [
+3794,
+3384
+]
+},
+"south:S47": {
+"conf": "medium",
+"pos": [
+3817,
+3458
+]
+},
+"south:S48": {
+"also": [
+[
+3577,
+3750
+]
+],
+"conf": "medium",
+"pos": [
+3792,
+3430
+]
+},
+"south:S49": {
+"conf": "high",
+"pos": [
+3612,
+3329
+]
+},
+"south:S5": {
+"conf": "high",
+"pos": [
+3572,
+3311
+]
+},
+"south:S50": {
+"conf": "high",
+"pos": [
+3647,
+3808
+]
+},
+"south:S51": {
+"conf": "high",
+"pos": [
+3725,
+3876
+]
+},
+"south:S52": {
+"conf": "high",
+"pos": [
+3761,
+3926
+]
+},
+"south:S53": {
+"conf": "high",
+"pos": [
+3656,
+4032
+]
+},
+"south:S54": {
+"conf": "high",
+"pos": [
+3742,
+3724
+]
+},
+"south:S55": {
+"conf": "medium",
+"note": "key prints S55 (S51 is missing from the key); the map label S51 is used",
+"pos": [
+3725,
+3876
+]
+},
+"south:S6": {
+"conf": "high",
+"pos": [
+3577,
+3288
+]
+},
+"south:S7": {
+"conf": "high",
+"pos": [
+3516,
+3356
+]
+},
+"south:S8": {
+"conf": "high",
+"pos": [
+3708,
+3400
+]
+},
+"south:S9": {
+"conf": "high",
+"pos": [
+3520,
+3448
+]
+},
+"trades:T1": {
+"conf": "high",
+"pos": [
+3516,
+3168
+]
+},
+"trades:T10": {
+"conf": "high",
+"pos": [
+3264,
+2620
+]
+},
+"trades:T11": {
+"conf": "high",
+"pos": [
+3224,
+2668
+]
+},
+"trades:T12": {
+"conf": "high",
+"pos": [
+3256,
+2716
+]
+},
+"trades:T13": {
+"conf": "high",
+"pos": [
+3356,
+2695
+]
+},
+"trades:T14": {
+"conf": "high",
+"pos": [
+3460,
+2718
+]
+},
+"trades:T15": {
+"conf": "high",
+"pos": [
+3228,
+2749
+]
+},
+"trades:T16": {
+"conf": "high",
+"pos": [
+3262,
+2756
+]
+},
+"trades:T17": {
+"conf": "high",
+"pos": [
+3303,
+2747
+]
+},
+"trades:T18": {
+"conf": "high",
+"pos": [
+3287,
+2806
+]
+},
+"trades:T19": {
+"conf": "high",
+"pos": [
+3353,
+2755
+]
+},
+"trades:T2": {
+"conf": "high",
+"pos": [
+3202,
+2294
+]
+},
+"trades:T20": {
+"conf": "high",
+"pos": [
+3388,
+2754
+]
+},
+"trades:T21": {
+"conf": "high",
+"pos": [
+3466,
+2740
+]
+},
+"trades:T22": {
+"conf": "high",
+"pos": [
+3497,
+2737
+]
+},
+"trades:T23": {
+"conf": "high",
+"pos": [
+3367,
+2816
+]
+},
+"trades:T24": {
+"conf": "high",
+"pos": [
+3385,
+2799
+]
+},
+"trades:T25": {
+"conf": "high",
+"pos": [
+3474,
+2806
+]
+},
+"trades:T26": {
+"conf": "high",
+"pos": [
+3556,
+2761
+]
+},
+"trades:T27": {
+"conf": "high",
+"pos": [
+3538,
+2794
+]
+},
+"trades:T28": {
+"conf": "high",
+"pos": [
+3179,
+2824
+]
+},
+"trades:T29": {
+"conf": "high",
+"pos": [
+3287,
+2843
+]
+},
+"trades:T3": {
+"conf": "high",
+"pos": [
+3216,
+2388
+]
+},
+"trades:T30": {
+"conf": "high",
+"pos": [
+3336,
+2876
+]
+},
+"trades:T31": {
+"also": [
+[
+3370,
+2845
+]
+],
+"conf": "medium",
+"pos": [
+3242,
+2794
+]
+},
+"trades:T32": {
+"conf": "high",
+"pos": [
+3446,
+2843
+]
+},
+"trades:T33": {
+"conf": "high",
+"pos": [
+3485,
+2848
+]
+},
+"trades:T34": {
+"conf": "high",
+"pos": [
+3604,
+2880
+]
+},
+"trades:T35": {
+"conf": "high",
+"pos": [
+3258,
+2894
+]
+},
+"trades:T36": {
+"conf": "high",
+"pos": [
+3242,
+2956
+]
+},
+"trades:T37": {
+"conf": "high",
+"pos": [
+3314,
+2979
+]
+},
+"trades:T38": {
+"conf": "high",
+"pos": [
+3426,
+2938
+]
+},
+"trades:T39": {
+"conf": "high",
+"pos": [
+3538,
+2946
+]
+},
+"trades:T4": {
+"conf": "high",
+"pos": [
+3215,
+2406
+]
+},
+"trades:T40": {
+"conf": "high",
+"pos": [
+3574,
+2972
+]
+},
+"trades:T41": {
+"conf": "high",
+"pos": [
+3630,
+3012
+]
+},
+"trades:T42": {
+"conf": "high",
+"pos": [
+3668,
+3012
+]
+},
+"trades:T43": {
+"conf": "high",
+"pos": [
+3392,
+3138
+]
+},
+"trades:T44": {
+"conf": "high",
+"pos": [
+3411,
+3210
+]
+},
+"trades:T45": {
+"conf": "high",
+"pos": [
+3322,
+2578
+]
+},
+"trades:T46": {
+"conf": "high",
+"pos": [
+3222,
+2103
+]
+},
+"trades:T47": {
+"conf": "high",
+"pos": [
+3534,
+2752
+]
+},
+"trades:T48": {
+"conf": "high",
+"pos": [
+3692,
+2985
+]
+},
+"trades:T49": {
+"conf": "high",
+"pos": [
+3544,
+2996
+]
+},
+"trades:T5": {
+"conf": "high",
+"pos": [
+3256,
+2447
+]
+},
+"trades:T50": {
+"conf": "high",
+"pos": [
+3543,
+2836
+]
+},
+"trades:T51": {
+"conf": "high",
+"pos": [
+3265,
+2481
+]
+},
+"trades:T6": {
+"conf": "high",
+"pos": [
+3292,
+2423
+]
+},
+"trades:T7": {
+"conf": "high",
+"pos": [
+3223,
+2612
+]
+},
+"trades:T8": {
+"conf": "high",
+"pos": [
+3235,
+2588
+]
+},
+"trades:T9": {
+"conf": "high",
+"pos": [
+3332,
+2492
+]
+}
+}

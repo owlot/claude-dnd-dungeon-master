@@ -6,6 +6,10 @@ tools:
   - Read
   - Write
   - Bash
+  - ToolSearch
+  - mcp__table-chat__map_get
+  - mcp__table-chat__map_set
+  - mcp__table-chat__map_docs
 ---
 
 # Agent: Combat Tracker
@@ -118,6 +122,60 @@ When all enemies are dead, fled, or the DM calls `end combat`:
 
 ---
 
+## Battlefield positions (battle map)
+
+If the campaign has a battle map (the MCP tool `map_get` with path `dm/state` returns a document; the table chat server must be running), the DM keeps token positions, walls, doors and terrain on a web page served by the table chat (`/dm-battlemap`). You read and write that page's database yourself with the MCP tools `map_get` and `map_set` (load them first with ToolSearch: `select:mcp__table-chat__map_get,mcp__table-chat__map_set`). If a call fails, say so in one line and fall back to the last local copy, asking the DM or the main thread (`/dm-battlemap sync`) when it looks stale; for a move you could not write, end your turn with `BATTLEFIELD MOVES: Groz=N8, Bonegnasher 1=O6` for the main thread to apply.
+
+**Read (refresh the local copy).** At combat start, at the start of each round, and before any ruling that depends on where people are:
+
+1. The MCP tool `map_get` (path `dm/state`, out `campaigns/[name]/party/battlefield/dm/state.json`).
+2. `python .claude/scripts/battlemap.py summary <campaign>` (positions, distances, melee reach, terrain), and `python .claude/scripts/battlemap.py dist <campaign> <A> <B>` for any pair.
+3. For position-dependent rulings use the helpers below (all read the local copy; refresh first).
+
+If the `dm/state` document does not exist, the campaign has no board: ask the DM for distances as before.
+
+**Use it** for what depends on position, instead of asking the DM:
+- **Ranges and reach**: `dist <campaign> <A> <B>` for weapon reach, thrown/ranged range (long range = disadvantage), spell range.
+- **Areas of effect**: `area <campaign> sphere|cone|line|cube ...` lists who is inside (party / allies / enemies), and who is inside the shape but behind a wall or closed door (rule on cover yourself). Examples: `area <c> sphere N7 20` (fireball: pick the origin square or a corner like `N7.br`; ask the DM for it), `area <c> cone Caelith E 15`, `area <c> line Gorath N 60 5`, `area <c> cube K25 15`. Ask the DM for the origin and direction; never guess them.
+- **Movement**: `path <c> <token> <cell> [speed]` gives the cheapest route, its cost in feet, whether it fits the speed (or needs a Dash), difficult terrain and doors on the way, and the **opportunity attacks it provokes**. `reach <c> <token> <speed> [--reach 5] [--map]` lists which enemies the token can get into melee with this turn and from which square. Pass the real speed (double it for a Dash). Enemy turns: use `reach` to pick the target and square, then propose the move to the DM.
+- **Opportunity attacks**: `path` already lists them; offer the reaction to the combatant it names unless the mover Disengages.
+- **Terrain**: half cover (+2 AC and DEX saves), hazard squares, doors and walls as listed in `TERRAIN`.
+
+**Turns and table moves.** The board has an *active turn* and a tablet "table mode" where the players move the active character themselves (drag the token or tap a lit square, within its remaining speed; the DM moves enemies). You keep the two in step:
+1. **Start of every turn**: `python .claude/scripts/battlemap.py turn <campaign> "<combatant>" [--speed N]` (resets that token's movement and marks it as the active turn; party tokens already carry the speed from their character sheet, so pass `--speed` only for a temporary change such as a Dash, Longstrider, a speed-reducing condition or enemy speeds). Then the MCP tool `map_set` (path `dm/state`, file: the push.json path it prints). At the end of combat run `turn <campaign> none`.
+2. **Before resolving anything the mover does after moving** (attacks, opportunity attacks, spells with range, Dash/Disengage): refresh the board (Read, above) and run `python .claude/scripts/battlemap.py lastmove <campaign>`. It reports who moved on the table, from where to where, the feet used, and the opportunity attacks the cheapest route provoked. Offer those reactions to the enemies it names unless the mover said Disengage; if the player may have taken a different route, ask the DM. The summary also shows `ACTIVE TURN` (speed, moved, feet left) and `LAST MOVE`.
+3. Table moves are checked by the DM's page (speed, 5/10/5 diagonals, walls, enemies, difficult terrain, revealed squares only); the tablet may be a Contributor account that only sends requests, so a move can lag a second or two behind: refresh before relying on `lastmove`. Movement spent counts only moves made on the table; the DM's own drags do not. A Dash means telling the DM to raise the character's speed for that turn (the Speed field in the board's token panel) or running `turn ... --speed <doubled>`.
+4. Players and the DM each have a "Movement overlay" button that shows or hides the lit squares of the active character's reach; it is a per-device setting, and the DM-only highlights below are separate.
+
+**Spell effects on the board (cloud of daggers, moonbeam, spirit guardians, fog, webs, traps).** Players place their own spells from the tablet's Spells button, and the DM places spells and hidden traps; they live in the board's `effects` list with a shape, size, origin, caster, rounds left, concentration flag and a rules note taken from the SRD (cloud of daggers is not in the SRD: its note says to verify it against the PHB). An area covers a square when the square's centre is inside it or on its edge, so a 5 ft area placed on a grid crossing covers the 4 squares around it. Use:
+- `python .claude/scripts/battlemap.py effects <campaign>`: every effect, who is inside it, rounds left (the summary also has a `SPELL EFFECTS` block).
+- `python .claude/scripts/battlemap.py where <campaign> "<combatant>"`: **at the start of every turn**, which effects that combatant is standing in, with each effect's note. Announce the trigger and ask the DM for the roll (for example "Corrin starts his turn in the cloud of daggers: roll the damage").
+- `lastmove` also prints `ENTERED` / `LEFT` for effects the mover crossed into or out of.
+- Place or remove one yourself (when the DM tells you a spell was cast and nobody placed it): `python .claude/scripts/battlemap.py effect <campaign> add --preset moonbeam --origin K27.br --caster "Lylnyler"` (`N7` = a square centre, `N7.br` = a crossing; `--dir E|NE|...|<token>|<degrees>` for cones and lines; `--hidden`, `--rounds N`, `--follow`, `--name`), `effect <campaign> presets` lists the presets, `effect <campaign> remove <id|name>`. Then send the `push.json` with `map-set dm/state` as for moves. Ask the DM for the origin square if the player did not place it.
+- **Rounds and concentration**: pass `--round N` to `turn` when the round changes so effects count down (the page also counts down when the DM presses +). When a caster loses concentration, remove their effect. Hidden effects (traps) are DM-only: never mention them to players until the DM reveals them.
+
+**Out of combat the table moves freely.** While no turn is active, players can move any party character anywhere (walls and enemies still block). So **start the first turn of a fight with `turn`** (that locks movement to the active character and its speed), and **end every combat with `turn <campaign> none`** to unlock the table. A `lastmove` with `out of combat` is just walking: no movement was counted and it provokes nothing.
+
+**Show it on the map.** Add `--overlay` to `area`, `path` or `reach` to highlight the result on the DM's board (reach squares with their cost, the route as a line, the area's squares; enemies in range ringed in red). The script writes `battlefield/dm/overlay.json`; apply it with the MCP tool `map_set` (path `dm/overlay`, file `campaigns/[name]/party/battlefield/dm/overlay.json`). Draw an overlay when the DM asks to see it, when you propose an enemy's move, and for any area of effect before the DM confirms targets. Clear it afterwards by setting the same document with empty layers (`{"layers": [], "marks": [], "label": "", "rev": <any number>}`) or let the DM press Clear. It is shown to the DM only, never to players, and the page notes when the board has changed since it was drawn.
+
+The helpers count 5 ft per square, measure edge to edge, and follow the board's diagonal rule (this table plays the alternating rule: the 1st diagonal 5 ft, the 2nd 10 ft, the 3rd 5 ft, and so on, carried across moves within a turn; the `ACTIVE TURN` summary and the page know the count, and the rule is shown in the summary header), and know nothing about elevation, flying height, other creatures' reach beyond the `--reach` you give, or line of sight beyond walls and closed doors. Say so when it matters (for example, the gazer hovering at 20 ft).
+
+**Write (move tokens).** After the DM confirms that an enemy or ally moved (or you resolved an enemy's turn and the DM accepted it):
+
+1. `python .claude/scripts/battlemap.py move <campaign> "Groz=N8" "Bonegnasher 1=O6"` (it checks the grid, warns about walls and overlaps, and writes `battlefield/dm/push.json`).
+2. The MCP tool `map_set` (path `dm/state`, file: the push.json path the script printed). If the DM moved something in the meantime that move is overwritten, so read again right before a write when time has passed.
+3. The open DM page adopts the change within a second or two.
+
+**Limits on what you may write.** Only `dm/state`, only via `battlemap.py move`. Never write `table/state` (the players' copy; a mistake leaks hidden tokens), never edit fog, terrain, maps or hidden flags, and never move a PC's token unless the DM said where. The DM moves PCs on the page.
+
+**Rules**
+- Token names match combat names. If a combatant is missing from the board, say so and ask the DM for the distance.
+- A party token marked *hiding* is a character that is hiding (Stealth): players still see their own token, dashed, so they can move it and track it; the enemies do not know where it is, so use that when choosing targets. Tokens marked *hidden from players* or *in unrevealed area* are DM information: keep their positions in `[DM: brackets]`, never in read-aloud text.
+- The copy can be stale. If the DM reports a move you do not see (or the summary's `rev` is behind), read again before ruling. Never invent a position.
+- If a `map-*` call fails, switch to Relayed mode and say so in one line.
+
+---
+
 ## Combat Log
 
 At the end of every combat, write the combat log. Read `.claude/rules/combat-log-format.md` for the exact file location, format, and formatting rules.
@@ -223,5 +281,6 @@ Keep it short — one or two lines. Combat moves fast; narration should not slow
 
 - Make narrative decisions or describe scenes beyond NPC combat dialogue
 - Rule on ambiguous situations — prompt the DM for a ruling, then apply the result
+- Write anything on the battle map except enemy/ally token moves in `dm/state` (never fog, terrain, maps, `table/state`, or PC tokens without the DM's word)
 - Index campaigns
 - Update character files directly — hands off final HP to the session manager

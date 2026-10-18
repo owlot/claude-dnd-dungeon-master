@@ -35,6 +35,25 @@
   #veil { position: fixed; inset: 0; background: rgba(10,8,6,.96); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; z-index: 5; text-align: center; padding: 24px; }
   #veil button { font: bold 1.6rem Georgia, serif; padding: 20px 44px; border-radius: 18px; border: 0; background: var(--accent); color: #1b1408; }
   #veil p { max-width: 36ch; color: var(--dim); font-size: 1.15rem; margin: 0; }
+  #mapPanel { position: fixed; top: 0; right: 0; bottom: 0; width: 62vw; background: #eceff4; border-left: 3px solid var(--accent); z-index: 4; display: flex; flex-direction: column; }
+  #mapPanel iframe { flex: 1; border: 0; width: 100%; }
+  body.map-open { padding-right: calc(62vw + 16px); }
+  #mapBtn { margin: 0; }
+  /* with the map open the chat shares the screen: smaller headings and controls so more lines fit */
+  body.map-open header { padding: 6px 2px 4px; gap: 8px; }
+  body.map-open h1 { font-size: 1.05rem; }
+  body.map-open #sub { font-size: .8rem; }
+  body.map-open .replay { margin: 0; padding: 4px 10px; font-size: .75rem; }
+  body.map-open #log { gap: 8px; padding: 4px 2px 8px; }
+  body.map-open .line { max-width: 94%; padding: 8px 12px; font-size: 1rem; line-height: 1.35; border-radius: 12px; }
+  body.map-open .line small { font-size: .68rem; margin-bottom: 2px; }
+  body.map-open .empty { font-size: 1rem; }
+  body.map-open #status { min-height: 1.2em; font-size: .85rem; padding: 2px 0; }
+  body.map-open #speakers { gap: 6px; padding: 2px 0 6px; }
+  body.map-open #speakers button { min-width: 0; padding: 6px 8px; border-width: 1px; border-radius: 10px; font-size: .95rem; }
+  body.map-open #speakers button small { display: none; }
+  body.map-open #talk { height: 64px; border-radius: 16px; font-size: 1.2rem; margin-bottom: 8px; }
+  @media (max-width: 900px) { #mapPanel { width: 100vw; border-left: 0; } body.map-open { padding-right: 16px; } body.map-open > :not(#mapPanel):not(header) { visibility: hidden; } }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -47,6 +66,7 @@
 <header>
   <h1 id="who">Waiting for the DM</h1>
   <span id="sub"></span>
+  <button id="mapBtn" class="replay">🗺 Map</button>
   <button id="replayAll" class="replay" style="margin:0">▶ Replay all</button>
 </header>
 <div id="log"><div class="empty" id="empty">When the DM starts a conversation, it appears here.</div></div>
@@ -54,6 +74,7 @@
 <div id="speakers"></div>
 <button id="talk" disabled>Hold to speak</button>
 
+<div id="mapPanel" class="hidden"><iframe id="mapFrame" title="Map"></iframe></div>
 <script>
 const $ = id => document.getElementById(id);
 let members = [], speaker = localStorage.getItem('speaker') || null;
@@ -61,6 +82,12 @@ let stream = null, recorder = null, chunks = [], recStart = 0, active = false, w
 // The tablet key arrives once as ?t=... in the link; it is kept for this tab and sent with every request.
 // All URLs are relative so the page works at / (laptop) and under /<campaign>/chat/ (through the web host).
 const TKEY = (() => { const q = new URLSearchParams(location.search).get('t'); if (q) { try { sessionStorage.setItem('tkey', q); } catch (e) {} return q; } try { return sessionStorage.getItem('tkey') || ''; } catch (e) { return ''; } })();
+$('mapBtn').onclick = () => {
+  const open = $('mapPanel').classList.toggle('hidden') === false;
+  document.body.classList.toggle('map-open', open);
+  $('mapBtn').textContent = open ? '✕ Close map' : '🗺 Map';
+  if (open && !$('mapFrame').src) $('mapFrame').src = 'map/?t=' + encodeURIComponent(TKEY);
+};
 const U = path => path + (TKEY ? (path.includes('?') ? '&' : '?') + 't=' + encodeURIComponent(TKEY) : '');
 const AU = url => url ? url.replace(/^\//, '') : url;
 const player = new Audio();

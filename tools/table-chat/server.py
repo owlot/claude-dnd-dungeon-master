@@ -129,6 +129,9 @@ API_LEVEL = 9  # raise this when a page starts to need a new route; the DM page 
 # ----------------------------------------------------------------------------------------------- state and events
 
 app = FastAPI(title="Table chat")
+import map_service  # noqa: E402  (the standalone map: documents, assets and pages for the battle map and the city map)
+map_service.init(CAMP_DIR, REPO, DM_KEY, TABLE_KEY, REPO / ".claude" / "skills" / "dm-battlemap" / "combined.html")
+app.include_router(map_service.router)
 clients = {"table": set(), "dm": set()}
 conv = None  # the live conversation
 pending = None  # {"id", "party", "draft"} waiting for the DM
@@ -876,11 +879,19 @@ async def draft_reply(pend, temperature=None):
 
 
 async def run_draft(pend, temperature=None):
+    """Draft for the waiting line. Only the newest request for this line may set the draft: an older call that finishes late (the DM
+    asked again meanwhile) is dropped, and so is one for a line that is no longer waiting."""
+    pend["seq"] = my = pend.get("seq", 0) + 1
     try:
-        pend["draft"] = await draft_reply(pend, temperature)
+        text = await draft_reply(pend, temperature)
+        if pend.get("seq") != my or pending is not pend:
+            return
+        pend["draft"] = text
         if pend["draft"]:
             start_prefetch(pend["to"], pend["draft"])
     except HTTPException as exc:
+        if pend.get("seq") != my or pending is not pend:
+            return
         pend["draft"], pend["error"] = "", exc.detail
     await publish(["dm"], "pending", pend)
 

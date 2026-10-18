@@ -384,15 +384,9 @@ python scripts/bump_asset_versions.py [--check]
 
 ---
 
-## campaign_paths.py
-
-Shared path helpers (imported by `combat_status.py`, `checkpoint.py` and `load_encounter.py`, not run directly): the campaign folder, the combat state file (`party/combat_state.json`, the campaign-root file only as a legacy fallback; set `COMBAT_STATE_FILE` to test against another file) and the encounter file (`info/encounters/<slug>.md`, legacy `encounters/`).
-
----
-
 ## battlemap.py
 
-Helper for the Combat Positions battle map (`.claude/skills/dm-battlemap/SKILL.md`). Reads the local copy of the board at `campaigns/<campaign>/party/battlefield/dm/state.json`, which is refreshed from the map database with `python .claude/tools/table-chat/table_chat.py map-get dm/state --out <that file>` (the map is served by the table chat, no artifact; see `.claude/tools/table-chat/README.md`). Changes are written back with `map-set dm/state @<battlefield/dm/push.json>`, which the script prints after `move`, `turn`, `effect` and `init`.
+Helper for the Combat Positions battle map (`.claude/skills/dm-battlemap/SKILL.md`). Reads the local copy of the board at `campaigns/<campaign>/party/battlefield/dm/state.json`, which the main thread refreshes from the artifact database.
 
 ```
 python .claude/scripts/battlemap.py maps <campaign> [words...]    # map images in sources/: dm / player / shared, squares from the file name

@@ -1,0 +1,88 @@
+@col 101 1750 29
+C1|Spires of the Morning|temple, A, 3
+C2|Fair Winds|villa, B, 2
+C3|Silavene's|festhall, B, 3
+C4|The Font of Knowledge|temple, B, 4
+C5|The Halls of Justice|temple, C, 5
+C6|Blackstaff Tower|wizard's domicile, B, 4
+C7|The Cynosure|city building, A, 2
+C8|The Market Hall|guildhall, B, 2
+C9|The Singing Sword|tavern, C, 3
+C10|The Smiling Siren|festhall, C, 2
+C11|The Pampered Traveler|inn, B, 3
+C12|Mighty Manticore Tavern|tavern, C, 1
+C13|Diloontier's Apothecary|business, C, 1
+C14|Balthorr's Rare & Wondrous Treasures|business, C, 1 ##2
+C15|Tower of the Order|guildhall, B, 4
+C16|Palace Paddocks|city building, C, 2
+C17|Palace Stables|city building, C, 2
+C18|Palace Storage|warehouse, C, 2
+C19|Guard Barracks|city building, C, 2
+C20|The Crawling Spider|tavern, C, 2
+C21|House of the Fine Carvers|guildhall, B, 3
+C22|Hilmer Storage|warehouse, C, 2
+C23|Halls of Hilmer, Master Armorer|business, C, 1 ##2
+C24|The Dragon's Head Tavern|tavern, C, 2
+C25|Halambar Lutes & Harps|business, B, 2
+C26|The Golden Key Locksmiths|business, C, 2
+C27|The Master Bakers' Hall|guildhall, B, 2
+C28|Velstrode the Venturer's Row house|house, B, 3 ##2
+C29|Olmhazan's Jewels|business; B, 1
+C30|The Asp's Strike|tavern, C, 2
+C31|Rebeleigh's Elegant Headwear|business, C, 1
+@col 709 1750 29
+C32|The Elfstone Tavern|tavern, B, 2
+C33|Phalantar's Philtres & Components|business, B, 2 ##2
+C34|Pewterers' and Casters' Guildhall|guildhall, C, 1 ##2
+C35|The Blue Jack|tavern, D, 1
+C36|Guildhall of the Order|guildhall, B, 1
+C37|Aurora's Realms Shop, Waterdeep Way Catalogue Count|? ##2
+C39|Fellowship Hall|guildhall, B, 3
+C40|The Map House|guildhall, B, 2
+C41|Shyrrhr's House|row house, B, 3
+C42|Loene the Fighter's House|row house, A, 3
+C43|Mother Tathlom's House of Pleasure|festhall, B, 5 ##2
+C44|The House of Gems|guildhall, C, 2) 1
+C45|Lady Naneatha Lhaurilstar's residence|row house, B, 3 ##2
+C46|Bell Tower|city building, C, 3
+C47|Guard Smithy|city building, C, 2
+C48|The Yawning Portal|inn, C, 3
+C49|The Red-eyed Owl|tavern, D, 2
+C50|The Sleepy Slyph|tavern, C, 2
+C51|Crommer's Warehouse|warehouse, C, 4
+C52|Mirt's Mansion|villa, A, 3
+C53|The Quaffing Quaggoth|tavern, C, 1
+C54|The Sailor's Own|tavern, D, 1
+C55|Eilean's Maztican Delights|business, B, 2
+C56|Lightsinger Theater|business, A, 3
+C57|Sorynth's Silverware|business, B, 2
+C58|Jhural's Dance|festhall, C, 3
+C59|Tavern of the Flagon Dragon|tavern, C, 2
+C60|Sapphire House|rooming house/inn, B, 5
+@col 1318 1750 29
+C61|Delzimmer residence|row house, B, 4
+C62|Irlingstar residence, "Sablehearth"|row house, B, 4 ##2
+C63|Syndra Wands' Tower|wizard's domicile, B, 3 ##2
+C64|Old Knot Shop|business, B, 2
+C65|"Sharkroar" Horth Shalark's Broadsheets|business, C, 1 ##2
+C66|Pantheon Temple of the Seldarine|temple, A, 4 ##2
+C67|Peaktop Aerie|city-building, A, 5
+C68|Watching Tower|city building, A, 6
+C69|Watching Tower|city building, A, 6
+C70|Thayan Embassy|embassy, A, 4
+C71|Caladorn Cassalanter's residence|rowhouse, A, 3 ##2
+C72|New Olamn|school, A, 4
+C73|Azuth's Mug|tavern, B, 1
+C74|House of Two Hands|monastery, A, 3,
+C75|Piergeiron's Palace|city building, A, 7
+C76|Castle Waterdeep|city building, A, 10
+C77|Larissa Neathal's residence|row house, A, 2
+C78|Wyrmbones Inn|inn, A, 3
+C79|Aghairon's Tower|city building, A, 4
+C80|Tolgar Anuvien's residence|villa, A, 3
+C81|Blushing Nymph|festhall, B, 2
+C82|Haerun Mhammaster's residence|rowhouse, C, 3 ##2
+C83|Ammathair Hawkfeather's residence|house, C, 2 ##2
+C84|Nurneene's Marvelous Masks|business, C, 4
+C85|The Curious Past|business, B, 2
+C86|Paethier's Pipeweed|business, B, 2

@@ -1,0 +1,83 @@
+# ward sea ; @col x y pitch ; entry CODE|name|detail ; trailing " ##2" = name wraps onto 2 lines
+@col 101 566 21
+S1|Sated Satyr|tavern, C, 2
+S2|Wyvern's Rest|inn, C, 2
+S3|Selchoun's Sundries|business, B, 2
+S4|Golden Harp Inn|inn, B, 2
+S5|The Shrines of Nature|temple, B, 2s
+S6|Emveolstone Villa|noble villa, A, 2s & 3s
+S7|Hiilgauntlet Villa|noble villa, A, 3s
+S8|The Blue Alley|wizard's domicile, C, 1
+S9|Gauntyl Villa|noble villa, A, 1s & 2s
+S10|The Temple of Beauty|temple, A, 3
+S11|Brokengulf Villa|noble villa, A, 4s & 3s
+S12|Raventree Villa|noble villa, A, 3s & 2s
+S13|Rosznar Villa|noble villa, A, 5s & 2s
+S14|Jhansczil Villa|noble villa, A, 1s & 3s
+S15|Naingate|wizard's domicile, B, 4
+S16|Melshimber' Villa|noble villa, A, 4s & 5s
+S17|Ilitul Villa|noble villa, A, 2s
+S18|Aurora's Realms Shop, Singing Dolphin Catalog Counter|business, B, 1 ##2
+S19|The Tower of Luck|temple, A, 2s & 3s
+S20|Wavesilver Villa|noble villa, A, 2s & 4s
+S21|The House of Wonder|temple, A, 5s
+S22|Eltorchul Villa|noble villa, A, 1s & 3s
+S23|Nesher Villa|noble villa, A, 1s & 2s
+S24|Gundwynd Villa|noble villa, A, 2s & 3s
+S25|Tessalar's Tower|wizard's domicile, B, 4s
+S26|Artemel Villa|noble villa, A, 2s
+@col 709 566 21
+S27|Ammakyl Villa|noble villa, A, 1s & 2s
+S28|Silmerhelve Villa|noble villa, A, 3s
+S29|Ruldegost Villa|noble villa, A, 3s & 4s
+S30|The Dragon Tower of Maaril|wizard's domicile, A, 4s
+S31|Husteem Villa|noble villa, A, 3s & 4s
+S32|Zulpair Villa|noble villa, A, 3s
+S33|Eirontalar Villa|noble villa, A, 2s
+S34|Tesper Villa, "Tespergates"|noble villa, A, 2s & 3s
+S35|Irlingstar Villa|noble villa, A, 3s & 4s
+S36|Manthar Villa|noble villa, A, 1s & 3s
+S37|The Fiery Flagon|tavern, B, 1s
+S38|The House of Inspired Hands|temple, B, 3s
+S39|Dacer's Inn|inn, B, 3s
+S40|Ilzimmer Villa|noble villa, A, 1s & 2s
+S41|The Ship's Wheel|tavern, C, 2
+S42|The Pilgrim's Rest|inn, B, 3
+S43|The Wandering Wemic|inn, B, 3
+S44|Tchazzam Villa|noble villa, A, 1s & 2s
+S45|Maerghoun's Inn|inn, B, 3
+S46|Urmbrusk Villa|noble villa, A, 2s & 3s
+S47|Assumbar Villa|noble villa, A, 1s & 3s
+S48|Cassalanter-Villa|noble villa, A, 3s & 4s
+S49|Thongolir Villa|noble villa, A, 1s & 2s
+S50|Eagleshield Villa|noble villa, A, 2s & 4s
+S51|Dezlentyr Villa|noble villa, A, 2s & 4s
+S52|Belabranta Villa|noble villa;, A, 3s & 5s
+S53|Bladesemmer Villa|noble villa, A, 1s & 3s
+@col 1318 566 21
+S54|The House of Purple Silks|festhall, B, 4
+S55|Gounar's Tavern|tavern, B, 2
+S56|The House of the Moon|temple, A, 4
+S57|Moonstar Villa|noble villa, A, 2s & 4s
+S58|The House of Heroes|temple, A, 3
+S59|The Broken Lance|tavern, C, 1
+S60|Halazar's Fine Gems|business, B, 2
+S61|The Silken Slyph|tavern/inn, A, 4
+S62|Gerin's Breads|business, B, 2
+S63|Melvar's Chapbooks and Folios|business, B, 2
+S64|Velatha's Delights|business, B, 2
+S65|Tammerbund's Glasswares|business, B, 3
+S66|Mystra's Arms|asylum, A, 6
+S67|Furjur the Flippant's residence|house, A, 3
+S68|Hlethvagi Anteos's residence|villa, A, 5
+S69|Stagdown Manse|villa, A, 3
+S70|Heroes' Garden|city building, n/a
+S71|Seaseyes Tower|city building, A, 5
+S72|West Gate|city building, A, 3
+S73|Seawatch Tower|city building, A, 5
+S74|North Tower, "The Trolltower"|city building, A, 4
+S75|Armory|city building, A, 3
+S76|High Flagon Gambling House|business, B, 3
+S77|Field of Triumph|city building, A, 5
+S78|Myrna Cassalanter's residence|house, A, 2
+S79|Trollfort|city building, A, 4

@@ -1,0 +1,17 @@
+@col 4131 2762 29
+CD1|Roads' End|vault, C, 1
+CD2|The House of the Homeless|tomb, C, 1
+CD3|Ahghairon's Statue|tomb, A, 1
+CD4|Merchants' Rest|tomb, B, 1
+CD5|Warriors' Monument|tomb, B, 1
+@col 4741 2762 29
+CD6|Lords' Respite|tomb, A, 1
+CD7|The Hall of the Sages|tomb, B, 1
+CD8|The Hall of Heroes|tomb, A, 1
+CD9|Mariners' Rest|tomb, C, 1
+CD10|Deepwinter Vault|tomb, B, 1
+@col 5349 2762 29
+CD11|Watchway Tower|city building, A, 4,
+CD12|Guard Tower|city building, A, 4
+CD13|Beacon Tower|city building, A, 7
+CD14|Sultlue Vault|tomb, B, 1

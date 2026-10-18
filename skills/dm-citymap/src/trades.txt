@@ -1,0 +1,54 @@
+@col 4131 1823 29
+T1|The Underdark|tavern, C, 2
+T2|Khammeral's Coins|business, C, 1
+T3|Inn of the Dripping Dagger|inn, B, 4
+T4|The Riven Shield Shop|business, B, 2
+T5|Myrmith Splendors' residence|row house, B, 2
+T6|Mhair's Tower|wizard's domicile, A, 5
+T7|Saern's Fine Swords|business, B, 2
+T8|Gondalim's|inn, B, 3
+T9|Dunblast Roofing Company|business, C, 2
+T10|Citadel of the Arrow|guildhall, B, 3
+T11|Costumers' Hall|guildhall, B, 2
+T12|Thentavva's Boots|business, C, 1
+T13|Maelstrom's Notch|inn, B, 2
+T14|The League Office|guildhall, C, 1
+T15|The Unicorn's Horn|inn, B, 6
+T16|Aurora's Realms Shop, Street of Tusks Catalogue Counter|business, B, 4 ##2
+T17|Orsabbas's Fine Imports|business, C, 3
+T18|Riautar's Weaponry|business, C, 2
+@col 4741 1823 29
+T19|The House of Song|guildhall, B, 2
+T20|Patient Fingers Fine work|business, C, 2
+T21|League of Basketmakers & Wickerworkers Storage|warehouse, C ##2
+T22|The House of Cleanliness|guildhall, C, 1
+T23|Belmonder's Meats|business, C, 1
+T24|Thond Glass and Glazing Shop|business, C, 2
+T25|The Zoarstar|guildhall, temple, B, 3
+T26|The Old Guildhall|guildhall, C, 3
+T27|The House of Textiles|guildhall, B, 2
+T28|Golden Horn Gambling House|festhall, B, 3
+T29|The House of Light|guildhall, B, 3
+T30|House of Light Storage|warehouse, C, 2
+T31|Stationers'Hall|guildhall, C, 2
+T32|The Gentle Rest|inn, B, 5
+T33|The Gentle Rest Stables|business, C, 2
+T34|The Guild Paddock|guildhall, G?, 2
+T35|Meiroth's Fine Silks|business, B, 3
+T36|The Bowels of the Earth|tavern, C, 2
+@col 5349 1823 29
+T37|Cobblers' and Corvisers' House|guildhall, C, 2
+T38|The Plinth|city building/temple, A, 6
+T39|Felzoun's Folly|tavern, C, 3
+T40|Surtlan's Metalwares|business, C, 1
+T41|Scirkhel Wands' residence|row house, B, 3
+T42|Wheel Hall|guildhall, C, 2
+T43|The Gray Serpent|inn, C, 3
+T44|Blackstone House|row house, B, 4
+T45|Rejviik's Mortuary|business, A, 3
+T46|Monastery of the Sun|temple, A, 4
+T47|Huulfor Manor|business, A, 3
+T48|River Gate|city building, A, 4
+T49|The Singed Bolt|tavern, C, 2
+T50|Zeltabbar Iliphar's residence|row house, B, 3
+T51|Henndever's Coffins and Coffers|business, B, 2

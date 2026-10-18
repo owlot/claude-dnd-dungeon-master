@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Battle map grid overlay</title>
+<style>
+  html, body { margin: 0; background: #111; }
+  canvas { display: block; }
+</style>
+<canvas id="c"></canvas>
+<script>
+// Draws a map with a labelled square grid so cell coordinates can be read off a screenshot.
+// Query: img=<path or url>  cols=22  rows=30  [scale=1 ox=0 oy=0]  [c0=1 c1=22 r0=1 r1=10]  (1-based, inclusive)
+// Same geometry as the Combat Positions page: the image is cols*scale squares wide, shifted by ox/oy squares.
+(function () {
+  var q = new URLSearchParams(location.search);
+  var cols = +q.get("cols") || 20, rows = +q.get("rows") || 14;
+  var scale = parseFloat(q.get("scale") || "1"), ox = parseFloat(q.get("ox") || "0"), oy = parseFloat(q.get("oy") || "0");
+  var c0 = (+q.get("c0") || 1) - 1, c1 = (+q.get("c1") || cols) - 1, r0 = (+q.get("r0") || 1) - 1, r1 = (+q.get("r1") || rows) - 1;
+  var cv = document.getElementById("c"), cx = cv.getContext("2d");
+  function col(i) { var s = ""; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+  var im = new Image();
+  im.onload = function () {
+    var nc = c1 - c0 + 1, nr = r1 - r0 + 1, lab = 30;
+    var cell = Math.floor((window.innerWidth - lab) / nc);
+    cv.width = lab + nc * cell; cv.height = lab + nr * cell;
+    cx.fillStyle = "#111"; cx.fillRect(0, 0, cv.width, cv.height);
+    var sq = (im.naturalWidth / (cols * scale));          // image pixels per grid square
+    var sx = (c0 - ox) * sq, sy = (r0 - oy) * sq;         // source crop origin in image pixels
+    cx.drawImage(im, sx, sy, nc * sq, nr * sq, lab, lab, nc * cell, nr * cell);
+    cx.font = "bold " + Math.max(10, Math.round(cell / 5)) + "px monospace";
+    for (var x = 0; x <= nc; x++) {
+      cx.strokeStyle = (x + c0) % 5 === 0 ? "rgba(255,40,40,.95)" : "rgba(255,255,0,.7)"; cx.lineWidth = (x + c0) % 5 === 0 ? 2 : 1;
+      cx.beginPath(); cx.moveTo(lab + x * cell, lab); cx.lineTo(lab + x * cell, cv.height); cx.stroke();
+    }
+    for (var y = 0; y <= nr; y++) {
+      cx.strokeStyle = (y + r0) % 5 === 0 ? "rgba(255,40,40,.95)" : "rgba(255,255,0,.7)"; cx.lineWidth = (y + r0) % 5 === 0 ? 2 : 1;
+      cx.beginPath(); cx.moveTo(lab, lab + y * cell); cx.lineTo(cv.width, lab + y * cell); cx.stroke();
+    }
+    cx.textBaseline = "top";
+    for (y = 0; y < nr; y++) for (x = 0; x < nc; x++) {
+      var t = col(c0 + x) + (r0 + y + 1), px = lab + x * cell + 2, py = lab + y * cell + 1;
+      cx.lineWidth = 3; cx.strokeStyle = "rgba(0,0,0,.85)"; cx.strokeText(t, px, py);
+      cx.fillStyle = "#fff"; cx.fillText(t, px, py);
+    }
+    cx.fillStyle = "#fff"; cx.textBaseline = "middle"; cx.textAlign = "center"; cx.font = "bold 14px monospace";
+    for (x = 0; x < nc; x++) cx.fillText(col(c0 + x), lab + x * cell + cell / 2, lab / 2);
+    for (y = 0; y < nr; y++) cx.fillText(String(r0 + y + 1), lab / 2, lab + y * cell + cell / 2);
+    document.title = "overlay ready " + col(c0) + (r0 + 1) + "-" + col(c1) + (r1 + 1);
+  };
+  im.onerror = function () { document.title = "overlay failed to load image"; };
+  im.src = q.get("img");
+})();
+</script>
