@@ -346,7 +346,8 @@ def parse_conditions(content: str) -> list[str]:
             if line.startswith("## "):
                 break
             notes_section += line + "\n"
-    m = re.search(r"[Cc]onditions?[:\s]+(.+)", notes_section)
+    # Only a dedicated "Conditions: ..." line counts, never prose mentioning the word.
+    m = re.search(r"^[ \t]*(?:\*\*)?Conditions?:(?:\*\*)?[ \t]*(.+)$", notes_section, re.MULTILINE | re.IGNORECASE)
     if m:
         raw = m.group(1).strip().rstrip(".")
         none_like = {"none", "—", "-", "", "n/a", "normal", "clear"}
@@ -369,7 +370,7 @@ def set_conditions(content: str, conditions: list[str]) -> str:
     cond_str = ", ".join(conditions) if conditions else "None"
 
     # Try to replace existing Conditions: line
-    cond_line_pattern = re.compile(r"([Cc]onditions?[:\s]+).+", re.MULTILINE)
+    cond_line_pattern = re.compile(r"^([ \t]*Conditions?:[ \t]*).+$", re.MULTILINE | re.IGNORECASE)
     m = cond_line_pattern.search(content)
     if m:
         new_line = m.group(1) + cond_str

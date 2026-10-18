@@ -21,11 +21,8 @@ import shutil
 import sys
 from datetime import datetime
 
-BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "campaigns")
-
-
-def campaign_dir(campaign: str) -> str:
-    return os.path.join(BASE, campaign)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from campaign_paths import BASE, campaign_dir, combat_state_path  # noqa: E402
 
 
 def checkpoints_dir(campaign: str) -> str:
@@ -45,7 +42,7 @@ def files_to_snapshot(campaign: str) -> list[str]:
                 files.append(os.path.join(char_dir, fname))
 
     # combat_state.json if it exists
-    combat_state = os.path.join(camp_dir, "combat_state.json")
+    combat_state = os.path.abspath(combat_state_path(campaign))
     if os.path.exists(combat_state):
         files.append(combat_state)
 
