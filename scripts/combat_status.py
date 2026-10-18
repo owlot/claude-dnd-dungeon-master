@@ -29,19 +29,16 @@ import sys
 
 # ── path helpers ──────────────────────────────────────────────────────────────
 
-BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "campaigns")
-
-
-def campaign_dir(campaign: str) -> str:
-    return os.path.join(BASE, campaign)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from campaign_paths import BASE, campaign_dir, combat_state_path, encounter_file  # noqa: E402
 
 
 def state_path(campaign: str) -> str:
-    return os.path.join(campaign_dir(campaign), "combat_state.json")
+    return combat_state_path(campaign)
 
 
 def encounter_path(campaign: str, encounter: str) -> str:
-    return os.path.join(campaign_dir(campaign), "encounters", f"{encounter}.md")
+    return encounter_file(campaign, encounter)
 
 
 # ── markdown table parser ─────────────────────────────────────────────────────
@@ -137,6 +134,11 @@ def pad(text: str, width: int) -> str:
     return text.ljust(width)
 
 
+def is_pc(c: dict) -> bool:
+    """The combat-tracker writes side: party|enemy; older files and --init write type: pc|enemy. Accept both."""
+    return c.get("type") == "pc" or (c.get("type") is None and c.get("side") == "party")
+
+
 def render_combat(state: dict) -> str:
     combatants: list[dict] = state["combatants"]
     round_num: int = state.get("round", 1)
@@ -172,7 +174,7 @@ def render_combat(state: dict) -> str:
     for c in ordered:
         active_marker = "►" if c["name"] == active_name else " "
         init_tag = f"[{c['initiative']}]".ljust(4)
-        ctype = "PC" if c["type"] == "pc" else "Enemy"
+        ctype = "PC" if is_pc(c) else "Enemy"
         name_field = f"{c['name']} ({ctype})"
 
         hp_c = c["hp_current"]
@@ -185,7 +187,7 @@ def render_combat(state: dict) -> str:
         conditions = c.get("conditions", [])
         death = c.get("death_saves", {"successes": 0, "failures": 0})
         if hp_c <= 0:
-            if c["type"] == "pc":
+            if is_pc(c):
                 s = death.get("successes", 0)
                 f = death.get("failures", 0)
                 status = f"UNCONSCIOUS ({s}S/{f}F)"
@@ -372,7 +374,7 @@ def cmd_update(campaign: str, patch_str: str) -> None:
             c = combatants[idx]
             # PCs at 0 HP are UNCONSCIOUS — they still get death save turns
             # Enemy at 0 HP is dead — skip
-            if c["type"] == "enemy" and c["hp_current"] <= 0:
+            if not is_pc(c) and c["hp_current"] <= 0:
                 continue
             state["active_index"] = idx
             # Wrap round
@@ -422,7 +424,7 @@ def cmd_display(campaign: str) -> None:
 def main() -> None:
     args = sys.argv[1:]
 
-    if len(args) < 2:
+    if len(args) < 1:
         print(__doc__)
         sys.exit(1)
 
@@ -431,7 +433,10 @@ def main() -> None:
     if not os.path.isdir(campaign_dir(campaign)):
         sys.exit(f"Error: campaign directory not found: {campaign_dir(campaign)}")
 
-    if args[1] == "--init":
+    if len(args) == 1:
+        cmd_display(campaign)
+
+    elif args[1] == "--init":
         if len(args) < 3:
             sys.exit("Error: --init requires an encounter name.")
         cmd_init(campaign, args[2])

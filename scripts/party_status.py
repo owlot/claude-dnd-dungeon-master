@@ -110,7 +110,8 @@ def parse_character_file(filepath: str) -> dict:
             notes_section += line + "\n"
 
     # Look for Condition: or Conditions: in notes
-    cond_match = re.search(r"[Cc]onditions?[:\s]+(.+)", notes_section)
+    # Only a line that starts with the label counts; "one stated condition: ..." in prose does not
+    cond_match = re.search(r"^[\s>*-]*\**[Cc]onditions?\**\s*:\s*\**\s*(.+)", notes_section, re.MULTILINE)
     if cond_match:
         raw = cond_match.group(1).strip().rstrip(".")
         none_like = {"none", "—", "-", "", "n/a", "normal", "clear"}
