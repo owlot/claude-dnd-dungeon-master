@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>At the table</title>
+<style>
+  :root { --bg:#14110f; --panel:#1f1a16; --ink:#efe6d8; --dim:#a39786; --accent:#d9a441; --npc:#2a2118; --party:#1a2430; --danger:#c0492f; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-family: Georgia, "Times New Roman", serif; }
+  body { display: flex; flex-direction: column; padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+  header { padding: 14px 4px 8px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  h1 { font-size: clamp(1.4rem, 4vw, 2.1rem); margin: 0; letter-spacing: .02em; }
+  #who { color: var(--accent); }
+  #sub { color: var(--dim); font-size: 1rem; }
+  #log { flex: 1; overflow-y: auto; padding: 8px 2px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .line { max-width: 88%; padding: 12px 16px; border-radius: 14px; font-size: clamp(1.1rem, 2.6vw, 1.5rem); line-height: 1.4; }
+  .line small { display: block; color: var(--dim); font-size: .8rem; margin-bottom: 4px; letter-spacing: .06em; text-transform: uppercase; }
+  .party { align-self: flex-end; background: var(--party); }
+  .npc { align-self: flex-start; background: var(--npc); border-left: 4px solid var(--accent); }
+  .narrator { align-self: center; max-width: 80%; background: transparent; color: var(--dim); font-style: italic; text-align: center; border: 1px dashed #4a3d2f; }
+  .replay { display: block; margin-top: 8px; padding: 6px 14px; border-radius: 10px; border: 1px solid #4a3d2f; background: transparent; color: var(--dim); font: inherit; font-size: .8rem; touch-action: manipulation; }
+  .empty { margin: auto; text-align: center; color: var(--dim); font-size: 1.3rem; max-width: 30ch; }
+  #status { min-height: 1.6em; text-align: center; color: var(--dim); font-size: 1.1rem; padding: 4px 0; }
+  #speakers { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 6px 0 12px; }
+  #speakers button { flex: 1 1 0; min-width: 120px; padding: 14px 10px; border-radius: 14px; border: 2px solid #4a3d2f; background: var(--panel);
+                     color: var(--ink); font: 600 clamp(1.05rem, 2.6vw, 1.4rem) Georgia, serif; touch-action: manipulation; }
+  #speakers button.on { background: var(--accent); color: #1b1408; border-color: var(--accent); }
+  #speakers button small { display: block; font-weight: 400; font-size: .72em; opacity: .75; }
+  #talk { width: 100%; height: clamp(120px, 22vh, 210px); border: 0; border-radius: 24px; background: var(--accent); color: #1b1408;
+          font: bold clamp(1.5rem, 4vw, 2.3rem) Georgia, serif; touch-action: none; user-select: none; -webkit-user-select: none;
+          -webkit-touch-callout: none; margin-bottom: 14px; }
+  #talk[disabled] { background: #3a322a; color: var(--dim); }
+  #talk.rec { background: var(--danger); color: #fff; }
+  #veil { position: fixed; inset: 0; background: rgba(10,8,6,.96); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; z-index: 5; text-align: center; padding: 24px; }
+  #veil button { font: bold 1.6rem Georgia, serif; padding: 20px 44px; border-radius: 18px; border: 0; background: var(--accent); color: #1b1408; }
+  #veil p { max-width: 36ch; color: var(--dim); font-size: 1.15rem; margin: 0; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="veil">
+  <h1>At the table</h1>
+  <p>Tap once to turn on sound and the microphone. Then hold the big button to speak to whoever the DM puts in front of you.</p>
+  <button id="begin">Tap to start</button>
+</div>
+<header>
+  <h1 id="who">Waiting for the DM</h1>
+  <span id="sub"></span>
+  <button id="replayAll" class="replay" style="margin:0">▶ Replay all</button>
+</header>
+<div id="log"><div class="empty" id="empty">When the DM starts a conversation, it appears here.</div></div>
+<div id="status"></div>
+<div id="speakers"></div>
+<button id="talk" disabled>Hold to speak</button>
+
+<script>
+const $ = id => document.getElementById(id);
+let members = [], speaker = localStorage.getItem('speaker') || null;
+let stream = null, recorder = null, chunks = [], recStart = 0, active = false, waiting = false, speaking = false;
+// The tablet key arrives once as ?t=... in the link; it is kept for this tab and sent with every request.
+// All URLs are relative so the page works at / (laptop) and under /<campaign>/chat/ (through the web host).
+const TKEY = (() => { const q = new URLSearchParams(location.search).get('t'); if (q) { try { sessionStorage.setItem('tkey', q); } catch (e) {} return q; } try { return sessionStorage.getItem('tkey') || ''; } catch (e) { return ''; } })();
+const U = path => path + (TKEY ? (path.includes('?') ? '&' : '?') + 't=' + encodeURIComponent(TKEY) : '');
+const AU = url => url ? url.replace(/^\//, '') : url;
+const player = new Audio();
+player.preload = 'auto';
+
+function speakerName() { const m = members.find(x => x.slug === speaker); return m ? m.name.split(' ')[0] : speaker === 'party' ? 'everyone' : ''; }
+function renderSpeakers() {
+  const box = $('speakers'); box.replaceChildren();
+  [...members, { slug: 'party', name: 'Everyone', short: 'the party together' }].forEach(m => {
+    const b = document.createElement('button'); b.className = m.slug === speaker ? 'on' : '';
+    b.append(document.createTextNode(m.name.split(' ')[0]));
+    const sm = document.createElement('small'); sm.textContent = m.short; b.append(sm);
+    b.onclick = () => { speaker = m.slug; try { localStorage.setItem('speaker', speaker); } catch (e) {} renderSpeakers(); refreshButton(); };
+    box.append(b);
+  });
+}
+function loadMembers() {
+  fetch(U('api/pcs')).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(list => {
+    if (!Array.isArray(list)) throw new Error('unexpected answer');
+    members = list;
+    if (speaker && speaker !== 'party' && !members.some(m => m.slug === speaker)) speaker = null;
+    if ($('status').textContent.startsWith('Could not load')) setStatus('');
+    renderSpeakers(); refreshButton();
+  }).catch(() => {
+    renderSpeakers(); refreshButton();   // at least "Everyone" is there
+    setStatus('Could not load the characters. The DM may need to restart the table chat server.');
+    setTimeout(loadMembers, 4000);
+  });
+}
+loadMembers();
+function setStatus(t) { $('status').textContent = t || ''; }
+function refreshButton() {
+  const b = $('talk');
+  b.disabled = !(active && !waiting && !speaking && stream && speaker);
+  if (!stream) b.textContent = 'Microphone not ready';
+  else if (!active) b.textContent = 'Waiting for the DM';
+  else if (!speaker) b.textContent = 'First tap who is speaking';
+  else if (waiting) b.textContent = 'The DM is thinking…';
+  else if (speaking) b.textContent = 'Listen…';
+  else if (!b.classList.contains('rec')) b.textContent = 'Hold to speak as ' + speakerName();
+}
+let shownLines = [];
+const isMine = l => l.who === 'party' && l.speaker && l.speaker !== 'party';
+async function ensureAudio(l) {
+  if (l.audio || !isMine(l)) return l.audio || null;
+  const r = await fetch(U('api/linevoice'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: l.id }) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.detail);
+  l.audio = j.audio; return l.audio;
+}
+function playUrl(url) {
+  return new Promise(res => {
+    const done = () => { player.removeEventListener('ended', done); player.removeEventListener('error', done); res(); };
+    player.addEventListener('ended', done); player.addEventListener('error', done);
+    speaking = true; refreshButton();
+    player.src = AU(url); player.play().catch(done);
+  });
+}
+function addLine(l) {
+  $('empty')?.remove();
+  shownLines.push(l);
+  const d = document.createElement('div');
+  d.className = 'line ' + (l.who === 'party' ? 'party' : l.who === 'narrator' ? 'narrator' : 'npc');
+  d.dataset.id = l.id || '';
+  const s = document.createElement('small'); s.textContent = l.name;
+  const t = document.createElement('span'); t.textContent = l.text;
+  d.append(s, t);
+  if (l.audio || isMine(l)) {
+    const first = l.name.split(' ')[0];
+    const b = document.createElement('button'); b.className = 'replay'; b.textContent = l.audio ? '▶ Replay' : '▶ Play in ' + first + "'s voice";
+    b.onclick = async () => {
+      if (!l.audio) {
+        b.disabled = true; b.textContent = 'Making the voice…';
+        try { await ensureAudio(l); } catch (e) { b.disabled = false; b.textContent = '▶ Play in ' + first + "'s voice"; setStatus('Could not make the voice: ' + e.message); return; }
+        b.disabled = false; b.textContent = '▶ Replay';
+      }
+      await playUrl(l.audio); speaking = false; refreshButton();
+    };
+    d.append(b);
+  }
+  $('log').append(d); $('log').scrollTop = $('log').scrollHeight;
+}
+let replaying = false;
+async function replayAll() {
+  const btn = $('replayAll');
+  if (replaying) { replaying = false; player.pause(); player.dispatchEvent(new Event('ended')); return; }
+  replaying = true; btn.textContent = '■ Stop';
+  for (const l of shownLines.slice()) {
+    if (!replaying) break;
+    try { const url = await ensureAudio(l); if (url) { setStatus(l.name + '…'); await playUrl(url); } } catch (e) { setStatus('Skipped a line: ' + e.message); }
+  }
+  replaying = false; speaking = false; btn.textContent = '▶ Replay all'; setStatus(''); refreshButton();
+}
+function renderState(s) {
+  // a new conversation starts with nobody chosen: the party picks who is speaking
+  if (s.active && s.cid && s.cid !== localStorage.getItem('cid')) {
+    try { localStorage.setItem('cid', s.cid); localStorage.removeItem('speaker'); } catch (e) {}
+    speaker = null; renderSpeakers();
+  }
+  active = !!s.active; waiting = !!s.waiting;
+  $('who').textContent = active ? 'Talking to ' + s.npc : 'Waiting for the DM';
+  $('sub').textContent = active ? ((s.also && s.also.length) ? 'also here: ' + s.also.join(', ') : 'in conversation') : '';
+  $('log').replaceChildren(); shownLines = [];
+  if (active && s.lines.length) s.lines.forEach(addLine);
+  else { const e = document.createElement('div'); e.className = 'empty'; e.id = 'empty'; e.textContent = active ? 'Hold the button and speak.' : 'When the DM starts a conversation, it appears here.'; $('log').append(e); }
+  refreshButton();
+}
+
+// ---- sound and microphone, unlocked by the first tap
+$('begin').onclick = async () => {
+  try {
+    player.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+    await player.play().catch(() => {});
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+    $('veil').classList.add('hidden');
+    try { await navigator.wakeLock?.request('screen'); } catch (e) {}
+  } catch (e) {
+    $('veil').querySelector('p').textContent = 'The microphone was blocked (' + (e.name || e) + '). Open this page over https and allow the microphone, then tap again.';
+    return;
+  }
+  setStatus(''); refreshButton();
+};
+
+// ---- hold to speak
+function pickMime() {
+  for (const m of ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']) if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+function startRec(e) {
+  e.preventDefault();
+  if ($('talk').disabled || recorder) return;
+  const mime = pickMime();
+  recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+  chunks = [];
+  recorder.ondataavailable = ev => { if (ev.data.size) chunks.push(ev.data); };
+  recorder.onstop = send;
+  recorder.start();
+  recStart = performance.now();
+  $('talk').classList.add('rec'); $('talk').textContent = 'Listening… let go when done';
+}
+function stopRec(e) {
+  e && e.preventDefault();
+  if (!recorder) return;
+  const r = recorder; recorder = null;
+  if (r.state !== 'inactive') r.stop();
+  $('talk').classList.remove('rec'); refreshButton();
+}
+async function send() {
+  const dur = performance.now() - recStart;
+  const type = (chunks[0] && chunks[0].type) || 'audio/webm';
+  const blob = new Blob(chunks, { type });
+  chunks = [];
+  if (dur < 600) { setStatus('Too short: hold the button while you speak.'); return; }
+  const ext = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+  const fd = new FormData(); fd.append('audio', blob, 'speech.' + ext); fd.append('speaker', speaker);
+  setStatus('Sending…');
+  try {
+    const r = await fetch(U('api/utterance'), { method: 'POST', body: fd });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); setStatus(j.detail || 'Something went wrong.'); }
+  } catch (e) { setStatus('Could not reach the table server.'); }
+}
+const talk = $('talk');
+talk.addEventListener('pointerdown', startRec);
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => talk.addEventListener(ev, stopRec));
+talk.addEventListener('contextmenu', e => e.preventDefault());
+
+// ---- live updates
+const es = new EventSource(U('events?role=table'));
+es.addEventListener('state', e => renderState(JSON.parse(e.data)));
+es.addEventListener('line', e => { addLine(JSON.parse(e.data)); setStatus('The DM is thinking…'); });
+es.addEventListener('waiting', e => { waiting = JSON.parse(e.data).waiting; refreshButton(); });
+es.addEventListener('status', e => setStatus(JSON.parse(e.data).text));
+es.addEventListener('reply', e => {
+  const l = JSON.parse(e.data); addLine(l); waiting = false;
+  if (l.audio) {
+    speaking = true; refreshButton(); setStatus(l.name + ' is speaking…');
+    player.src = AU(l.audio); player.play().catch(() => { speaking = false; setStatus('Tap the screen to hear the reply.'); refreshButton(); });
+  } else { setStatus(''); refreshButton(); }
+});
+player.onended = player.onerror = () => { speaking = false; setStatus(''); refreshButton(); };
+es.addEventListener('stop', () => { player.pause(); speaking = false; setStatus(''); refreshButton(); });
+let poll = null, shown = '';
+async function pollState() {
+  try { const s = await (await fetch(U('api/public'))).json(); const key = JSON.stringify([s.cid, (s.lines || []).length, s.waiting]); if (key !== shown) { shown = key; renderState(s); } } catch (e) {}
+}
+es.onerror = () => { setStatus('Reconnecting…'); if (!poll) poll = setInterval(pollState, 3000); };
+es.onopen = () => { if ($('status').textContent === 'Reconnecting…') setStatus(''); if (poll) { clearInterval(poll); poll = null; } };
+$('replayAll').onclick = replayAll;
+refreshButton();
+</script>
+</body>
+</html>

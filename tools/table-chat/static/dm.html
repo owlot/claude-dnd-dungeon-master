@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DM: table chat</title>
+<style>
+  :root { --bg:#12151a; --panel:#1b2028; --line:#2b3340; --ink:#e7ebf0; --dim:#8c97a6; --accent:#6fb3ff; --ok:#5fcf80; --bad:#ef6b5b; --warn:#e6b450; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+  main { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  h2 { margin: 0 0 10px; font-size: 1rem; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); }
+  label { display: block; margin: 10px 0 4px; color: var(--dim); font-size: .85rem; }
+  select, input, textarea { width: 100%; background: #0f1318; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; }
+  textarea { min-height: 72px; resize: vertical; }
+  button { background: #2a3442; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 9px 14px; font: inherit; cursor: pointer; }
+  button.primary { background: var(--accent); color: #07121f; border-color: var(--accent); font-weight: 600; }
+  button.danger { background: #3a1f1c; border-color: #6b2f29; }
+  button:disabled { opacity: .45; cursor: default; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .health span { margin-right: 14px; } .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--dim); margin-right: 5px; }
+  .ok { background: var(--ok); } .bad { background: var(--bad); }
+  #transcript { max-height: 38vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .l { padding: 8px 10px; border-radius: 8px; background: #0f1318; } .l b { color: var(--accent); font-weight: 600; } .l.npc b { color: var(--warn); }
+  .err { color: var(--bad); } .note { color: var(--dim); font-size: .85rem; }
+  .end input, .end textarea { margin-bottom: 4px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="stale" class="hidden" style="background:#3a1f1c;border-bottom:1px solid #6b2f29;color:#ffb4a8;padding:10px 16px;font-weight:600">This page is newer than the table chat server that is running (some buttons will answer "Not Found"). Stop the server with Ctrl-C and start run.sh again, then reload this page.</div>
+<main>
+  <div>
+    <section>
+      <h2>Backends</h2>
+      <div class="health" id="health">checking…</div>
+      <div class="note" id="sessionNote"></div>
+    </section>
+    <section id="savedBox" style="margin-top:16px">
+      <h2>Saved conversations</h2>
+      <div class="note">Every ended conversation keeps its recordings next to its log. Party lines are voiced in their characters' voices.</div>
+      <select id="savedSel"></select>
+      <div class="row"><button id="savedPlay">▶ Play all</button><button id="savedStop">■ Stop</button></div>
+      <div class="note" id="savedNow"></div>
+    </section>
+    <section id="setup" style="margin-top:16px">
+      <h2>Start a conversation</h2>
+      <label for="npc">NPC</label>
+      <select id="npc"></select>
+      <div class="note" id="voiceNote"></div>
+      <label for="location">Where and when (prefilled from the campaign state; one line, goes in the log header)</label>
+      <input id="location" placeholder="Trollskull Manor, common room, about 3 PM">
+      <div class="note" id="locHint"></div>
+      <label for="scene">Scene (prefilled from the campaign state: who is present and what the NPC can see and hear). Add facts you approve for the NPC to know</label>
+      <textarea id="scene" placeholder="Present: Caelith, Corrin, Lylnyler. The NPC can see… [approved third-party information goes here]"></textarea>
+      <label>Also in the room (prefilled from the campaign state; tick everyone who hears the conversation)</label>
+      <div id="alsoBox" class="note">loading…</div>
+      <label>How each NPC refers to the others (use a name only if that NPC already knows it)</label>
+      <div id="setupLabels" class="note">loading…</div>
+      <div class="row"><button class="primary" id="start">Start</button></div>
+      <div class="err" id="startErr"></div>
+    </section>
+  </div>
+  <div>
+    <section id="live" class="hidden">
+      <h2 id="liveTitle">Conversation</h2>
+      <div class="row" style="margin-top:0"><span class="note" style="margin:0">The party is talking to</span><span id="addressBtns" class="row" style="margin:0"></span></div>
+      <div id="transcript"></div>
+      <div class="row" style="margin-top:6px"><button id="replayAllDm">▶ Replay all (on this computer)</button></div>
+      <div id="pend" class="hidden">
+        <div id="needBox" class="hidden" style="background:#2a2418;border:1px solid #6b5a2f;border-radius:8px;padding:10px;margin-bottom:10px">
+          <b id="needTitle"></b><div id="needText" class="note"></div>
+          <textarea id="needAnswer" placeholder="What the NPC knows about this (a fact, in plain words)…"></textarea>
+          <div class="row"><button class="primary" id="needSend">Answer and draft</button><button id="needNo">It does not know</button></div>
+        </div>
+        <label for="party" id="partyLabel">The party said (fix anything the microphone got wrong)</label>
+        <div class="note" id="heardAs"></div>
+        <textarea id="party"></textarea>
+        <label for="answerer" id="answererLabel">Who answers</label>
+        <select id="answerer" style="width:auto"></select>
+        <label for="draft">Drafted reply (edit freely: this exact text is spoken and logged)</label>
+        <textarea id="draft" style="min-height:96px"></textarea>
+        <div class="err" id="pendErr"></div>
+        <div class="row">
+          <button class="primary" id="approve">Approve and speak</button>
+          <button id="regen">Draft again</button>
+          <button id="skip">No reply</button>
+        </div>
+      </div>
+      <label style="margin-top:14px">Others in the room</label>
+      <div class="row" style="margin-top:0"><select id="chimeWho" style="width:auto"></select><button id="chime">Let them speak up</button>
+        <select id="joinWho" style="width:auto"></select><button id="join">Bring into the room</button><select id="leaveWho" style="width:auto"></select><button id="leave">Leaves</button></div>
+      <label for="narrDir" style="margin-top:14px">Narrator (describes something between the lines; leave the direction empty for a natural small beat)</label>
+      <div class="row" style="margin-top:0"><input id="narrDir" style="flex:1" placeholder="Avi comes back through the door with Embric, wiping soot from his hands…"><button id="narrate">Narrate</button></div>
+      <label style="margin-top:14px">How each NPC refers to everyone right now (change a row when they introduce themselves)</label>
+      <div id="liveLabels"></div>
+      <div class="row" style="margin-top:6px"><button id="saveLabels">Update labels</button></div>
+      <label for="typed" style="margin-top:14px">Say a line as</label>
+      <div class="row" style="margin-top:0"><select id="typedSpeaker" style="width:auto"></select><input id="typed" style="flex:1" placeholder="asks about the cellar…"><button id="send">Send</button></div>
+      <div class="row"><button id="stop">Stop audio on the tablet</button><button class="primary" id="endAuto">End and save</button><button id="end">Review before saving…</button></div>
+      <div class="row"><button id="restart">Restart conversation</button><button id="endKeep">End without saving</button><button class="danger" id="endDelete">Discard and delete the log</button></div>
+      <div class="note">"End and save" drafts the closing record and the NPC's memory entry from the transcript and writes them at once. "End without saving" closes the conversation and keeps the log of the exchanges so far, with no closing record and no memory entry.</div>
+    </section>
+    <section id="endbox" class="hidden end">
+      <h2>End of conversation: review before saving</h2>
+      <div class="note" id="endNote">Drafted from the transcript. Nothing is written until you save.</div>
+      <div id="reviews"></div>
+      <div class="row"><button class="primary" id="save">Save log and memory</button><button id="cancelEnd">Back</button></div>
+      <div class="err" id="endErr"></div>
+    </section>
+    <section id="done" class="hidden"><h2 id="doneTitle">Saved</h2><div id="doneText"></div></section>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const K = new URLSearchParams(location.search).get('k') || '';
+const H = { 'x-dm-key': K, 'content-type': 'application/json' };
+async function api(path, body, method) {
+  const r = await fetch(path, { method: method || (body === undefined ? 'GET' : 'POST'), headers: H, body: body === undefined ? undefined : JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+let npcs = [], lines = [], pending = null, editedParty = false, members = [], setupEdited = {};
+// labels: one block per NPC in the room, a row for every party member and every other NPC
+let roomNames = {};   // slug -> name of the NPCs in the setup or live room
+function labelBlocks(container, data, names, onedit) {
+  container.replaceChildren(...Object.keys(data).map(viewer => {
+    const det = document.createElement('details'); det.open = Object.keys(data).length === 1 || viewer === Object.keys(data)[0];
+    const sum = document.createElement('summary'); sum.textContent = (names[viewer] || viewer) + ' refers to…'; sum.style.cursor = 'pointer'; det.append(sum);
+    Object.keys(data[viewer]).filter(k => k !== 'party').forEach(k => {
+      const row = document.createElement('div'); row.className = 'row'; row.style.marginTop = '4px';
+      const n = document.createElement('span'); n.style.minWidth = '8.5em';
+      const m = members.find(x => x.slug === k); n.textContent = m ? m.name.split(' ')[0] : (names[k] || k).split(' ')[0];
+      const i = document.createElement('input'); i.dataset.viewer = viewer; i.dataset.key = k; i.value = data[viewer][k]; i.style.flex = '1';
+      i.oninput = () => onedit && onedit(viewer, k);
+      row.append(n, i); det.append(row);
+    });
+    return det;
+  }));
+}
+function readLabels(box) {
+  const out = {};
+  box.querySelectorAll('input').forEach(i => { (out[i.dataset.viewer] = out[i.dataset.viewer] || {})[i.dataset.key] = i.value.trim(); });
+  return out;
+}
+let prepEdited = false, prepFor = null, alsoEdited = false, setupSeq = 0;
+function checkedOthers() { return [...document.querySelectorAll('#alsoBox input')].filter(i => i.checked).map(i => i.value); }
+function renderAlso(present) {
+  const mainSlug = $('npc').value;
+  const box = $('alsoBox'); box.replaceChildren();
+  npcs.filter(n => n.slug !== mainSlug).forEach(n => {
+    const l = document.createElement('label'); l.style.cssText = 'display:inline-flex;gap:6px;align-items:center;margin:0 14px 4px 0;font-weight:normal';
+    const c = document.createElement('input'); c.type = 'checkbox'; c.value = n.slug; c.checked = (present || []).includes(n.slug); c.style.width = 'auto';
+    c.onchange = () => { alsoEdited = true; refreshSetupLabels(); };
+    l.append(c, document.createTextNode(n.name)); box.append(l);
+  });
+}
+async function prepare() {
+  const slug = $('npc').value; if (!slug || prepEdited) return;
+  prepFor = slug; $('location').placeholder = 'preparing from the campaign state…'; $('scene').placeholder = 'preparing…';
+  try {
+    const r = await api('/api/prepare?npc=' + encodeURIComponent(slug));
+    if (prepFor !== slug || prepEdited) return;
+    $('location').value = r.location || ''; $('scene').value = r.scene || '';
+    if (!alsoEdited) renderAlso(r.present || []);
+    $('startErr').textContent = r.error || '';
+    $('locHint').textContent = r.note ? r.note + (r.last_seen ? ' Last met: ' + r.last_seen + '.' : '') + (r.time ? ' Time per the state: ' + r.time + '.' : '') : '';
+    refreshSetupLabels();
+  } catch (e) { $('startErr').textContent = e.message; }
+  $('location').placeholder = 'Trollskull Manor, common room, about 3 PM'; $('scene').placeholder = 'Present: …';
+}
+$('location').addEventListener('input', () => { prepEdited = true; }); $('scene').addEventListener('input', () => { prepEdited = true; });
+async function refreshSetupLabels() {
+  const slug = $('npc').value; if (!slug) return;
+  const seq = ++setupSeq;
+  $('setupLabels').textContent = 'working out what each NPC knows…';
+  try {
+    if (!members.length) members = await api('/api/pcs');
+    $('typedSpeaker').replaceChildren(...[...members.map(m => [m.slug, m.name]), ['party', 'The party']].map(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; return o; }));
+    const r = await api('/api/labels/suggest', { slug, others: checkedOthers(), scene: $('scene').value });
+    if (seq !== setupSeq) return;
+    const typed = readLabels($('setupLabels'));
+    const data = {};
+    Object.keys(r.labels).forEach(v => { data[v] = {}; Object.keys(r.labels[v]).forEach(k => { data[v][k] = setupEdited[v + '|' + k] && typed[v] && typed[v][k] !== undefined ? typed[v][k] : r.labels[v][k]; }); });
+    roomNames = r.names; labelBlocks($('setupLabels'), data, r.names, (v, k) => { setupEdited[v + '|' + k] = true; });
+  } catch (e) { if (seq === setupSeq) $('setupLabels').textContent = e.message; }
+}
+
+function renderTranscript() {
+  const t = $('transcript'); t.replaceChildren();
+  lines.forEach(l => { const d = document.createElement('div'); d.className = 'l ' + l.who; if (l.who === 'narrator') d.style.fontStyle = 'italic'; const b = document.createElement('b'); b.textContent = (l.who === 'party' ? 'Party' : l.name) + ': '; d.append(b, document.createTextNode(l.text)); if (l.audio || (l.who === 'party' && l.speaker && l.speaker !== 'party')) { const r = document.createElement('button'); r.textContent = '▶'; r.title = 'Play on this computer'; r.style.cssText = 'margin-left:8px;padding:0 8px'; r.onclick = async () => { try { if (!l.audio) { r.disabled = true; const j = await api('/api/linevoice', { id: l.id }); l.audio = j.audio; r.disabled = false; } await new Audio(l.audio).play(); } catch (e) { r.disabled = false; alert(e.message || 'That recording is no longer available.'); } }; d.append(r); } t.append(d); });
+  t.scrollTop = t.scrollHeight;
+}
+let room = [], addressed = null, mainSlug = null;
+function opt(v, t) { const o = document.createElement('option'); o.value = v; o.textContent = t; return o; }
+function renderRoom() {
+  $('addressBtns').replaceChildren(...room.map(r => { const b = document.createElement('button'); b.textContent = r.display; if (r.slug === addressed) b.className = 'primary';
+    b.onclick = () => api('/api/address', { to: r.slug }).catch(e => alert(e.message)); return b; }));
+  $('chimeWho').replaceChildren(...room.map(r => opt(r.slug, r.name)));
+  $('leaveWho').replaceChildren(...room.map(r => opt(r.slug, r.name)));
+  $('leave').disabled = !room.length;
+  const here = new Set(room.map(r => r.slug));
+  $('joinWho').replaceChildren(...npcs.filter(n => !here.has(n.slug)).map(n => opt(n.slug, n.name)));
+  $('join').disabled = !$('joinWho').options.length;
+  const labs = Object.fromEntries(room.map(r => [r.slug, r.labels]));
+  const typed = readLabels($('liveLabels'));
+  labelBlocks($('liveLabels'), labs, Object.fromEntries(room.map(r => [r.slug, r.name])));
+  $('answerer').replaceChildren(...room.map(r => opt(r.slug, r.display)));
+}
+function renderPending() {
+  $('pend').classList.toggle('hidden', !pending);
+  if (!pending) return;
+  const narr = pending.kind === 'narration', chime = pending.kind === 'chime' || narr;
+  $('party').classList.toggle('hidden', chime); $('partyLabel').classList.toggle('hidden', chime); $('heardAs').classList.toggle('hidden', !narr);
+  $('answerer').classList.toggle('hidden', narr); $('answererLabel').classList.toggle('hidden', narr);
+  if (narr && $('narrDir').dataset.id !== pending.id) { $('narrDir').value = pending.direction || ''; $('narrDir').dataset.id = pending.id; }
+  if (!chime && (!editedParty || $('party').dataset.id !== pending.id)) { $('party').value = pending.party; $('party').dataset.id = pending.id; editedParty = false; }
+  $('partyLabel').textContent = (pending.speaker_name || 'The party') + ' said (fix anything the microphone got wrong)';
+  $('heardAs').textContent = narr ? 'The narrator is describing this (the direction is in the box under "Narrator"; change it and press Draft again).' : '';
+  if (!narr) $('answerer').value = pending.to;
+  $('draft').value = pending.draft === null ? '' : pending.draft;
+  $('draft').placeholder = pending.draft === null ? 'drafting…' : '';
+  $('pendErr').textContent = pending.error ? 'The model failed: ' + pending.error + ' (write the reply yourself, or draft again)' : '';
+  $('needBox').classList.toggle('hidden', !pending.need);
+  if (pending.need) { $('needTitle').textContent = (pending.to_name || 'The NPC') + ' needs a fact before answering'; $('needText').textContent = pending.need; }
+  $('approve').disabled = (pending.draft === null && !pending.error) || !!pending.need;
+}
+function renderState(s) {
+  const active = !!s.active;
+  $('setup').classList.toggle('hidden', active); $('live').classList.toggle('hidden', !active);
+  if (active && s.members) { members = s.members.map(m => ({ slug: m.slug, name: m.name, short: m.short })); room = s.room || []; addressed = s.addressed; mainSlug = s.main; renderRoom(); }
+  if (active) { $('liveTitle').textContent = 'Talking with ' + room.map(r => r.display).join(', ') + '  ·  ' + (s.log || ''); lines = s.lines || []; pending = s.pending || null; renderTranscript(); renderPending(); }
+  else { lines = []; pending = null; }
+}
+async function health() {
+  try {
+    const h = await api('/api/health');
+    $('health').replaceChildren(...['llm', 'stt', 'tts'].map(k => { const s = document.createElement('span'); const d = document.createElement('i'); d.className = 'dot ' + (h[k] === 'ok' ? 'ok' : 'bad'); s.append(d, document.createTextNode(k.toUpperCase() + ' ' + h[k])); return s; }));
+    $('sessionNote').textContent = 'Logs go to session ' + h.session;
+    $('stale').classList.toggle('hidden', (h.api || 0) >= 9);
+  } catch (e) { $('health').textContent = 'DM key missing or wrong: open the link printed by the server.'; }
+}
+async function loadNpcs() {
+  try { npcs = await api('/api/npcs'); } catch (e) { return; }
+  $('npc').replaceChildren(...npcs.map(n => { const o = document.createElement('option'); o.value = n.slug; o.textContent = n.name + (n.role ? ' — ' + n.role.slice(0, 50) : ''); return o; }));
+  showVoice(); renderAlso([]); prepare();
+}
+function showVoice() {
+  const n = npcs.find(x => x.slug === $('npc').value);
+  $('voiceNote').textContent = n ? (n.voice === 'locked' ? 'Has a locked voice.' : n.voice === 'generic' ? 'Uses a generic stand-in voice.' : 'No voice yet: replies appear as text only.') : '';
+}
+$('npc').onchange = () => { setupEdited = {}; prepEdited = false; alsoEdited = false; showVoice(); renderAlso([]); prepare(); refreshSetupLabels(); };
+$('scene').onblur = refreshSetupLabels;
+$('start').onclick = async () => {
+  $('startErr').textContent = '';
+  try { renderState(await api('/api/start', { slug: $('npc').value, scene: $('scene').value, location: $('location').value, others: checkedOthers(), labels: readLabels($('setupLabels')) })); }
+  catch (e) { $('startErr').textContent = e.message; }
+};
+$('party').oninput = () => { editedParty = true; };
+let editingFor = null;
+$('draft').addEventListener('input', () => { if (pending && editingFor !== pending.id) { editingFor = pending.id; api('/api/editing', {}).catch(() => {}); } });
+setInterval(() => { if (pending && pending.draft === null && !pending.error) $('draft').placeholder = 'drafting… (if the model was idle it may take a minute to load)'; }, 4000);
+$('approve').onclick = async () => {
+  $('approve').disabled = true;
+  try { const r = await api('/api/approve', { text: $('draft').value }); if (r.warning) $('pendErr').textContent = r.warning; }
+  catch (e) { $('pendErr').textContent = e.message; $('approve').disabled = false; }
+};
+$('regen').onclick = async () => { try { await api('/api/regenerate', { party: $('party').value, to: $('answerer').value, direction: $('narrDir').value }); } catch (e) { $('pendErr').textContent = e.message; } };
+$('skip').onclick = async () => { try { await api('/api/skip', {}); } catch (e) { $('pendErr').textContent = e.message; } };
+$('send').onclick = async () => { const t = $('typed').value.trim(); if (!t) return; try { await api('/api/say', { text: t, speaker: $('typedSpeaker').value }); $('typed').value = ''; } catch (e) { $('pendErr').textContent = e.message; $('pend').classList.remove('hidden'); } };
+$('typed').onkeydown = e => { if (e.key === 'Enter') $('send').click(); };
+$('answerer').onchange = () => { if (pending && $('answerer').value !== pending.to) $('regen').click(); };
+$('needSend').onclick = async () => { const t = $('needAnswer').value.trim(); if (!t) return; try { await api('/api/answer', { text: t }); $('needAnswer').value = ''; } catch (e) { $('pendErr').textContent = e.message; } };
+$('needNo').onclick = () => api('/api/answer', { unknown: true }).catch(e => { $('pendErr').textContent = e.message; });
+$('narrate').onclick = () => api('/api/narrate', { direction: $('narrDir').value }).catch(e => alert(e.message));
+$('chime').onclick = () => api('/api/chime', { to: $('chimeWho').value }).catch(e => alert(e.message));
+$('join').onclick = () => api('/api/room', { add: $('joinWho').value }).catch(e => alert(e.message));
+$('leave').onclick = () => api('/api/room', { remove: $('leaveWho').value }).catch(e => alert(e.message));
+$('saveLabels').onclick = () => api('/api/labels', { labels: readLabels($('liveLabels')) }).then(() => { $('saveLabels').textContent = 'Updated'; setTimeout(() => $('saveLabels').textContent = 'Update labels', 1500); }).catch(e => alert(e.message));
+$('stop').onclick = () => api('/api/stop', {}).catch(() => {});
+const lines2 = v => v.split('\n').map(s => s.trim()).filter(Boolean);
+let reviewMain = null;
+function openReview(r, note) {
+  reviewMain = r.main; const box = $('reviews'); box.replaceChildren();
+  Object.entries(r.drafts).forEach(([slug, d]) => {
+    const sec = document.createElement('div'); sec.dataset.slug = slug; sec.style.marginBottom = '18px';
+    const h = document.createElement('h3'); h.textContent = d.name + (slug === r.main ? '' : ' (also in the room)'); sec.append(h);
+    if (!d.heard) { const n = document.createElement('div'); n.className = 'note'; n.textContent = 'Heard nothing: no record will be written for this NPC unless you fill it in.'; sec.append(n); }
+    const field = (key, label, kind, value) => { const l = document.createElement('label'); l.textContent = label; const el = document.createElement(kind === 'select' ? 'select' : kind === 'input' ? 'input' : 'textarea');
+      if (kind === 'select') ['Hostile', 'Suspicious', 'Neutral', 'Warming', 'Friendly', 'Allied'].forEach(x => el.append(opt(x, x)));
+      el.dataset.f = key; el.value = value; sec.append(l, el); };
+    field('final_disposition', 'Final disposition', 'select', d.final_disposition || 'Neutral');
+    field('location', 'Location (memory heading)', 'input', d.location || '');
+    field('revealed', 'Information revealed (one per line)', 'area', (d.revealed || []).join('\n'));
+    field('withheld', 'Information withheld', 'area', (d.withheld || []).join('\n'));
+    field('commitments', 'Commitments made', 'area', (d.commitments || []).join('\n'));
+    field('learned', 'Learned from the party (memory)', 'area', (d.learned || []).join('\n'));
+    field('told', 'Told the party (memory)', 'area', (d.told || []).join('\n'));
+    field('next_beat', 'Next beat', 'area', d.next_beat || '');
+    box.append(sec);
+  });
+  const err = Object.values(r.drafts).map(d => d._error).find(Boolean);
+  $('endNote').textContent = note || err || 'Drafted from the transcript. Nothing is written until you save.';
+  $('live').classList.add('hidden'); $('endbox').classList.remove('hidden');
+}
+function readReviews() {
+  const out = {};
+  document.querySelectorAll('#reviews > div').forEach(sec => {
+    const g = k => sec.querySelector('[data-f="' + k + '"]').value, L = k => lines2(g(k));
+    out[sec.dataset.slug] = { final_disposition: g('final_disposition'), location: g('location'), revealed: L('revealed'), withheld: L('withheld'), commitments: L('commitments'),
+      learned: L('learned'), told: L('told'), next_beat: g('next_beat'), heard: true };
+  });
+  return out;
+}
+$('end').onclick = async () => {
+  $('end').disabled = true;
+  try { openReview(await api('/api/end', {})); } catch (e) { alert(e.message); }
+  $('end').disabled = false;
+};
+async function discard(del) {
+  if (del && !confirm('Delete the log of this conversation? This cannot be undone.')) return;
+  try {
+    const r = await api('/api/end/discard', { delete_log: del });
+    $('done').classList.remove('hidden'); $('doneTitle').textContent = 'Ended without saving';
+    $('doneText').textContent = r.deleted ? 'The log was deleted. Nothing was written to the NPC memory.'
+      : r.exchanges + ' exchanges stay in ' + r.log + ' (no closing record). Nothing was written to the NPC memory.';
+  } catch (e) { alert(e.message); }
+}
+$('restart').onclick = async () => {
+  if (!confirm('Start this conversation over? The lines so far are removed from the log and every NPC forgets them. Nothing is saved to memory.')) return;
+  try { renderState(await api('/api/restart', {})); } catch (e) { alert(e.message); }
+};
+$('endKeep').onclick = () => discard(false);
+$('endDelete').onclick = () => discard(true);
+$('endAuto').onclick = async () => {
+  $('endAuto').disabled = true; $('endAuto').textContent = 'Saving…';
+  try {
+    const r = await api('/api/end/auto', {});
+    if (r.saved) { $('done').classList.remove('hidden'); $('doneTitle').textContent = 'Saved'; $('doneText').textContent = r.saved.exchanges + ' exchanges. Log: ' + r.saved.log + '. Memory: ' + r.saved.memories.join(', ') + '.'; }
+    else { openReview(r, r.reason); }
+  } catch (e) { alert(e.message); }
+  $('endAuto').disabled = false; $('endAuto').textContent = 'End and save';
+};
+$('cancelEnd').onclick = () => { $('endbox').classList.add('hidden'); $('live').classList.remove('hidden'); };
+$('save').onclick = async () => {
+  $('endErr').textContent = '';
+  try {
+    const r = await api('/api/end/confirm', { records: readReviews() });
+    $('endbox').classList.add('hidden'); $('done').classList.remove('hidden'); $('doneTitle').textContent = 'Saved';
+    $('doneText').textContent = r.exchanges + ' exchanges. Log: ' + r.log + '. Memory: ' + r.memories.join(', ') + '.';
+  } catch (e) { $('endErr').textContent = e.message; }
+};
+
+const es = new EventSource('/events?role=dm&k=' + encodeURIComponent(K));
+es.addEventListener('state', e => { $('done').classList.add('hidden'); const st = JSON.parse(e.data); renderState(st); if (!st.active) setTimeout(loadSaved, 4000); });
+es.addEventListener('line', e => { lines.push(JSON.parse(e.data)); renderTranscript(); });
+es.addEventListener('reply', e => { lines.push(JSON.parse(e.data)); renderTranscript(); });
+es.addEventListener('pending', e => { pending = JSON.parse(e.data); renderPending(); });
+let saved = [], playing = null;
+async function loadSaved() {
+  try { saved = await api('/api/saved'); } catch (e) { return; }
+  $('savedSel').replaceChildren(...saved.map((c, i) => opt(String(i), c.title + ' (' + c.lines.filter(l => l.url).length + ' recordings)')));
+  $('savedBox').classList.toggle('hidden', !saved.length);
+}
+async function playSequence(items, label) {   // items: [{text, name, url|null|function}]
+  stopPlaying(); const token = playing = { stop: false };
+  for (const it of items) {
+    if (token.stop) break;
+    let url = it.url; if (typeof url === 'function') { try { url = await url(); } catch (e) { url = null; } }
+    if (!url) continue;
+    label.textContent = it.name + ': ' + it.text;
+    await new Promise(res => { const a = new Audio(url); token.audio = a; a.onended = a.onerror = () => res(); a.play().catch(() => res()); });
+  }
+  if (playing === token) playing = null; label.textContent = '';
+}
+function stopPlaying() { if (playing) { playing.stop = true; playing.audio && playing.audio.pause(); } playing = null; }
+$('savedPlay').onclick = () => { const c = saved[Number($('savedSel').value)]; if (c) playSequence(c.lines.map(l => ({ name: l.name, text: l.text, url: l.url ? l.url + '?k=' + encodeURIComponent(K) : null })), $('savedNow')); };
+$('savedStop').onclick = stopPlaying;
+$('replayAllDm').onclick = () => playSequence(lines.map(l => ({ name: l.name, text: l.text, url: l.audio || ((l.who === 'party' && l.speaker && l.speaker !== 'party') ? (() => api('/api/linevoice', { id: l.id }).then(j => { l.audio = j.audio; return j.audio; })) : null) })), $('savedNow'));
+loadSaved(); loadNpcs(); health(); setInterval(health, 20000);
+</script>
+</body>
+</html>
