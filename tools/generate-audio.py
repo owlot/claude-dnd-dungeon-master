@@ -217,7 +217,7 @@ def main():
     parser.add_argument("--scenes-only", action="store_true", help="Generate only scene audio")
     parser.add_argument("--anchor", action="append", help="Memoir anchor filter: [char/]anchor-slug (repeatable)")
     parser.add_argument("--character", action="append", help="Regenerate memoirs only for this character slug (repeatable). Combine with --anchor to also filter to one anchor.")
-    parser.add_argument("--backend", help="Override backend: qwen3 or moss")
+    parser.add_argument("--backend", help="Override backend: qwen3, moss or tts-serve")
     parser.add_argument("--offline", action="store_true", help="Skip HuggingFace network checks, use local cache only")
     parser.add_argument("--narrator", help="Override narrator voice slug (e.g. lotte-narrator)")
     args = parser.parse_args()

@@ -6,7 +6,7 @@ Dispatches to the configured TTS backend (qwen3 or moss).
 Backend is read from website/assets/config.json ("ttsBackend" key, default: qwen3).
 
 Usage:
-    python tools/audition-voice.py <campaign> <character> [--count N] [--backend qwen3|moss]
+    python tools/audition-voice.py <campaign> <character> [--count N] [--backend qwen3|moss|tts-serve]
     python tools/audition-voice.py waterdeep-dragon-heist yagra-stonefist
     python tools/audition-voice.py waterdeep-dragon-heist yagra-stonefist --count 6
 
@@ -36,7 +36,7 @@ def main():
     parser.add_argument("campaign", help="Campaign slug")
     parser.add_argument("character", help="Character slug")
     parser.add_argument("--count", type=int, default=4, help="Number of samples (default: 4)")
-    parser.add_argument("--backend", help="Override backend: qwen3 or moss")
+    parser.add_argument("--backend", help="Override backend: qwen3, moss or tts-serve")
     parser.add_argument("--reaudition", action="store_true",
                         help="Re-audition using the already-locked .pt voice — use when intro text changed after voice was chosen")
     args = parser.parse_args()
@@ -53,7 +53,8 @@ def main():
     spec.loader.exec_module(be)
 
     if args.reaudition:
-        pt_path = os.path.join(voices_dir, f"{args.character}.pt")
+        # the tts-serve backend keeps a locked voice as a .wav (reference clip), the others as a .pt prompt
+        pt_path = os.path.join(voices_dir, f"{args.character}.{'wav' if backend == 'tts-serve' else 'pt'}")
         if not os.path.exists(pt_path):
             print(f"Error: no locked voice found at {pt_path} — run without --reaudition first")
             sys.exit(1)
