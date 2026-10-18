@@ -5,7 +5,7 @@ load_encounter.py — Print a structured DM summary of an encounter file.
 Usage:
   python scripts/load_encounter.py <campaign> <encounter_name>
 
-Reads: campaigns/<campaign>/encounters/<encounter_name>.md
+Reads: campaigns/<campaign>/info/encounters/<encounter_name>.md (the legacy campaigns/<campaign>/encounters/ is a fallback)
 
 Output sections (always in this order):
   1. ENCOUNTER header
@@ -20,7 +20,8 @@ import os
 import re
 import sys
 
-BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "campaigns")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from campaign_paths import BASE, encounter_file  # noqa: E402
 
 WIDTH = 60   # box inner width
 
@@ -444,7 +445,7 @@ def main() -> None:
         sys.exit(1)
 
     campaign, encounter_name = args[0], args[1]
-    enc_path = os.path.join(BASE, campaign, "encounters", f"{encounter_name}.md")
+    enc_path = encounter_file(campaign, encounter_name)
 
     if not os.path.exists(enc_path):
         sys.exit(f"Error: encounter file not found: {enc_path}")
