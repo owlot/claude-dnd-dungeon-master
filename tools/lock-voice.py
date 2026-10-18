@@ -9,12 +9,12 @@ Qwen3: generates .wav + .pt ICL clone prompt (reference audio + transcript embed
 MOSS:  renders introduction text via MOSS-TTS, saves as .wav reference
 
 Usage:
-    python tools/lock-voice.py <campaign> <character> [--wav <path>] [--backend qwen3|moss]
+    python tools/lock-voice.py <campaign> <character> [--wav <path>] [--backend qwen3|moss|tts-serve]
     python tools/lock-voice.py waterdeep-dragon-heist yagra-stonefist
     python tools/lock-voice.py waterdeep-dragon-heist yagra-stonefist --wav .../yagra_audition_4.wav
 
     # Narrator (no introduction rendering — just copy + build prompt):
-    python tools/lock-voice.py narrator <wav-path> [--backend qwen3|moss]
+    python tools/lock-voice.py narrator <wav-path> [--backend qwen3|moss|tts-serve]
     python tools/lock-voice.py narrator website/audio/introductions/narrator_audition_1.wav
 """
 
@@ -59,7 +59,7 @@ def main():
     parser.add_argument("arg1", help="'narrator' or campaign slug")
     parser.add_argument("arg2", nargs="?", help="character slug (or wav path for narrator)")
     parser.add_argument("--wav", help="Specific audition WAV to use as reference")
-    parser.add_argument("--backend", help="Override backend: qwen3 or moss")
+    parser.add_argument("--backend", help="Override backend: qwen3, moss or tts-serve")
     args = parser.parse_args()
 
     # ---- Narrator mode ----
